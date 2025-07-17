@@ -1,9 +1,23 @@
+
+"use client";
+
+import { useState } from 'react';
 import ModelInsightsDashboard from '@/components/dashboard/model-insights-dashboard';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown } from 'lucide-react';
+import type { ModelData } from '@/lib/data';
+import { topModels } from '@/lib/data';
+
+const categories: ModelData['category'][] = ['Language', 'Vision', 'Multimodal'];
 
 export default function Home() {
+  const [selectedCategory, setSelectedCategory] = useState<ModelData['category'] | 'All'>('All');
+
+  const filteredModels = selectedCategory === 'All'
+    ? topModels
+    : topModels.filter(model => model.category === selectedCategory);
+
   return (
     <main className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-screen-2xl">
@@ -25,18 +39,27 @@ export default function Home() {
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-[150px] justify-between">
-                  Sort By: All <ChevronDown />
+                <Button variant="outline" className="w-[180px] justify-between">
+                  Sort By: {selectedCategory} <ChevronDown />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>Sort By: Tokens</DropdownMenuItem>
-                <DropdownMenuItem>Sort By: Change</DropdownMenuItem>
+                 <DropdownMenuItem onSelect={() => setSelectedCategory('All')}>
+                  All
+                </DropdownMenuItem>
+                {categories.map((category) => (
+                  <DropdownMenuItem
+                    key={category}
+                    onSelect={() => setSelectedCategory(category)}
+                  >
+                    {category}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
-        <ModelInsightsDashboard />
+        <ModelInsightsDashboard models={filteredModels} />
       </div>
     </main>
   );

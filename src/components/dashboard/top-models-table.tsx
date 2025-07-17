@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { topModels, type ModelData } from '@/lib/data';
+import type { ModelData } from '@/lib/data';
 import { ArrowUp, ArrowDown, Bot, Building, Eye, MessageSquare, Boxes, Server, Box } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -27,7 +27,11 @@ const providerIcons: Record<ModelData['provider'], React.ElementType> = {
   Other: Server,
 };
 
-export default function TopModelsTable() {
+interface TopModelsTableProps {
+  models: ModelData[];
+}
+
+export default function TopModelsTable({ models }: TopModelsTableProps) {
   return (
     <Card>
       <CardHeader>
@@ -48,7 +52,7 @@ export default function TopModelsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {topModels.map((model) => {
+            {models.map((model) => {
               const CategoryIcon = categoryIcons[model.category] || Box;
               const ProviderIcon = providerIcons[model.provider] || Server;
               const isPositiveChange = model.change >= 0;
