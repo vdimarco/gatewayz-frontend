@@ -10,7 +10,7 @@ import type { ModelData } from '@/lib/data';
 import { topModels, monthlyModelTokenData, weeklyModelTokenData, yearlyModelTokenData, adjustModelDataForTimeRange } from '@/lib/data';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
-const categories: ModelData['category'][] = ['Language', 'Vision', 'Multimodal', 'Audio & Speech Models', 'Code Models', 'Reinforcement Learning Agents', 'Embedding Models', 'Scientific/Domain-Specific Models'];
+const categories: ModelData['category'][] = ['Language', 'Vision', 'Multimodal', 'Audio & Speech Models', 'Code Models', 'Reinforcement Learning Agents', 'Embedding Models', 'Domain-Specific'];
 
 type TimeRange = 'year' | 'month' | 'week';
 

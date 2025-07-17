@@ -1,7 +1,8 @@
+
 export type ModelData = {
   name: string;
   organization: string;
-  category: 'Language' | 'Vision' | 'Multimodal' | 'Audio & Speech Models' | 'Code Models' | 'Reinforcement Learning Agents' | 'Embedding Models' | 'Scientific/Domain-Specific Models';
+  category: 'Language' | 'Vision' | 'Multimodal' | 'Audio & Speech Models' | 'Code Models' | 'Reinforcement Learning Agents' | 'Embedding Models' | 'Domain-Specific';
   subCategories?: ('Text' | 'Image' | 'Audio' | 'Video')[];
   provider: 'OpenAI' | 'Google' | 'Anthropic' | 'Meta' | 'Mistral' | 'Other';
   tokens: number;
@@ -32,9 +33,9 @@ export const topModels: ModelData[] = [
   { name: 'AlphaCode 2', organization: 'Google', category: 'Code Models', provider: 'Google', tokens: 14.9, value: '$2T', change: 10.1 },
   { name: 'StarCoder 2', organization: 'Hugging Face', category: 'Code Models', provider: 'Other', tokens: 14.6, value: '$4.5B', change: 14.3 },
   
-  // Scientific/Domain-Specific
-  { name: 'AlphaFold 3', organization: 'Google', category: 'Scientific/Domain-Specific Models', provider: 'Google', tokens: 14.3, value: '$2T', change: 13.8 },
-  { name: 'Galactica', organization: 'Meta', category: 'Scientific/Domain-Specific Models', provider: 'Meta', tokens: 14.0, value: '$1.3T', change: 4.9 },
+  // Domain-Specific
+  { name: 'AlphaFold 3', organization: 'Google', category: 'Domain-Specific', provider: 'Google', tokens: 14.3, value: '$2T', change: 13.8 },
+  { name: 'Galactica', organization: 'Meta', category: 'Domain-Specific', provider: 'Meta', tokens: 14.0, value: '$1.3T', change: 4.9 },
 
   // Audio & Speech
   { name: 'Whisper', organization: 'OpenAI', category: 'Audio & Speech Models', provider: 'OpenAI', tokens: 13.8, value: '$86B', change: 8.2 },
@@ -51,7 +52,7 @@ export const topModels: ModelData[] = [
   { name: 'I-JEPA', organization: 'Meta', category: 'Vision', provider: 'Meta', tokens: 12.5, value: '$1.3T', change: 3.2 },
   { name: 'Jamba', organization: 'AI21 Labs', category: 'Language', provider: 'Other', tokens: 12.2, value: '$1.4B', change: 7.8 },
   { name: 'Code Llama', organization: 'Meta', category: 'Code Models', provider: 'Meta', tokens: 11.9, value: '$1.3T', change: 9.5 },
-  { name: 'BioMedLM', organization: 'Stanford', category: 'Scientific/Domain-Specific Models', provider: 'Other', tokens: 11.6, value: '$30M', change: 11.1 },
+  { name: 'BioMedLM', organization: 'Stanford', category: 'Domain-Specific', provider: 'Other', tokens: 11.6, value: '$30M', change: 11.1 },
   { name: 'AudioPaLM', organization: 'Google', category: 'Audio & Speech Models', provider: 'Google', tokens: 11.3, value: '$2T', change: 5.9 },
   { name: 'BGE', organization: 'BAAI', category: 'Embedding Models', provider: 'Other', tokens: 11.0, value: '$60M', change: 12.3 },
   { name: 'Agent57', organization: 'Google', category: 'Reinforcement Learning Agents', provider: 'Google', tokens: 10.7, value: '$2T', change: 3.5 },

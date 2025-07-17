@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -21,7 +22,7 @@ const categoryIcons: Record<ModelData['category'], React.ElementType> = {
   'Code Models': Code,
   'Reinforcement Learning Agents': Puzzle,
   'Embedding Models': Sliders,
-  'Scientific/Domain-Specific Models': Dna,
+  'Domain-Specific': Dna,
 };
 
 const providerIcons: Record<ModelData['provider'], React.ElementType> = {
