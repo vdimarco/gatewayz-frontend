@@ -40,13 +40,9 @@ export function useModelData(selectedTimeRange: TimeRange, selectedCategory: Mod
       filtered = adjustedModels.filter(model => model.category === selectedCategory);
     }
     
-    if (filtered.length < 10 && selectedCategory !== 'All') {
-        const additionalModels = topModels
-            .filter(m => m.category !== selectedCategory && !filtered.find(f => f.name === m.name))
-            .slice(0, 10 - filtered.length);
-        filtered.push(...adjustModelDataForTimeRange(additionalModels, selectedTimeRange));
-        filtered.sort((a,b) => b.tokens - a.tokens);
-    }
+    // If a category is selected and has fewer than 20 models, we no longer fill it.
+    // We just show what's available in that category. The user wants the top 20 *within* that category.
+    // The original logic to fill up to 10 is now incorrect based on the new request.
     
     return filtered.slice(0, 20);
   }, [isClient, selectedTimeRange, selectedCategory]);
