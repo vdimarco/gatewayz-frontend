@@ -63,18 +63,24 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
     return '0';
   };
 
-  const xAxisFormatter = (value: string) => {
+  const xAxisFormatter = (value: string, index: number) => {
     const date = new Date(value);
-    switch (timeRange) {
-        case 'year':
-            return format(date, 'MMM');
-        case 'month':
-            return format(date, 'd');
-        case 'week':
-            return format(date, 'EEE');
-        default:
-            return value;
+    
+    if (timeRange === 'year') {
+      // Show month only if it's the first tick of that month
+      const prevDate = index > 0 ? new Date(rawChartData[index-1].date) : null;
+      if (!prevDate || prevDate.getMonth() !== date.getMonth()) {
+        return format(date, 'MMM');
+      }
+      return "";
     }
+    if (timeRange === 'month') {
+        return format(date, 'd');
+    }
+    if (timeRange === 'week') {
+        return format(date, 'EEE');
+    }
+    return value;
   };
   
   return (
@@ -98,7 +104,7 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
               tickMargin={10}
               axisLine={false}
               tickFormatter={xAxisFormatter}
-              interval="preserveStartEnd"
+              interval={0}
             />
             <YAxis 
               tickFormatter={yAxisFormatter}
