@@ -25,3 +25,32 @@ export const chartData = topModels.map(model => ({
   name: model.name,
   tokens: model.tokens,
 }));
+
+// Function to get short month name and year
+const getMonthYear = (date: Date) => {
+  return date.toLocaleString('default', { month: 'short', year: '2-digit' }).replace(' ', ' \'');
+};
+
+const generateMonthlyData = () => {
+  const data = [];
+  const today = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const monthYear = getMonthYear(date);
+
+    // Some plausible random data with upward trend
+    const baseLanguage = 20 + i * 1.5;
+    const baseVision = 5 + i * 0.8;
+    const baseMultimodal = 8 + i * 1.2;
+
+    data.push({
+      month: monthYear,
+      Language: parseFloat((baseLanguage + Math.random() * 5).toFixed(1)),
+      Vision: parseFloat((baseVision + Math.random() * 3).toFixed(1)),
+      Multimodal: parseFloat((baseMultimodal + Math.random() * 4).toFixed(1)),
+    });
+  }
+  return data;
+};
+
+export const monthlyTokenData = generateMonthlyData();
