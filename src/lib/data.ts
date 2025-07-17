@@ -2,7 +2,7 @@
 export type ModelData = {
   name: string;
   organization: string;
-  category: 'Language' | 'Vision' | 'Multimodal' | 'Audio & Speech Models' | 'Code Models' | 'Reinforcement Learning Agents' | 'Embedding Models' | 'Domain-Specific';
+  category: 'Language' | 'Vision' | 'Multimodal' | 'Audio & Speech Models' | 'Code Models' | 'Reinforcement Learning' | 'Embedding Models' | 'Domain-Specific';
   subCategories?: ('Text' | 'Image' | 'Audio' | 'Video')[];
   provider: 'OpenAI' | 'Google' | 'Anthropic' | 'Meta' | 'Mistral' | 'Other';
   tokens: number;
@@ -46,7 +46,7 @@ export const topModels: ModelData[] = [
   { name: 'text-embedding-3', organization: 'OpenAI', category: 'Embedding Models', provider: 'OpenAI', tokens: 13.0, value: '$86B', change: 6.7 },
   
   // Reinforcement Learning
-  { name: 'MuZero', organization: 'Google', category: 'Reinforcement Learning Agents', provider: 'Google', tokens: 12.8, value: '$2T', change: 4.1 },
+  { name: 'MuZero', organization: 'Google', category: 'Reinforcement Learning', provider: 'Google', tokens: 12.8, value: '$2T', change: 4.1 },
 
   // Filler Models for categories
   { name: 'I-JEPA', organization: 'Meta', category: 'Vision', provider: 'Meta', tokens: 12.5, value: '$1.3T', change: 3.2 },
@@ -55,9 +55,9 @@ export const topModels: ModelData[] = [
   { name: 'BioMedLM', organization: 'Stanford', category: 'Domain-Specific', provider: 'Other', tokens: 11.6, value: '$30M', change: 11.1 },
   { name: 'AudioPaLM', organization: 'Google', category: 'Audio & Speech Models', provider: 'Google', tokens: 11.3, value: '$2T', change: 5.9 },
   { name: 'BGE', organization: 'BAAI', category: 'Embedding Models', provider: 'Other', tokens: 11.0, value: '$60M', change: 12.3 },
-  { name: 'Agent57', organization: 'Google', category: 'Reinforcement Learning Agents', provider: 'Google', tokens: 10.7, value: '$2T', change: 3.5 },
+  { name: 'Agent57', organization: 'Google', category: 'Reinforcement Learning', provider: 'Google', tokens: 10.7, value: '$2T', change: 3.5 },
   { name: 'CogVLM 2', organization: 'THUDM', category: 'Multimodal', subCategories: ['Text', 'Image'], provider: 'Other', tokens: 10.4, value: '$300M', change: 8.8 },
-  { name: 'AlphaGo', organization: 'Google', category: 'Reinforcement Learning Agents', provider: 'Google', tokens: 10.1, value: '$2T', change: 2.1 },
+  { name: 'AlphaGo', organization: 'Google', category: 'Reinforcement Learning', provider: 'Google', tokens: 10.1, value: '$2T', change: 2.1 },
 ].sort((a, b) => b.tokens - a.tokens);
 
 

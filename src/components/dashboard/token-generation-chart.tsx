@@ -67,7 +67,6 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
     const date = new Date(value);
     
     if (timeRange === 'year') {
-      // Show month only if it's the first tick of that month
       const prevDate = index > 0 ? new Date(rawChartData[index-1].date) : null;
       if (!prevDate || prevDate.getMonth() !== date.getMonth()) {
         return format(date, 'MMM');
@@ -133,7 +132,7 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
                 key={modelName}
                 dataKey={modelName} 
                 stackId="a" 
-                fill={`var(--color-${modelName})`}
+                fill={chartConfig[modelName]?.color ? `var(--color-${modelName})` : `hsl(var(--chart-${(Math.floor(Math.random() * 10) + 1)}))`}
               />
             ))}
           </BarChart>

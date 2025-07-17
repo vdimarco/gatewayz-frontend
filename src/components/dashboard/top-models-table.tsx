@@ -20,7 +20,7 @@ const categoryIcons: Record<ModelData['category'], React.ElementType> = {
   Multimodal: Boxes,
   'Audio & Speech Models': Mic,
   'Code Models': Code,
-  'Reinforcement Learning Agents': Puzzle,
+  'Reinforcement Learning': Puzzle,
   'Embedding Models': Sliders,
   'Domain-Specific': Dna,
 };
