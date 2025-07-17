@@ -7,58 +7,22 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 import type { ModelData } from '@/lib/data';
-import { topModels, monthlyModelTokenData, weeklyModelTokenData, yearlyModelTokenData, adjustModelDataForTimeRange } from '@/lib/data';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { useModelData, type TimeRange } from '@/hooks/useModelData';
 
 const categories: ModelData['category'][] = ['Language', 'Vision', 'Multimodal', 'Audio & Speech Models', 'Code Models', 'Reinforcement Learning', 'Embedding Models', 'Domain-Specific'];
-
-type TimeRange = 'year' | 'month' | 'week';
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<ModelData['category'] | 'All'>('All');
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('year');
+
+  const { filteredModels, chartData } = useModelData(selectedTimeRange, selectedCategory);
 
   const timeRangeLabels: Record<TimeRange, string> = {
     year: 'Top This Year',
     month: 'Top This Month',
     week: 'Top This Week',
   };
-
-  const getChartData = () => {
-    switch (selectedTimeRange) {
-      case 'week':
-        return weeklyModelTokenData;
-      case 'month':
-        return monthlyModelTokenData;
-      case 'year':
-      default:
-        return yearlyModelTokenData;
-    }
-  };
-
-  const getFilteredModels = () => {
-    const adjustedModels = adjustModelDataForTimeRange(topModels, selectedTimeRange);
-    
-    let filtered;
-    if (selectedCategory === 'All') {
-      filtered = [...adjustedModels];
-    } else {
-      filtered = adjustedModels.filter(model => model.category === selectedCategory);
-    }
-    
-    if (filtered.length < 10 && selectedCategory !== 'All') {
-        const additionalModels = topModels
-            .filter(m => m.category !== selectedCategory && !filtered.find(f => f.name === m.name))
-            .slice(0, 10 - filtered.length);
-        filtered.push(...additionalModels);
-        filtered.sort((a,b) => b.tokens - a.tokens);
-    }
-    
-    return filtered.slice(0, 20);
-  };
-
-  const filteredModels = getFilteredModels();
-  const chartData = getChartData();
 
   return (
     <main className="min-h-screen p-4 sm:p-6 lg:p-8">
