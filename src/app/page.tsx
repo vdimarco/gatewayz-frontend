@@ -74,7 +74,7 @@ export default function Home() {
                   {timeRangeLabels[selectedTimeRange]} <ChevronDown />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent className="w-[180px]">
                 <DropdownMenuItem onSelect={() => setSelectedTimeRange('year')}>Top This Year</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setSelectedTimeRange('month')}>Top This Month</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setSelectedTimeRange('week')}>Top This Week</DropdownMenuItem>
@@ -86,7 +86,7 @@ export default function Home() {
                   Sort By: {selectedCategory} <ChevronDown />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="max-h-80 overflow-y-auto">
+              <DropdownMenuContent className="w-[240px] max-h-80 overflow-y-auto">
                  <DropdownMenuItem onSelect={() => setSelectedCategory('All')}>
                   All
                 </DropdownMenuItem>
