@@ -70,7 +70,7 @@ export default function TopModelsTable({ models }: TopModelsTableProps) {
               <TableHead>Model</TableHead>
               <TableHead className="hidden sm:table-cell">Organization</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead className="hidden md:table-cell">Provider</TableHead>
+              <TableHead className="hidden md:table-cell">Top Provider</TableHead>
               <TableHead className="text-right">Tokens (T)</TableHead>
               <TableHead className="hidden lg:table-cell text-right">Value</TableHead>
               <TableHead className="text-right">Change</TableHead>
