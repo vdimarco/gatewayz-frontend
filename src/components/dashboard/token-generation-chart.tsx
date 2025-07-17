@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Area, AreaChart, CartesianGrid, Legend, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from 'recharts';
 import {
   Card,
   CardContent,
@@ -85,10 +85,11 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[450px] w-full">
-          <AreaChart 
+          <BarChart 
             data={chartData} 
             margin={{ top: 20, right: 20, bottom: 60, left: 20 }}
             accessibilityLayer
+            barCategoryGap="5%"
           >
             <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
             <XAxis
@@ -121,42 +122,15 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
                 </div>
               )}
             />
-            <defs>
-              {Object.keys(chartConfig).map((modelName) => (
-                <linearGradient
-                  key={modelName}
-                  id={`fill${modelName.replace(/[^a-zA-Z0-9]/g, '')}`}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop
-                    offset="5%"
-                    stopColor={`var(--color-${modelName})`}
-                    stopOpacity={0.8}
-                  />
-                  <stop
-                    offset="95%"
-                    stopColor={`var(--color-${modelName})`}
-                    stopOpacity={0.1}
-                  />
-                </linearGradient>
-              ))}
-            </defs>
             {Object.keys(chartConfig).map(modelName => (
-              <Area 
+              <Bar 
                 key={modelName}
-                type="natural"
                 dataKey={modelName} 
                 stackId="a" 
-                stroke={`var(--color-${modelName})`}
-                strokeWidth={2}
-                fillOpacity={1}
-                fill={`url(#fill${modelName.replace(/[^a-zA-Z0-9]/g, '')})`}
+                fill={`var(--color-${modelName})`}
               />
             ))}
-          </AreaChart>
+          </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>
