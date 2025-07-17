@@ -14,9 +14,34 @@ const categories: ModelData['category'][] = ['Language', 'Vision', 'Multimodal']
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<ModelData['category'] | 'All'>('All');
 
-  const filteredModels = selectedCategory === 'All'
-    ? topModels
-    : topModels.filter(model => model.category === selectedCategory);
+  const getFilteredModels = () => {
+    if (selectedCategory === 'All') {
+      return topModels;
+    }
+
+    const filtered = topModels.filter(model => model.category === selectedCategory);
+
+    if (filtered.length < 10) {
+      const needed = 10 - filtered.length;
+      const placeholderModels: ModelData[] = [];
+      for (let i = 1; i <= needed; i++) {
+        placeholderModels.push({
+          name: `${selectedCategory} Model ${i + filtered.length}`,
+          organization: 'Generated Inc.',
+          category: selectedCategory,
+          provider: 'Other',
+          tokens: Math.round((Math.random() * 10 + 5) * 10) / 10,
+          value: `$${Math.floor(Math.random() * 500) + 100}M`,
+          change: Math.round((Math.random() * 20 - 10) * 10) / 10,
+        });
+      }
+      return [...filtered, ...placeholderModels];
+    }
+
+    return filtered;
+  };
+
+  const filteredModels = getFilteredModels();
 
   return (
     <main className="min-h-screen p-4 sm:p-6 lg:p-8">
