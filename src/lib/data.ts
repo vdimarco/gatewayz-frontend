@@ -9,12 +9,12 @@ export type ModelData = {
 };
 
 export const topModels: ModelData[] = [
-  { name: 'Aether-7B', organization: 'QuantumLeap', category: 'Language', provider: 'Other', tokens: 18.5, value: '$1.2B', change: 5.2 },
   { name: 'GPT-4o', organization: 'OpenAI', category: 'Multimodal', provider: 'OpenAI', tokens: 17.2, value: '$80B', change: 12.5 },
-  { name: 'Gemini 2.1 Pro', organization: 'Google', category: 'Multimodal', provider: 'Google', tokens: 15.8, value: '$1.5T', change: 8.1 },
   { name: 'Claude 3.5 Sonnet', organization: 'Anthropic', category: 'Language', provider: 'Anthropic', tokens: 14.1, value: '$18.4B', change: 15.3 },
+  { name: 'Gemini 2.1 Pro', organization: 'Google', category: 'Multimodal', provider: 'Google', tokens: 15.8, value: '$1.5T', change: 8.1 },
   { name: 'Llama 4', organization: 'Meta', category: 'Language', provider: 'Meta', tokens: 12.9, value: '$1.2T', change: 6.7 },
   { name: 'Mistral Large 2', organization: 'Mistral', category: 'Language', provider: 'Mistral', tokens: 10.3, value: '$2B', change: 22.4 },
+  { name: 'Aether-7B', organization: 'QuantumLeap', category: 'Language', provider: 'Other', tokens: 18.5, value: '$1.2B', change: 5.2 },
   { name: 'VisionX-Pro', organization: 'DeepSight', category: 'Vision', provider: 'Other', tokens: 8.9, value: '$750M', change: -2.1 },
   { name: 'Nexus-9', organization: 'Cyberdyne', category: 'Multimodal', provider: 'Other', tokens: 7.5, value: '$5.6B', change: 3.8 },
   { name: 'Oracle-Prime', organization: 'Delphi AI', category: 'Language', provider: 'Other', tokens: 6.1, value: '$980M', change: 1.5 },
@@ -54,3 +54,37 @@ const generateMonthlyData = () => {
 };
 
 export const monthlyTokenData = generateMonthlyData();
+
+
+const generateModelDataForChart = () => {
+  const data = [];
+  const today = new Date();
+  const modelNames = topModels.map(m => m.name);
+  
+  // Base values and growth factors for each model to create some variation
+  const modelMetrics = modelNames.map((name, i) => ({
+    name,
+    base: 10 + i * 5 + Math.random() * 10,
+    growth: 1.1 + Math.random() * 0.2
+  }));
+
+  for (let i = 52; i >= 0; i--) { // 52 weeks in a year
+    const date = new Date(today.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+    const weekData: { [key: string]: any } = {
+      date: date.toISOString().split('T')[0]
+    };
+
+    modelMetrics.forEach(metric => {
+      // Calculate value based on some growth formula
+      const value = metric.base * Math.pow(metric.growth, (52 - i) / 52 * 4);
+      const noise = value * (Math.random() - 0.4) * 0.5;
+      weekData[metric.name] = Math.max(0, parseFloat((value + noise).toFixed(1)));
+    });
+    
+    data.push(weekData);
+  }
+  return data;
+};
+
+
+export const monthlyModelTokenData = generateModelDataForChart();

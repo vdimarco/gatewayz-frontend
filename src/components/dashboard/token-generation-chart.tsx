@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from 'recharts';
 import {
   Card,
   CardContent,
@@ -14,55 +14,87 @@ import {
   ChartTooltipContent,
   type ChartConfig
 } from '@/components/ui/chart';
-import { monthlyTokenData } from '@/lib/data';
+import { monthlyModelTokenData, topModels } from '@/lib/data';
 
-const chartConfig = {
-  Language: {
-    label: "Language",
-    color: "hsl(var(--chart-1))",
-  },
-  Vision: {
-    label: "Vision",
-    color: "hsl(var(--chart-2))",
-  },
-  Multimodal: {
-    label: "Multimodal",
-    color: "hsl(var(--chart-3))",
-  },
-} satisfies ChartConfig;
+const chartConfig = topModels.reduce((acc, model, index) => {
+  acc[model.name] = {
+    label: model.name,
+    color: `hsl(var(--chart-${(index % 5) + 1}))`,
+  };
+  return acc;
+}, {} as ChartConfig);
+
+chartConfig['Other'] = {
+  label: 'Other',
+  color: 'hsl(var(--muted-foreground))',
+};
 
 export default function TokenGenerationChart() {
+  const yAxisFormatter = (value: number) => {
+    if (value >= 1000) return `${value / 1000}T`;
+    if (value > 0) return `${value}B`;
+    return '0';
+  };
+
+  const legendFormatter = (value: string) => {
+    return <span className="text-xs text-muted-foreground">{value}</span>;
+  };
+  
   return (
-    <Card>
+    <Card className="border-border/40">
       <CardHeader>
-        <CardTitle>Token Generation by Category</CardTitle>
-        <CardDescription>Monthly token generation over the past year (in trillions), stacked by category</CardDescription>
+        <CardTitle>Tokens Generated</CardTitle>
+        <CardDescription>Unit: Trillions of Tokens</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[400px] w-full">
+        <ChartContainer config={chartConfig} className="h-[450px] w-full">
           <BarChart 
-            data={monthlyTokenData} 
-            margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+            data={monthlyModelTokenData} 
+            margin={{ top: 20, right: 20, bottom: 60, left: 20 }}
             accessibilityLayer
           >
-            <CartesianGrid vertical={false} />
+            <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
             <XAxis
-              dataKey="month"
+              dataKey="date"
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              interval={0}
+              tickFormatter={(value, index) => {
+                 // Show roughly 8 ticks
+                const total = monthlyModelTokenData.length;
+                const step = Math.floor(total / 8);
+                if (index % step === 0 || index === total -1) {
+                  const date = new Date(value);
+                  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                }
+                return "";
+              }}
             />
             <YAxis 
-              tickFormatter={(value) => `${value}T`}
+              tickFormatter={yAxisFormatter}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+              domain={[0, (dataMax: number) => Math.ceil(dataMax / 500) * 500]}
             />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="dot" />}
             />
-            <Bar dataKey="Language" stackId="a" fill="var(--color-Language)" radius={[0, 0, 4, 4]} />
-            <Bar dataKey="Vision" stackId="a" fill="var(--color-Vision)" radius={[0, 0, 4, 4]} />
-            <Bar dataKey="Multimodal" stackId="a" fill="var(--color-Multimodal)" radius={[4, 4, 0, 0]} />
+            <Legend content={({ payload }) => (
+                <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 absolute -bottom-10">
+                  {payload?.map((entry, index) => (
+                    <div key={`item-${index}`} className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                      <span className="text-xs text-muted-foreground">{entry.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            />
+            {Object.keys(chartConfig).map(modelName => (
+              <Bar key={modelName} dataKey={modelName} stackId="a" fill={`var(--color-${modelName})`} radius={[2, 2, 2, 2]} barSize={20} />
+            ))}
           </BarChart>
         </ChartContainer>
       </CardContent>
