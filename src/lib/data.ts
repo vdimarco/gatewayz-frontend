@@ -107,7 +107,7 @@ const modelMetrics = modelNames.map((name, i) => ({
   growth: 1.05 + Math.random() * 0.1
 }));
 
-export const yearlyModelTokenData = generateChartData(12, 'months', modelMetrics);
+export const yearlyModelTokenData = generateChartData(52, 'weeks', modelMetrics);
 export const monthlyModelTokenData = generateChartData(30, 'days', modelMetrics);
 export const weeklyModelTokenData = generateChartData(7, 'days', modelMetrics);
 
