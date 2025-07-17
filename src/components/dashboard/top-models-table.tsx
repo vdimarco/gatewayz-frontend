@@ -40,7 +40,7 @@ export default function TopModelsTable({ models }: TopModelsTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Top 10 Models</CardTitle>
+        <CardTitle>Top 20 Models</CardTitle>
         <CardDescription>Detailed comparison of leading AI models.</CardDescription>
       </CardHeader>
       <CardContent>

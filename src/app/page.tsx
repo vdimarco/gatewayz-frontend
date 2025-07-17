@@ -18,15 +18,15 @@ export default function Home() {
   const getFilteredModels = () => {
     let filtered;
     if (selectedCategory === 'All') {
-      filtered = topModels.slice(0, 10);
+      filtered = topModels.slice(0, 20);
     } else {
       filtered = topModels.filter(model => model.category === selectedCategory);
     }
     
-    if (filtered.length < 10) {
+    if (filtered.length < 20) {
       const existingNames = new Set(topModels.map(m => m.name));
       const newModels: ModelData[] = [];
-      while (filtered.length + newModels.length < 10) {
+      while (filtered.length + newModels.length < 20) {
           const name = faker.company.name() + ' ' + faker.science.chemicalElement().name;
           if (!existingNames.has(name)) {
               newModels.push({
@@ -44,7 +44,7 @@ export default function Home() {
       filtered = [...filtered, ...newModels];
     }
     
-    return filtered.slice(0, 10);
+    return filtered.slice(0, 20);
   };
 
   const filteredModels = getFilteredModels();

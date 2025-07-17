@@ -23,13 +23,37 @@ interface TokenGenerationChartProps {
 }
 
 export default function TokenGenerationChart({ models }: TokenGenerationChartProps) {
-  const chartConfig = models.reduce((acc, model, index) => {
-    acc[model.name] = {
-      label: model.name,
-      color: `hsl(var(--chart-${(index % 10) + 1}))`,
+    const top10Models = models.slice(0, 10);
+    const otherModels = models.slice(10, 20);
+
+    const chartData = monthlyModelTokenData.map(monthData => {
+        const newMonthData = { ...monthData };
+        
+        let othersTotal = 0;
+        otherModels.forEach(model => {
+            if (newMonthData[model.name]) {
+                othersTotal += newMonthData[model.name];
+                delete newMonthData[model.name];
+            }
+        });
+        
+        newMonthData['Others'] = othersTotal;
+        return newMonthData;
+    });
+
+
+    const chartConfig = top10Models.reduce((acc, model, index) => {
+        acc[model.name] = {
+            label: model.name,
+            color: `hsl(var(--chart-${(index % 10) + 1}))`,
+        };
+        return acc;
+    }, {} as ChartConfig);
+
+    chartConfig['Others'] = {
+        label: 'Others',
+        color: 'hsl(var(--muted-foreground))',
     };
-    return acc;
-  }, {} as ChartConfig);
   
   const yAxisFormatter = (value: number) => {
     if (value >= 1000) return `${value / 1000}T`;
@@ -46,7 +70,7 @@ export default function TokenGenerationChart({ models }: TokenGenerationChartPro
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[450px] w-full">
           <BarChart 
-            data={monthlyModelTokenData} 
+            data={chartData} 
             margin={{ top: 20, right: 20, bottom: 60, left: 20 }}
             accessibilityLayer
           >
