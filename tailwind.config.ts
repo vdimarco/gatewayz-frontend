@@ -65,6 +65,11 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        gradient: {
+          orange: '#ff7e5f',
+          green: '#76b852',
+          blue: '#4facfe',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -88,11 +93,23 @@ export default {
             height: '0',
           },
         },
+        'gradient-spin': {
+          '0%': { '--gradient-angle': '0deg' },
+          '100%': { '--gradient-angle': '360deg' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'gradient-spin': 'gradient-spin 2.5s linear infinite',
       },
+      // This is needed to register the custom property
+      // @ts-ignore
+      '@property --gradient-angle': {
+        syntax: '<angle>',
+        inherits: false,
+        initialValue: '0deg'
+      }
     },
   },
   plugins: [require('tailwindcss-animate')],

@@ -70,7 +70,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-[180px] justify-between">
+                <Button variant="outline-gradient" className="w-[180px] justify-between">
                   {timeRangeLabels[selectedTimeRange]} <ChevronDown />
                 </Button>
               </DropdownMenuTrigger>
@@ -82,7 +82,7 @@ export default function Home() {
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-[240px] justify-between">
+                <Button variant="outline-gradient" className="w-[240px] justify-between">
                   Sort By: {selectedCategory} <ChevronDown />
                 </Button>
               </DropdownMenuTrigger>

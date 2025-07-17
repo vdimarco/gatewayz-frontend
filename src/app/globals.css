@@ -96,3 +96,30 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .btn-gradient-border {
+    @apply relative bg-background border border-input;
+  }
+
+  .btn-gradient-border::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    margin: -2px; /* border thickness */
+    border-radius: inherit; /* inherit parent's border radius */
+    background: conic-gradient(from var(--gradient-angle), theme('colors.gradient.blue'), theme('colors.gradient.green'), theme('colors.gradient.orange'), theme('colors.gradient.blue'));
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  .btn-gradient-border:hover::before,
+  .btn-gradient-border:focus-visible::before {
+    opacity: 1;
+    animation: gradient-spin 2.5s linear infinite;
+  }
+}
