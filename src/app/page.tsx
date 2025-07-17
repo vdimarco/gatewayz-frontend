@@ -9,6 +9,7 @@ import { ChevronDown } from 'lucide-react';
 import type { ModelData } from '@/lib/data';
 import { topModels } from '@/lib/data';
 import { faker } from '@faker-js/faker';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const categories: ModelData['category'][] = ['Language', 'Vision', 'Multimodal', 'Audio & Speech Models', 'Code Models', 'Reinforcement Learning Agents', 'Embedding Models', 'Scientific/Domain-Specific Models'];
 
@@ -18,30 +19,18 @@ export default function Home() {
   const getFilteredModels = () => {
     let filtered;
     if (selectedCategory === 'All') {
-      filtered = topModels.slice(0, 20);
+      filtered = [...topModels];
     } else {
       filtered = topModels.filter(model => model.category === selectedCategory);
     }
     
-    if (filtered.length < 20) {
-      const existingNames = new Set(topModels.map(m => m.name));
-      const newModels: ModelData[] = [];
-      while (filtered.length + newModels.length < 20) {
-          const name = faker.company.name() + ' ' + faker.science.chemicalElement().name;
-          if (!existingNames.has(name)) {
-              newModels.push({
-                  name,
-                  organization: faker.company.name(),
-                  category: selectedCategory === 'All' ? 'Language' : selectedCategory,
-                  provider: 'Other',
-                  tokens: faker.number.float({ min: 5, max: 20, precision: 0.1 }),
-                  value: `$${faker.number.int({ min: 1, max: 999 })}M`,
-                  change: faker.number.float({ min: -10, max: 20, precision: 0.1 }),
-              });
-              existingNames.add(name);
-          }
-      }
-      filtered = [...filtered, ...newModels];
+    // Ensure there are at least 10 models for any category view
+    if (filtered.length < 10 && selectedCategory !== 'All') {
+        const additionalModels = topModels
+            .filter(m => m.category !== selectedCategory && !filtered.find(f => f.name === m.name)) // get models from other cats
+            .slice(0, 10 - filtered.length); // get only what's needed
+        filtered.push(...additionalModels);
+        filtered.sort((a,b) => b.tokens - a.tokens); // re-sort with the new models
     }
     
     return filtered.slice(0, 20);
@@ -90,7 +79,9 @@ export default function Home() {
             </DropdownMenu>
           </div>
         </div>
-        <ModelInsightsDashboard models={filteredModels} />
+        <TooltipProvider>
+          <ModelInsightsDashboard models={filteredModels} />
+        </TooltipProvider>
       </div>
     </main>
   );
