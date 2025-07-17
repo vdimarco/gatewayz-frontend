@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, CartesianGrid, Legend, XAxis, YAxis } from 'recharts';
 import {
   Card,
   CardContent,
@@ -85,7 +85,7 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[450px] w-full">
-          <BarChart 
+          <AreaChart 
             data={chartData} 
             margin={{ top: 20, right: 20, bottom: 60, left: 20 }}
             accessibilityLayer
@@ -107,8 +107,8 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
               domain={[0, (dataMax: number) => Math.ceil(dataMax / 500) * 500]}
             />
             <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="dot" />}
+              cursor={true}
+              content={<ChartTooltipContent indicator="line" />}
             />
             <Legend content={({ payload }) => (
                 <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 absolute -bottom-10 left-0 right-0">
@@ -121,10 +121,42 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
                 </div>
               )}
             />
+            <defs>
+              {Object.keys(chartConfig).map((modelName) => (
+                <linearGradient
+                  key={modelName}
+                  id={`fill${modelName.replace(/[^a-zA-Z0-9]/g, '')}`}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop
+                    offset="5%"
+                    stopColor={`var(--color-${modelName})`}
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor={`var(--color-${modelName})`}
+                    stopOpacity={0.1}
+                  />
+                </linearGradient>
+              ))}
+            </defs>
             {Object.keys(chartConfig).map(modelName => (
-              <Bar key={modelName} dataKey={modelName} stackId="a" fill={`var(--color-${modelName})`} radius={[2, 2, 2, 2]} barSize={20} />
+              <Area 
+                key={modelName}
+                type="natural"
+                dataKey={modelName} 
+                stackId="a" 
+                stroke={`var(--color-${modelName})`}
+                strokeWidth={2}
+                fillOpacity={1}
+                fill={`url(#fill${modelName.replace(/[^a-zA-Z0-9]/g, '')})`}
+              />
             ))}
-          </BarChart>
+          </AreaChart>
         </ChartContainer>
       </CardContent>
     </Card>
