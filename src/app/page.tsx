@@ -8,18 +8,41 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ChevronDown } from 'lucide-react';
 import type { ModelData } from '@/lib/data';
 import { topModels } from '@/lib/data';
+import { faker } from '@faker-js/faker';
 
-const categories: ModelData['category'][] = ['Language', 'Vision', 'Multimodal'];
+const categories: ModelData['category'][] = ['Language', 'Vision', 'Multimodal', 'Audio & Speech Models', 'Code Models', 'Reinforcement Learning Agents', 'Embedding Models', 'Scientific/Domain-Specific Models'];
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<ModelData['category'] | 'All'>('All');
 
   const getFilteredModels = () => {
+    let filtered;
     if (selectedCategory === 'All') {
-      return topModels.slice(0, 10);
+      filtered = topModels.slice(0, 10);
+    } else {
+      filtered = topModels.filter(model => model.category === selectedCategory);
     }
-
-    const filtered = topModels.filter(model => model.category === selectedCategory);
+    
+    if (filtered.length < 10) {
+      const existingNames = new Set(topModels.map(m => m.name));
+      const newModels: ModelData[] = [];
+      while (filtered.length + newModels.length < 10) {
+          const name = faker.company.name() + ' ' + faker.science.chemicalElement().name;
+          if (!existingNames.has(name)) {
+              newModels.push({
+                  name,
+                  organization: faker.company.name(),
+                  category: selectedCategory === 'All' ? 'Language' : selectedCategory,
+                  provider: 'Other',
+                  tokens: faker.number.float({ min: 5, max: 20, precision: 0.1 }),
+                  value: `$${faker.number.int({ min: 1, max: 999 })}M`,
+                  change: faker.number.float({ min: -10, max: 20, precision: 0.1 }),
+              });
+              existingNames.add(name);
+          }
+      }
+      filtered = [...filtered, ...newModels];
+    }
     
     return filtered.slice(0, 10);
   };
@@ -47,11 +70,11 @@ export default function Home() {
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-[180px] justify-between">
+                <Button variant="outline" className="w-[240px] justify-between">
                   Sort By: {selectedCategory} <ChevronDown />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent className="max-h-80 overflow-y-auto">
                  <DropdownMenuItem onSelect={() => setSelectedCategory('All')}>
                   All
                 </DropdownMenuItem>

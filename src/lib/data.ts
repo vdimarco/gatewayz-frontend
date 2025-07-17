@@ -1,7 +1,7 @@
 export type ModelData = {
   name: string;
   organization: string;
-  category: 'Language' | 'Vision' | 'Multimodal';
+  category: 'Language' | 'Vision' | 'Multimodal' | 'Audio & Speech Models' | 'Code Models' | 'Reinforcement Learning Agents' | 'Embedding Models' | 'Scientific/Domain-Specific Models';
   provider: 'OpenAI' | 'Google' | 'Anthropic' | 'Meta' | 'Mistral' | 'Other';
   tokens: number;
   value: string;
@@ -44,6 +44,41 @@ export const topModels: ModelData[] = [
   { name: 'DINOv2', organization: 'Meta', category: 'Vision', provider: 'Meta', tokens: 9.5, value: '$1.2T', change: 5.5 },
   { name: 'Segment Anything', organization: 'Meta', category: 'Vision', provider: 'Meta', tokens: 11.2, value: '$1.2T', change: 6.8 },
   { name: 'YOLO-World', organization: 'Tencent', category: 'Vision', provider: 'Other', tokens: 6.5, value: '$400B', change: 16.7 },
+
+  // Audio & Speech Models
+  { name: 'Whisper', organization: 'OpenAI', category: 'Audio & Speech Models', provider: 'OpenAI', tokens: 11.1, value: '$80B', change: 9.8 },
+  { name: 'Voicebox', organization: 'Meta', category: 'Audio & Speech Models', provider: 'Meta', tokens: 8.3, value: '$1.2T', change: 5.4 },
+  { name: 'Seamless', organization: 'Meta', category: 'Audio & Speech Models', provider: 'Meta', tokens: 7.9, value: '$1.2T', change: 11.2 },
+  { name: 'AudioPaLM', organization: 'Google', category: 'Audio & Speech Models', provider: 'Google', tokens: 9.5, value: '$1.5T', change: 7.1 },
+  { name: 'Sonix-Pro', organization: 'Echo AI', category: 'Audio & Speech Models', provider: 'Other', tokens: 6.8, value: '$300M', change: 14.3 },
+
+  // Code Models
+  { name: 'Codex', organization: 'OpenAI', category: 'Code Models', provider: 'OpenAI', tokens: 13.2, value: '$80B', change: 11.5 },
+  { name: 'Code Llama', organization: 'Meta', category: 'Code Models', provider: 'Meta', tokens: 10.5, value: '$1.2T', change: 8.2 },
+  { name: 'AlphaCode 2', organization: 'Google', category: 'Code Models', provider: 'Google', tokens: 14.8, value: '$1.5T', change: 9.9 },
+  { name: 'StarCoder 2', organization: 'Hugging Face', category: 'Code Models', provider: 'Other', tokens: 9.2, value: '$4.5B', change: 15.1 },
+  { name: 'Devin', organization: 'Cognition', category: 'Code Models', provider: 'Other', tokens: 19.1, value: '$2B', change: 25.0 },
+
+  // Reinforcement Learning Agents
+  { name: 'AlphaGo', organization: 'Google', category: 'Reinforcement Learning Agents', provider: 'Google', tokens: 20.0, value: '$1.5T', change: 5.0 },
+  { name: 'MuZero', organization: 'Google', category: 'Reinforcement Learning Agents', provider: 'Google', tokens: 18.2, value: '$1.5T', change: 7.3 },
+  { name: 'Agent57', organization: 'Google', category: 'Reinforcement Learning Agents', provider: 'Google', tokens: 17.5, value: '$1.5T', change: 6.1 },
+  { name: 'SimPLe', organization: 'Berkeley', category: 'Reinforcement Learning Agents', provider: 'Other', tokens: 12.1, value: '$10M', change: 12.8 },
+  { name: 'Nexus-RL', organization: 'Cyberdyne', category: 'Reinforcement Learning Agents', provider: 'Other', tokens: 15.5, value: '$5.6B', change: 8.5 },
+
+  // Embedding Models
+  { name: 'text-embedding-3', organization: 'OpenAI', category: 'Embedding Models', provider: 'OpenAI', tokens: 9.9, value: '$80B', change: 4.2 },
+  { name: 'Universal Sentence Encoder', organization: 'Google', category: 'Embedding Models', provider: 'Google', tokens: 8.8, value: '$1.5T', change: 3.9 },
+  { name: 'E5', organization: 'Microsoft', category: 'Embedding Models', provider: 'Other', tokens: 9.1, value: '$3T', change: 6.6 },
+  { name: 'BGE', organization: 'BAAI', category: 'Embedding Models', provider: 'Other', tokens: 8.5, value: '$50M', change: 10.1 },
+  { name: 'Voyage-02', organization: 'Voyage AI', category: 'Embedding Models', provider: 'Other', tokens: 9.5, value: '$100M', change: 13.3 },
+
+  // Scientific/Domain-Specific Models
+  { name: 'AlphaFold 3', organization: 'Google', category: 'Scientific/Domain-Specific Models', provider: 'Google', tokens: 16.3, value: '$1.5T', change: 11.8 },
+  { name: 'Galactica', organization: 'Meta', category: 'Scientific/Domain-Specific Models', provider: 'Meta', tokens: 12.4, value: '$1.2T', change: 7.7 },
+  { name: 'SciBERT', organization: 'AllenAI', category: 'Scientific/Domain-Specific Models', provider: 'Other', tokens: 10.2, value: '$150M', change: 9.2 },
+  { name: 'BioMedLM', organization: 'Stanford', category: 'Scientific/Domain-Specific Models', provider: 'Other', tokens: 11.8, value: '$25M', change: 14.5 },
+  { name: 'ClimateBERT', organization: 'ETH Zurich', category: 'Scientific/Domain-Specific Models', provider: 'Other', tokens: 9.7, value: '$12M', change: 8.1 },
 ];
 
 export const chartData = topModels.map(model => ({
@@ -89,8 +124,8 @@ const generateModelDataForChart = () => {
   // Base values and growth factors for each model to create some variation
   const modelMetrics = modelNames.map((name, i) => ({
     name,
-    base: 10 + i * 2 + Math.random() * 5,
-    growth: 1.05 + Math.random() * 0.15
+    base: 10 + i * 0.5 + Math.random() * 5,
+    growth: 1.05 + Math.random() * 0.1
   }));
 
   for (let i = 52; i >= 0; i--) { // 52 weeks in a year

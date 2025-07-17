@@ -9,13 +9,18 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { ModelData } from '@/lib/data';
-import { ArrowUp, ArrowDown, Bot, Building, Eye, MessageSquare, Boxes, Server, Box } from 'lucide-react';
+import { ArrowUp, ArrowDown, Bot, Building, Eye, MessageSquare, Boxes, Server, Box, Code, Sliders, Puzzle, Dna, Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const categoryIcons: Record<ModelData['category'], React.ElementType> = {
   Language: MessageSquare,
   Vision: Eye,
   Multimodal: Boxes,
+  'Audio & Speech Models': Mic,
+  'Code Models': Code,
+  'Reinforcement Learning Agents': Puzzle,
+  'Embedding Models': Sliders,
+  'Scientific/Domain-Specific Models': Dna,
 };
 
 const providerIcons: Record<ModelData['provider'], React.ElementType> = {
