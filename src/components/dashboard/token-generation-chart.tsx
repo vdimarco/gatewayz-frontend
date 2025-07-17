@@ -79,7 +79,7 @@ export default function TokenGenerationChart({ models }: TokenGenerationChartPro
               content={<ChartTooltipContent indicator="dot" />}
             />
             <Legend content={({ payload }) => (
-                <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 absolute -bottom-10">
+                <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 absolute -bottom-10 left-0 right-0">
                   {payload?.map((entry, index) => (
                     <div key={`item-${index}`} className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
