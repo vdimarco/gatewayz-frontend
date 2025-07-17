@@ -16,29 +16,12 @@ export default function Home() {
 
   const getFilteredModels = () => {
     if (selectedCategory === 'All') {
-      return topModels;
+      return topModels.slice(0, 10);
     }
 
     const filtered = topModels.filter(model => model.category === selectedCategory);
-
-    if (filtered.length < 10) {
-      const needed = 10 - filtered.length;
-      const placeholderModels: ModelData[] = [];
-      for (let i = 1; i <= needed; i++) {
-        placeholderModels.push({
-          name: `${selectedCategory} Model ${i + filtered.length}`,
-          organization: 'Generated Inc.',
-          category: selectedCategory,
-          provider: 'Other',
-          tokens: Math.round((Math.random() * 10 + 5) * 10) / 10,
-          value: `$${Math.floor(Math.random() * 500) + 100}M`,
-          change: Math.round((Math.random() * 20 - 10) * 10) / 10,
-        });
-      }
-      return [...filtered, ...placeholderModels];
-    }
-
-    return filtered;
+    
+    return filtered.slice(0, 10);
   };
 
   const filteredModels = getFilteredModels();
