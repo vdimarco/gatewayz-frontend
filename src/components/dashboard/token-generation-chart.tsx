@@ -26,7 +26,7 @@ export default function TokenGenerationChart({ models }: TokenGenerationChartPro
   const chartConfig = models.reduce((acc, model, index) => {
     acc[model.name] = {
       label: model.name,
-      color: `hsl(var(--chart-${(index % 5) + 1}))`,
+      color: `hsl(var(--chart-${(index % 10) + 1}))`,
     };
     return acc;
   }, {} as ChartConfig);
