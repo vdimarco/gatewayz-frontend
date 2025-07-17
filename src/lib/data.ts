@@ -71,70 +71,62 @@ export const topModels: ModelData[] = [
 ].sort((a, b) => b.tokens - a.tokens);
 
 
-export const chartData = topModels.map(model => ({
-  name: model.name,
-  tokens: model.tokens,
-}));
-
-// Function to get short month name and year
-const getMonthYear = (date: Date) => {
-  return date.toLocaleString('default', { month: 'short', year: '2-digit' }).replace(' ', ' \'');
-};
-
-const generateMonthlyData = () => {
+const generateChartData = (numPoints: number, timeUnit: 'days' | 'weeks' | 'months', modelMetrics: any[]) => {
   const data = [];
   const today = new Date();
-  for (let i = 11; i >= 0; i--) {
-    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-    const monthYear = getMonthYear(date);
 
-    // Some plausible random data with upward trend
-    const baseLanguage = 20 + i * 1.5;
-    const baseVision = 5 + i * 0.8;
-    const baseMultimodal = 8 + i * 1.2;
-
-    data.push({
-      month: monthYear,
-      Language: parseFloat((baseLanguage + Math.random() * 5).toFixed(1)),
-      Vision: parseFloat((baseVision + Math.random() * 3).toFixed(1)),
-      Multimodal: parseFloat((baseMultimodal + Math.random() * 4).toFixed(1)),
-    });
-  }
-  return data;
-};
-
-export const monthlyTokenData = generateMonthlyData();
-
-
-const generateModelDataForChart = () => {
-  const data = [];
-  const today = new Date();
-  const modelNames = topModels.map(m => m.name);
-  
-  // Base values and growth factors for each model to create some variation
-  const modelMetrics = modelNames.map((name, i) => ({
-    name,
-    base: 10 + i * 0.5 + Math.random() * 5,
-    growth: 1.05 + Math.random() * 0.1
-  }));
-
-  for (let i = 52; i >= 0; i--) { // 52 weeks in a year
-    const date = new Date(today.getTime() - i * 7 * 24 * 60 * 60 * 1000);
-    const weekData: { [key: string]: any } = {
+  for (let i = numPoints - 1; i >= 0; i--) {
+    let date;
+    if (timeUnit === 'days') {
+      date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+    } else if (timeUnit === 'weeks') {
+      date = new Date(today.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+    } else { // months
+      date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    }
+    
+    const dataPoint: { [key: string]: any } = {
       date: date.toISOString().split('T')[0]
     };
 
     modelMetrics.forEach(metric => {
-      // Calculate value based on some growth formula
-      const value = metric.base * Math.pow(metric.growth, (52 - i) / 52 * 4);
+      const value = metric.base * Math.pow(metric.growth, (numPoints - i) / numPoints);
       const noise = value * (Math.random() - 0.4) * 0.3;
-      weekData[metric.name] = Math.max(0, parseFloat((value + noise).toFixed(1)));
+      dataPoint[metric.name] = Math.max(0, parseFloat((value + noise).toFixed(1)));
     });
     
-    data.push(weekData);
+    data.push(dataPoint);
   }
   return data;
 };
 
+const modelNames = topModels.map(m => m.name);
+const modelMetrics = modelNames.map((name, i) => ({
+  name,
+  base: 10 + i * 0.5 + Math.random() * 5,
+  growth: 1.05 + Math.random() * 0.1
+}));
 
-export const monthlyModelTokenData = generateModelDataForChart();
+export const yearlyModelTokenData = generateChartData(12, 'months', modelMetrics);
+export const monthlyModelTokenData = generateChartData(30, 'days', modelMetrics);
+export const weeklyModelTokenData = generateChartData(7, 'days', modelMetrics);
+
+export const adjustModelDataForTimeRange = (models: ModelData[], timeRange: 'year' | 'month' | 'week'): ModelData[] => {
+  const multiplier = {
+    year: 1,
+    month: 1/12,
+    week: 1/52,
+  };
+
+  const changeVolatility = {
+    year: 1,
+    month: 2.5,
+    week: 4,
+  }
+
+  return models.map(model => ({
+    ...model,
+    tokens: parseFloat((model.tokens * multiplier[timeRange] * (1 + (Math.random() - 0.5) * 0.1)).toFixed(1)),
+    change: parseFloat((model.change * (1 + (Math.random() - 0.5) * changeVolatility[timeRange])).toFixed(1)),
+  })).sort((a, b) => b.tokens - a.tokens);
+};

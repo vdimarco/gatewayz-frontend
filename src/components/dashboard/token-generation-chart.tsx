@@ -15,30 +15,32 @@ import {
   ChartTooltipContent,
   type ChartConfig
 } from '@/components/ui/chart';
-import { monthlyModelTokenData } from '@/lib/data';
 import type { ModelData } from '@/lib/data';
+import { format } from 'date-fns';
 
 interface TokenGenerationChartProps {
   models: ModelData[];
+  chartData: any[];
+  timeRange: 'year' | 'month' | 'week';
 }
 
-export default function TokenGenerationChart({ models }: TokenGenerationChartProps) {
+export default function TokenGenerationChart({ models, chartData: rawChartData, timeRange }: TokenGenerationChartProps) {
     const top10Models = models.slice(0, 10);
     const otherModels = models.slice(10, 20);
 
-    const chartData = monthlyModelTokenData.map(monthData => {
-        const newMonthData = { ...monthData };
+    const chartData = rawChartData.map(dataPoint => {
+        const newDataPoint = { ...dataPoint };
         
         let othersTotal = 0;
         otherModels.forEach(model => {
-            if (newMonthData[model.name]) {
-                othersTotal += newMonthData[model.name];
-                delete newMonthData[model.name];
+            if (newDataPoint[model.name]) {
+                othersTotal += newDataPoint[model.name];
+                delete newDataPoint[model.name];
             }
         });
         
-        newMonthData['Others'] = othersTotal;
-        return newMonthData;
+        newDataPoint['Others'] = othersTotal;
+        return newDataPoint;
     });
 
 
@@ -60,6 +62,20 @@ export default function TokenGenerationChart({ models }: TokenGenerationChartPro
     if (value > 0) return `${value}B`;
     return '0';
   };
+
+  const xAxisFormatter = (value: string) => {
+    const date = new Date(value);
+    switch (timeRange) {
+        case 'year':
+            return format(date, 'MMM');
+        case 'month':
+            return format(date, 'd');
+        case 'week':
+            return format(date, 'EEE');
+        default:
+            return value;
+    }
+  };
   
   return (
     <Card className="border-border/40">
@@ -80,16 +96,8 @@ export default function TokenGenerationChart({ models }: TokenGenerationChartPro
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              tickFormatter={(value, index) => {
-                 // Show roughly 8 ticks
-                const total = monthlyModelTokenData.length;
-                const step = Math.floor(total / 8);
-                if (index % step === 0 || index === total -1) {
-                  const date = new Date(value);
-                  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                }
-                return "";
-              }}
+              tickFormatter={xAxisFormatter}
+              interval="preserveStartEnd"
             />
             <YAxis 
               tickFormatter={yAxisFormatter}

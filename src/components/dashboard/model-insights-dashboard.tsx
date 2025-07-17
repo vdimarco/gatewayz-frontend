@@ -4,13 +4,15 @@ import type { ModelData } from '@/lib/data';
 
 interface ModelInsightsDashboardProps {
   models: ModelData[];
+  chartData: any[];
+  timeRange: 'year' | 'month' | 'week';
 }
 
-export default function ModelInsightsDashboard({ models }: ModelInsightsDashboardProps) {
+export default function ModelInsightsDashboard({ models, chartData, timeRange }: ModelInsightsDashboardProps) {
   return (
     <div className="grid grid-cols-1 gap-8">
       <div className="flex flex-col gap-8">
-        <TokenGenerationChart models={models} />
+        <TokenGenerationChart models={models} chartData={chartData} timeRange={timeRange} />
         <TopModelsTable models={models} />
       </div>
     </div>
