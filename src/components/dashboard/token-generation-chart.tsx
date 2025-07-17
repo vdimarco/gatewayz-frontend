@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from 'recharts';
@@ -14,30 +15,26 @@ import {
   ChartTooltipContent,
   type ChartConfig
 } from '@/components/ui/chart';
-import { monthlyModelTokenData, topModels } from '@/lib/data';
+import { monthlyModelTokenData } from '@/lib/data';
+import type { ModelData } from '@/lib/data';
 
-const chartConfig = topModels.reduce((acc, model, index) => {
-  acc[model.name] = {
-    label: model.name,
-    color: `hsl(var(--chart-${(index % 5) + 1}))`,
-  };
-  return acc;
-}, {} as ChartConfig);
+interface TokenGenerationChartProps {
+  models: ModelData[];
+}
 
-chartConfig['Other'] = {
-  label: 'Other',
-  color: 'hsl(var(--muted-foreground))',
-};
-
-export default function TokenGenerationChart() {
+export default function TokenGenerationChart({ models }: TokenGenerationChartProps) {
+  const chartConfig = models.reduce((acc, model, index) => {
+    acc[model.name] = {
+      label: model.name,
+      color: `hsl(var(--chart-${(index % 5) + 1}))`,
+    };
+    return acc;
+  }, {} as ChartConfig);
+  
   const yAxisFormatter = (value: number) => {
     if (value >= 1000) return `${value / 1000}T`;
     if (value > 0) return `${value}B`;
     return '0';
-  };
-
-  const legendFormatter = (value: string) => {
-    return <span className="text-xs text-muted-foreground">{value}</span>;
   };
   
   return (

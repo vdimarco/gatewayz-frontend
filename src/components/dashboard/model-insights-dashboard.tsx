@@ -10,7 +10,7 @@ export default function ModelInsightsDashboard({ models }: ModelInsightsDashboar
   return (
     <div className="grid grid-cols-1 gap-8">
       <div className="flex flex-col gap-8">
-        <TokenGenerationChart />
+        <TokenGenerationChart models={models} />
         <TopModelsTable models={models} />
       </div>
     </div>
