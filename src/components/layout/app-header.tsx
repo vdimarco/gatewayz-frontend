@@ -26,9 +26,8 @@ export function AppHeader() {
         
         <div className="flex items-center gap-4">
           <nav className="flex items-center gap-6 text-sm">
-            <Link href="#" className="transition-colors hover:text-foreground/80 text-foreground/60">Developers</Link>
+            <Link href="#" className="transition-colors hover:text-foreground/80 text-foreground/60">Models</Link>
             <Link href="#" className="transition-colors hover:text-foreground/80 text-foreground/60">Rankings</Link>
-            <Link href="#" className="transition-colors hover:text-foreground/80 text-foreground/60">Portfolio</Link>
           </nav>
           <ThemeToggle />
         </div>
