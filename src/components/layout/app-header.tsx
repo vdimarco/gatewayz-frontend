@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import Link from 'next/link';
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function AppHeader() {
   return (
@@ -17,7 +18,7 @@ export function AppHeader() {
             </svg>
             <span className="font-bold sm:inline-block">MODELZ</span>
           </Link>
-           <div className="relative w-full max-w-sm">
+           <div className="relative hidden sm:block w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input type="search" placeholder="Search..." className="pl-9 pr-4 h-9" />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground border rounded-sm px-1.5 py-0.5">/</div>
@@ -29,9 +30,31 @@ export function AppHeader() {
             <Link href="/models" className="transition-colors hover:text-foreground/80 text-foreground/60">Models</Link>
             <Link href="/rankings" className="transition-colors hover:text-foreground/80 text-foreground/60">Rankings</Link>
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2">
             <Button variant="outline">Sign In</Button>
             <ThemeToggle />
+          </div>
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <div className="p-4">
+                  <nav className="flex flex-col gap-4 text-lg">
+                    <Link href="/models" className="transition-colors hover:text-foreground/80 text-foreground/60">Models</Link>
+                    <Link href="/rankings" className="transition-colors hover:text-foreground/80 text-foreground/60">Rankings</Link>
+                  </nav>
+                  <div className="mt-6 flex flex-col gap-2">
+                     <Button variant="outline">Sign In</Button>
+                     <ThemeToggle />
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>

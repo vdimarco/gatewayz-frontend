@@ -27,18 +27,18 @@ export default function RankingsPage() {
   return (
     <main className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-screen-2xl">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-semibold tracking-tight">LLM Rankings</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline-gradient" className="w-[180px] justify-between">
+                <Button variant="outline-gradient" className="w-full sm:w-[180px] justify-between">
                   {timeRangeLabels[selectedTimeRange]} <ChevronDown />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[180px]">
+              <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
                 <DropdownMenuItem onSelect={() => setSelectedTimeRange('year')}>Top This Year</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setSelectedTimeRange('month')}>Top This Month</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setSelectedTimeRange('week')}>Top This Week</DropdownMenuItem>
@@ -46,11 +46,11 @@ export default function RankingsPage() {
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline-gradient" className="w-[240px] justify-between">
+                <Button variant="outline-gradient" className="w-full sm:w-[240px] justify-between">
                   Sort By: {selectedCategory} <ChevronDown />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[240px] max-h-80 overflow-y-auto">
+              <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] max-h-80 overflow-y-auto">
                  <DropdownMenuItem onSelect={() => setSelectedCategory('All')}>
                   All
                 </DropdownMenuItem>
