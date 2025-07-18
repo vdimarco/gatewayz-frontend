@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ModelData } from '@/lib/data';
-import { ArrowUp, ArrowDown, Bot, Building, Eye, MessageSquare, Boxes, Server, Box, Code, Sliders, Puzzle, Dna, Mic } from 'lucide-react';
+import { ArrowUp, ArrowDown, Bot, Building, Eye, MessageSquare, Boxes, Server, Box, Code, Sliders, Puzzle, Dna, Mic, Minus, Triangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const categoryIcons: Record<ModelData['category'], React.ElementType> = {
@@ -79,7 +79,7 @@ export default function TopModelsTable({ models }: TopModelsTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]">Rank</TableHead>
+              <TableHead className="w-[80px]">Rank</TableHead>
               <TableHead>Model</TableHead>
               <TableHead className="hidden sm:table-cell">Organization</TableHead>
               <TableHead>Category</TableHead>
@@ -95,9 +95,25 @@ export default function TopModelsTable({ models }: TopModelsTableProps) {
               const isPositiveChange = model.change >= 0;
               const rank = index + 1;
 
+              const getPositionChangeColor = () => {
+                if (model.positionChange > 0) return 'text-green-400';
+                if (model.positionChange < 0) return 'text-red-400';
+                return 'text-muted-foreground';
+              };
+
               return (
                 <TableRow key={model.name}>
-                  <TableCell className="font-bold text-center">{rank}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className={cn("flex items-center gap-1 text-xs w-6", getPositionChangeColor())}>
+                        {model.positionChange !== 0 && (
+                           <Triangle className={cn("h-2 w-2 fill-current", model.positionChange > 0 ? 'transform rotate-180' : '')} />
+                        )}
+                        {model.positionChange !== 0 ? Math.abs(model.positionChange) : <Minus className="h-2 w-2" />}
+                      </div>
+                      <span className="font-bold text-lg">{rank}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
                       <Bot className="h-4 w-4 text-muted-foreground" />

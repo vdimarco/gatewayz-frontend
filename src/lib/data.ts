@@ -8,61 +8,62 @@ export type ModelData = {
   tokens: number;
   value: string;
   change: number;
+  positionChange: number;
 };
 
 export const topModels: ModelData[] = [
   // Multimodal (5 models)
-  { name: 'GPT-4o', organization: 'OpenAI', category: 'Multimodal', subCategories: ['Text', 'Image', 'Audio', 'Video'], provider: 'OpenAI', tokens: 20.0, value: '$86B', change: 15.2 },
-  { name: 'Gemini 2.1 Pro', organization: 'Google', category: 'Multimodal', subCategories: ['Text', 'Image', 'Audio'], provider: 'Google', tokens: 19.5, value: '$2T', change: 9.8 },
-  { name: 'Claude 3.5 Sonnet', organization: 'Anthropic', category: 'Multimodal', subCategories: ['Text', 'Image'], provider: 'Anthropic', tokens: 19.2, value: '$20B', change: 25.1 },
-  { name: 'CogVLM 2', organization: 'THUDM', category: 'Multimodal', subCategories: ['Text', 'Image'], provider: 'Other', tokens: 10.4, value: '$300M', change: 8.8 },
-  { name: 'Llava-NeXT', organization: 'Various', category: 'Multimodal', subCategories: ['Text', 'Image'], provider: 'Other', tokens: 9.9, value: '$50M', change: 7.3 },
+  { name: 'GPT-4o', organization: 'OpenAI', category: 'Multimodal', subCategories: ['Text', 'Image', 'Audio', 'Video'], provider: 'OpenAI', tokens: 20.0, value: '$86B', change: 15.2, positionChange: 1 },
+  { name: 'Gemini 2.1 Pro', organization: 'Google', category: 'Multimodal', subCategories: ['Text', 'Image', 'Audio'], provider: 'Google', tokens: 19.5, value: '$2T', change: 9.8, positionChange: -1 },
+  { name: 'Claude 3.5 Sonnet', organization: 'Anthropic', category: 'Multimodal', subCategories: ['Text', 'Image'], provider: 'Anthropic', tokens: 19.2, value: '$20B', change: 25.1, positionChange: 3 },
+  { name: 'CogVLM 2', organization: 'THUDM', category: 'Multimodal', subCategories: ['Text', 'Image'], provider: 'Other', tokens: 10.4, value: '$300M', change: 8.8, positionChange: 0 },
+  { name: 'Llava-NeXT', organization: 'Various', category: 'Multimodal', subCategories: ['Text', 'Image'], provider: 'Other', tokens: 9.9, value: '$50M', change: 7.3, positionChange: 2 },
 
   // Language (6 models)
-  { name: 'Llama 3.1 405B', organization: 'Meta', category: 'Language', provider: 'Meta', tokens: 18.8, value: '$1.3T', change: 12.5 },
-  { name: 'Mistral Large 2', organization: 'Mistral', category: 'Language', provider: 'Mistral', tokens: 17.5, value: '$6B', change: 30.2 },
-  { name: 'Gemma 2 27B', organization: 'Google', category: 'Language', provider: 'Google', tokens: 16.8, value: '$2T', change: 8.5 },
-  { name: 'Command R+', organization: 'Cohere', category: 'Language', provider: 'Other', tokens: 16.5, value: '$5B', change: 18.7 },
-  { name: 'DBRX', organization: 'Databricks', category: 'Language', provider: 'Other', tokens: 16.2, value: '$43B', change: 11.3 },
-  { name: 'Jamba', organization: 'AI21 Labs', category: 'Language', provider: 'Other', tokens: 12.2, value: '$1.4B', change: 7.8 },
+  { name: 'Llama 3.1 405B', organization: 'Meta', category: 'Language', provider: 'Meta', tokens: 18.8, value: '$1.3T', change: 12.5, positionChange: -2 },
+  { name: 'Mistral Large 2', organization: 'Mistral', category: 'Language', provider: 'Mistral', tokens: 17.5, value: '$6B', change: 30.2, positionChange: 5 },
+  { name: 'Gemma 2 27B', organization: 'Google', category: 'Language', provider: 'Google', tokens: 16.8, value: '$2T', change: 8.5, positionChange: 1 },
+  { name: 'Command R+', organization: 'Cohere', category: 'Language', provider: 'Other', tokens: 16.5, value: '$5B', change: 18.7, positionChange: -1 },
+  { name: 'DBRX', organization: 'Databricks', category: 'Language', provider: 'Other', tokens: 16.2, value: '$43B', change: 11.3, positionChange: 0 },
+  { name: 'Jamba', organization: 'AI21 Labs', category: 'Language', provider: 'Other', tokens: 12.2, value: '$1.4B', change: 7.8, positionChange: 4 },
   
   // Vision (5 models)
-  { name: 'PaliGemma', organization: 'Google', category: 'Vision', provider: 'Google', tokens: 15.9, value: '$2T', change: 7.1 },
-  { name: 'Florence-2', organization: 'Microsoft', category: 'Vision', provider: 'Other', tokens: 15.5, value: '$3T', change: 6.5 },
-  { name: 'Segment Anything', organization: 'Meta', category: 'Vision', provider: 'Meta', tokens: 15.2, value: '$1.3T', change: 5.4 },
-  { name: 'I-JEPA', organization: 'Meta', category: 'Vision', provider: 'Meta', tokens: 12.5, value: '$1.3T', change: 3.2 },
-  { name: 'YOLOv10', organization: 'THUDM', category: 'Vision', provider: 'Other', tokens: 9.8, value: '$100M', change: 6.1 },
+  { name: 'PaliGemma', organization: 'Google', category: 'Vision', provider: 'Google', tokens: 15.9, value: '$2T', change: 7.1, positionChange: 2 },
+  { name: 'Florence-2', organization: 'Microsoft', category: 'Vision', provider: 'Other', tokens: 15.5, value: '$3T', change: 6.5, positionChange: -1 },
+  { name: 'Segment Anything', organization: 'Meta', category: 'Vision', provider: 'Meta', tokens: 15.2, value: '$1.3T', change: 5.4, positionChange: -1 },
+  { name: 'I-JEPA', organization: 'Meta', category: 'Vision', provider: 'Meta', tokens: 12.5, value: '$1.3T', change: 3.2, positionChange: 3 },
+  { name: 'YOLOv10', organization: 'THUDM', category: 'Vision', provider: 'Other', tokens: 9.8, value: '$100M', change: 6.1, positionChange: 0 },
 
   // Code Models (5 models)
-  { name: 'Devin', organization: 'Cognition', category: 'Code Models', provider: 'Other', tokens: 17.1, value: '$2B', change: 50.0 },
-  { name: 'AlphaCode 2', organization: 'Google', category: 'Code Models', provider: 'Google', tokens: 14.9, value: '$2T', change: 10.1 },
-  { name: 'StarCoder 2', organization: 'Hugging Face', category: 'Code Models', provider: 'Other', tokens: 14.6, value: '$4.5B', change: 14.3 },
-  { name: 'Code Llama', organization: 'Meta', category: 'Code Models', provider: 'Meta', tokens: 11.9, value: '$1.3T', change: 9.5 },
-  { name: 'CodeGemma', organization: 'Google', category: 'Code Models', provider: 'Google', tokens: 9.5, value: '$2T', change: 8.1 },
+  { name: 'Devin', organization: 'Cognition', category: 'Code Models', provider: 'Other', tokens: 17.1, value: '$2B', change: 50.0, positionChange: 10 },
+  { name: 'AlphaCode 2', organization: 'Google', category: 'Code Models', provider: 'Google', tokens: 14.9, value: '$2T', change: 10.1, positionChange: -3 },
+  { name: 'StarCoder 2', organization: 'Hugging Face', category: 'Code Models', provider: 'Other', tokens: 14.6, value: '$4.5B', change: 14.3, positionChange: 1 },
+  { name: 'Code Llama', organization: 'Meta', category: 'Code Models', provider: 'Meta', tokens: 11.9, value: '$1.3T', change: 9.5, positionChange: 2 },
+  { name: 'CodeGemma', organization: 'Google', category: 'Code Models', provider: 'Google', tokens: 9.5, value: '$2T', change: 8.1, positionChange: -1 },
   
   // Domain-Specific (4 models)
-  { name: 'AlphaFold 3', organization: 'Google', category: 'Domain-Specific', provider: 'Google', tokens: 14.3, value: '$2T', change: 13.8 },
-  { name: 'Galactica', organization: 'Meta', category: 'Domain-Specific', provider: 'Meta', tokens: 14.0, value: '$1.3T', change: 4.9 },
-  { name: 'BioMedLM', organization: 'Stanford', category: 'Domain-Specific', provider: 'Other', tokens: 11.6, value: '$30M', change: 11.1 },
-  { name: 'ClimateBERT', organization: 'TU Berlin', category: 'Domain-Specific', provider: 'Other', tokens: 9.4, value: '$10M', change: 5.5 },
+  { name: 'AlphaFold 3', organization: 'Google', category: 'Domain-Specific', provider: 'Google', tokens: 14.3, value: '$2T', change: 13.8, positionChange: 3 },
+  { name: 'Galactica', organization: 'Meta', category: 'Domain-Specific', provider: 'Meta', tokens: 14.0, value: '$1.3T', change: 4.9, positionChange: -1 },
+  { name: 'BioMedLM', organization: 'Stanford', category: 'Domain-Specific', provider: 'Other', tokens: 11.6, value: '$30M', change: 11.1, positionChange: 0 },
+  { name: 'ClimateBERT', organization: 'TU Berlin', category: 'Domain-Specific', provider: 'Other', tokens: 9.4, value: '$10M', change: 5.5, positionChange: 1 },
 
   // Audio & Speech Models (4 models)
-  { name: 'Whisper', organization: 'OpenAI', category: 'Audio & Speech Models', provider: 'OpenAI', tokens: 13.8, value: '$86B', change: 8.2 },
-  { name: 'Seamless', organization: 'Meta', category: 'Audio & Speech Models', provider: 'Meta', tokens: 13.5, value: '$1.3T', change: 9.1 },
-  { name: 'AudioPaLM', organization: 'Google', category: 'Audio & Speech Models', provider: 'Google', tokens: 11.3, value: '$2T', change: 5.9 },
-  { name: 'VALL-E X', organization: 'Microsoft', category: 'Audio & Speech Models', provider: 'Other', tokens: 9.3, value: '$3T', change: 7.7 },
+  { name: 'Whisper', organization: 'OpenAI', category: 'Audio & Speech Models', provider: 'OpenAI', tokens: 13.8, value: '$86B', change: 8.2, positionChange: 2 },
+  { name: 'Seamless', organization: 'Meta', category: 'Audio & Speech Models', provider: 'Meta', tokens: 13.5, value: '$1.3T', change: 9.1, positionChange: -1 },
+  { name: 'AudioPaLM', organization: 'Google', category: 'Audio & Speech Models', provider: 'Google', tokens: 11.3, value: '$2T', change: 5.9, positionChange: 0 },
+  { name: 'VALL-E X', organization: 'Microsoft', category: 'Audio & Speech Models', provider: 'Other', tokens: 9.3, value: '$3T', change: 7.7, positionChange: 1 },
 
   // Embedding Models (4 models)
-  { name: 'Voyage-02', organization: 'Voyage AI', category: 'Embedding Models', provider: 'Other', tokens: 13.2, value: '$150M', change: 16.4 },
-  { name: 'text-embedding-3', organization: 'OpenAI', category: 'Embedding Models', provider: 'OpenAI', tokens: 13.0, value: '$86B', change: 6.7 },
-  { name: 'BGE', organization: 'BAAI', category: 'Embedding Models', provider: 'Other', tokens: 11.0, value: '$60M', change: 12.3 },
-  { name: 'Nomic Embed', organization: 'Nomic', category: 'Embedding Models', provider: 'Other', tokens: 9.2, value: '$40M', change: 10.5 },
+  { name: 'Voyage-02', organization: 'Voyage AI', category: 'Embedding Models', provider: 'Other', tokens: 13.2, value: '$150M', change: 16.4, positionChange: 4 },
+  { name: 'text-embedding-3', organization: 'OpenAI', category: 'Embedding Models', provider: 'OpenAI', tokens: 13.0, value: '$86B', change: 6.7, positionChange: -2 },
+  { name: 'BGE', organization: 'BAAI', category: 'Embedding Models', provider: 'Other', tokens: 11.0, value: '$60M', change: 12.3, positionChange: 1 },
+  { name: 'Nomic Embed', organization: 'Nomic', category: 'Embedding Models', provider: 'Other', tokens: 9.2, value: '$40M', change: 10.5, positionChange: -1 },
   
   // Reinforcement Learning (4 models)
-  { name: 'MuZero', organization: 'Google', category: 'Reinforcement Learning', provider: 'Google', tokens: 12.8, value: '$2T', change: 4.1 },
-  { name: 'Agent57', organization: 'Google', category: 'Reinforcement Learning', provider: 'Google', tokens: 10.7, value: '$2T', change: 3.5 },
-  { name: 'AlphaGo', organization: 'Google', category: 'Reinforcement Learning', provider: 'Google', tokens: 10.1, value: '$2T', change: 2.1 },
-  { name: 'DreamerV3', organization: 'Google', category: 'Reinforcement Learning', provider: 'Google', tokens: 9.1, value: '$2T', change: 2.9 },
+  { name: 'MuZero', organization: 'Google', category: 'Reinforcement Learning', provider: 'Google', tokens: 12.8, value: '$2T', change: 4.1, positionChange: 0 },
+  { name: 'Agent57', organization: 'Google', category: 'Reinforcement Learning', provider: 'Google', tokens: 10.7, value: '$2T', change: 3.5, positionChange: 0 },
+  { name: 'AlphaGo', organization: 'Google', category: 'Reinforcement Learning', provider: 'Google', tokens: 10.1, value: '$2T', change: 2.1, positionChange: 0 },
+  { name: 'DreamerV3', organization: 'Google', category: 'Reinforcement Learning', provider: 'Google', tokens: 9.1, value: '$2T', change: 2.9, positionChange: 0 },
 ].sort((a, b) => b.tokens - a.tokens);
 
 
@@ -123,5 +124,6 @@ export const adjustModelDataForTimeRange = (models: ModelData[], timeRange: 'yea
     ...model,
     tokens: parseFloat((model.tokens * multiplier[timeRange] * (1 + (Math.random() - 0.5) * 0.1)).toFixed(1)),
     change: parseFloat((model.change * (1 + (Math.random() - 0.5) * changeVolatility[timeRange])).toFixed(1)),
+    positionChange: Math.floor(model.positionChange * (1 + (Math.random() - 0.5) * changeVolatility[timeRange])),
   })).sort((a, b) => b.tokens - a.tokens);
 };

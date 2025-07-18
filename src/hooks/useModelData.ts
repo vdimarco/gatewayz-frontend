@@ -26,7 +26,6 @@ export function useModelData(selectedTimeRange: TimeRange, selectedCategory: Mod
 
   const filteredModels = useMemo(() => {
     if (!isClient) {
-      // Return a stable, non-randomized list on the server
       const initialModels = topModels.filter(model => selectedCategory === 'All' || model.category === selectedCategory);
       return initialModels.slice(0, 20);
     }
