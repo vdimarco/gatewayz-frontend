@@ -16,7 +16,8 @@ import {
   type ChartConfig
 } from '@/components/ui/chart';
 import type { ModelData } from '@/lib/data';
-import { format } from 'date-fns';
+import { format, getMonth } from 'date-fns';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface TokenGenerationChartProps {
   models: ModelData[];
@@ -63,15 +64,14 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
     return '0';
   };
 
-  const xAxisFormatter = (value: string, index: number) => {
+  const xAxisFormatter = (value: string) => {
     const date = new Date(value);
-    
     if (timeRange === 'year') {
-      const prevDate = index > 0 ? new Date(rawChartData[index-1].date) : null;
-      if (!prevDate || prevDate.getMonth() !== date.getMonth()) {
-        return format(date, 'MMM');
-      }
-      return "";
+        const month = getMonth(date);
+        if (month % 2 === 0) { // Show every other month
+            return format(date, 'MMM');
+        }
+        return "";
     }
     if (timeRange === 'month') {
         return format(date, 'd');
@@ -88,11 +88,11 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
         <CardTitle>Tokens Generated</CardTitle>
         <CardDescription>Unit: Trillions of Tokens</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pl-2">
         <ChartContainer config={chartConfig} className="h-[450px] w-full">
           <BarChart 
             data={chartData} 
-            margin={{ top: 20, right: 20, bottom: 40, left: 20 }}
+            margin={{ top: 20, right: 10, bottom: 60, left: 0 }}
             accessibilityLayer
             barCategoryGap="5%"
           >
@@ -103,9 +103,8 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
               tickMargin={10}
               axisLine={false}
               tickFormatter={xAxisFormatter}
-              interval={0}
-              tick={{ angle: -45, textAnchor: 'end' }}
-              dy={10}
+              interval={timeRange === 'year' ? 'preserveStartEnd' : 0}
+              tick={{ dy: 10 }}
             />
             <YAxis 
               tickFormatter={yAxisFormatter}
@@ -118,15 +117,19 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
               cursor={true}
               content={<ChartTooltipContent indicator="line" />}
             />
-            <Legend content={({ payload }) => (
-                <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 absolute -bottom-10 left-0 right-0">
-                  {payload?.map((entry, index) => (
-                    <div key={`item-${index}`} className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                      <span className="text-xs text-muted-foreground">{entry.value}</span>
-                    </div>
-                  ))}
-                </div>
+            <Legend 
+              content={({ payload }) => (
+                <ScrollArea className="w-full whitespace-nowrap absolute -bottom-14">
+                  <div className="flex justify-center items-center gap-x-4 gap-y-2 pb-4 px-4">
+                    {payload?.map((entry, index) => (
+                      <div key={`item-${index}`} className="flex items-center gap-1.5 flex-shrink-0">
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                        <span className="text-xs text-muted-foreground">{entry.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <ScrollBar orientation="horizontal" className="invisible" />
+                </ScrollArea>
               )}
             />
             {Object.keys(chartConfig).map(modelName => (
