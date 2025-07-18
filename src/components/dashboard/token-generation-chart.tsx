@@ -92,7 +92,7 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
         <ChartContainer config={chartConfig} className="h-[450px] w-full">
           <BarChart 
             data={chartData} 
-            margin={{ top: 20, right: 20, bottom: 60, left: 20 }}
+            margin={{ top: 20, right: 20, bottom: 40, left: 20 }}
             accessibilityLayer
             barCategoryGap="5%"
           >
@@ -104,6 +104,8 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
               axisLine={false}
               tickFormatter={xAxisFormatter}
               interval={0}
+              tick={{ angle: -45, textAnchor: 'end' }}
+              dy={10}
             />
             <YAxis 
               tickFormatter={yAxisFormatter}
