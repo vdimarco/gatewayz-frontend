@@ -47,7 +47,7 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
     const chartConfig = top10Models.reduce((acc, model, index) => {
         acc[model.name] = {
             label: model.name,
-            color: `hsl(var(--chart-${(index % 10) + 1}))`,
+            color: `hsl(var(--chart-${(index % 11) + 1}))`,
         };
         return acc;
     }, {} as ChartConfig);
@@ -132,7 +132,7 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
                 key={modelName}
                 dataKey={modelName} 
                 stackId="a" 
-                fill={chartConfig[modelName]?.color ? `var(--color-${modelName})` : `hsl(var(--chart-${(Math.floor(Math.random() * 10) + 1)}))`}
+                fill={chartConfig[modelName]?.color ? `var(--color-${modelName})` : `hsl(var(--chart-${(Math.floor(Math.random() * 11) + 1)}))`}
               />
             ))}
           </BarChart>
