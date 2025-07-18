@@ -26,20 +26,20 @@ export function useModelData(selectedTimeRange: TimeRange, selectedCategory: Mod
 
   const filteredModels = useMemo(() => {
     if (!isClient) {
-      const initialModels = topModels.filter(model => selectedCategory === 'All' || model.category === selectedCategory);
+      // For server-side rendering, return a stable list
+      const initialModels = selectedCategory === 'All' 
+        ? topModels 
+        : topModels.filter(model => model.category === selectedCategory);
       return initialModels.slice(0, 20);
     }
     
     const adjustedModels = adjustModelDataForTimeRange(topModels, selectedTimeRange);
     
-    let filtered;
-    if (selectedCategory === 'All') {
-      filtered = [...adjustedModels];
-    } else {
-      filtered = adjustedModels.filter(model => model.category === selectedCategory);
-    }
+    const categoryFilteredModels = selectedCategory === 'All'
+      ? adjustedModels
+      : adjustedModels.filter(model => model.category === selectedCategory);
     
-    return filtered.slice(0, 20);
+    return categoryFilteredModels.slice(0, 20);
   }, [isClient, selectedTimeRange, selectedCategory]);
 
   return { filteredModels, chartData };
