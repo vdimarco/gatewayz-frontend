@@ -65,7 +65,7 @@ export default function ModelsPage() {
 
   return (
     <SidebarProvider>
-      <div className="relative flex h-full min-h-[calc(100vh_-_theme(spacing.14))]">
+      <div className="relative flex h-full">
         <Sidebar
           variant="sidebar"
           collapsible="icon"
