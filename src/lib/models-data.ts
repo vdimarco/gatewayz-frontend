@@ -1,3 +1,4 @@
+
 export type Model = {
   name: string;
   isFree: boolean;
@@ -8,6 +9,9 @@ export type Model = {
   context: number;
   inputCost: number;
   outputCost: number;
+  modalities: string[];
+  series: string;
+  supportedParameters: string[];
 };
 
 export const models: Model[] = [
@@ -21,6 +25,9 @@ export const models: Model[] = [
     context: 262,
     inputCost: 0,
     outputCost: 0,
+    modalities: ['Text', 'File'],
+    series: 'Qwen',
+    supportedParameters: ['tools', 'temperature'],
   },
   {
     name: 'Qwen: Qwen2 57B A14B 2507',
@@ -32,6 +39,9 @@ export const models: Model[] = [
     context: 262,
     inputCost: 0.15,
     outputCost: 0.85,
+    modalities: ['Text', 'File'],
+    series: 'Qwen',
+    supportedParameters: ['tools', 'temperature', 'top_p'],
   },
   {
     name: 'Switchpoint Router',
@@ -43,6 +53,9 @@ export const models: Model[] = [
     context: 131,
     inputCost: 0.85,
     outputCost: 3.40,
+    modalities: ['Text'],
+    series: 'Other',
+    supportedParameters: ['temperature'],
   },
   {
     name: 'MoonshotAI: Kimi K2',
@@ -54,6 +67,9 @@ export const models: Model[] = [
     context: 200,
     inputCost: 0,
     outputCost: 0,
+    modalities: ['Text', 'File'],
+    series: 'Kimi',
+    supportedParameters: ['temperature', 'top_p'],
   },
    {
     name: 'Google: Gemini 2.1 Pro',
@@ -65,6 +81,9 @@ export const models: Model[] = [
     context: 1024,
     inputCost: 0.5,
     outputCost: 1.5,
+    modalities: ['Text', 'Image', 'File'],
+    series: 'Gemini',
+    supportedParameters: ['tools', 'temperature', 'top_p'],
   },
   {
     name: 'Anthropic: Claude 3.5 Sonnet',
@@ -76,6 +95,9 @@ export const models: Model[] = [
     context: 200,
     inputCost: 0.25,
     outputCost: 1.25,
+    modalities: ['Text', 'Image'],
+    series: 'Claude',
+    supportedParameters: ['tools', 'temperature', 'top_p'],
   },
   {
     name: 'Meta: Llama 3.1 405B',
@@ -87,5 +109,8 @@ export const models: Model[] = [
     context: 128,
     inputCost: 0.9,
     outputCost: 2.5,
+    modalities: ['Text'],
+    series: 'Llama',
+    supportedParameters: ['temperature', 'top_p'],
   }
 ];
