@@ -93,7 +93,7 @@ export default function OrganizationPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <header className="mb-8">
             <div className="flex items-center gap-4 mb-4">
                 <Building className="w-10 h-10 text-primary" />
