@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import type { ModelData } from '@/lib/data';
 import { ArrowUp, ArrowDown, Bot, Building, Eye, MessageSquare, Boxes, Server, Box, Code, Sliders, Puzzle, Dna, Mic, Minus, Triangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 const categoryIcons: Record<ModelData['category'], React.ElementType> = {
   Language: MessageSquare,
@@ -121,10 +122,10 @@ export default function TopModelsTable({ models }: TopModelsTableProps) {
                     </div>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">
-                    <div className="flex items-center gap-2">
+                    <Link href={`/organizations/${encodeURIComponent(model.organization)}`} className="flex items-center gap-2 hover:underline">
                       <Building className="h-4 w-4 text-muted-foreground" />
                       <span>{model.organization}</span>
-                    </div>
+                    </Link>
                   </TableCell>
                   <CategoryCell model={model} />
                   <TableCell className="hidden md:table-cell">
