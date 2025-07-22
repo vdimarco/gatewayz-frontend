@@ -21,6 +21,7 @@ import { auth } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
+import Link from "next/link";
 
 interface UserNavProps {
   user: User;
@@ -75,7 +76,9 @@ export function UserNav({ user }: UserNavProps) {
           <DropdownMenuItem>Credits</DropdownMenuItem>
           <DropdownMenuItem>Keys</DropdownMenuItem>
           <DropdownMenuItem>Activity</DropdownMenuItem>
-          <DropdownMenuItem>Settings</DropdownMenuItem>
+          <Link href="/settings">
+            <DropdownMenuItem>Settings</DropdownMenuItem>
+          </Link>
           <DropdownMenuItem>Enterprise</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
