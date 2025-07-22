@@ -135,7 +135,7 @@ export default function DevelopersPage() {
             return num;
         };
 
-        const sorted = منظمations.sort((a,b) => {
+        const sorted = organizations.sort((a,b) => {
             if (activeTab === 'trending') {
                 return b.performanceChange - a.performanceChange;
             }
