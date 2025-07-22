@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
     const isPositiveChange = app.change >= 0;
@@ -31,7 +32,16 @@ const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
                 {app.name}
                 <ChevronsRight className="w-4 h-4 text-muted-foreground" />
                 </Link>
-                <p className="text-sm text-muted-foreground truncate max-w-[200px]">{app.description}</p>
+                {app.description ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-sm text-muted-foreground truncate max-w-[200px] cursor-default">{app.description}</p>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">{app.description}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : null}
                 {app.isNew && <Badge variant="secondary" className="mt-1">new</Badge>}
             </div>
             </div>
