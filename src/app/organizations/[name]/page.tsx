@@ -202,17 +202,16 @@ export default function OrganizationPage() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-            <StatCard icon={Package} title="Total Models" value={orgModels.length} />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
             <StatCard icon={BarChart} title="Total Tokens" value={totalTokens} />
             <StatCard icon={HardHat} title="Top Provider" value={orgRankingData?.provider || 'N/A'} />
             <StatCard icon={Bot} title="Top Model" value={topRankedModel} />
         </div>
 
         <main>
-            <h2 className="text-2xl font-bold mb-6">Models by {organizationName.charAt(0).toUpperCase() + organizationName.slice(1)}</h2>
+            <h2 className="text-2xl font-bold mb-6">Models by {organizationName.charAt(0).toUpperCase() + organizationName.slice(1)} ({orgModels.length})</h2>
             {orgModels.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {orgModels.map(model => (
                         <ModelCard key={model.name} model={model} />
                     ))}
