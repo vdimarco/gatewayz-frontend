@@ -7,6 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
+import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -27,7 +32,39 @@ const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function SignInPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      toast({ title: 'Success', description: 'Signed in successfully!' });
+      router.push('/');
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const handleSignUp = async () => {
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      toast({ title: 'Success', description: 'Account created successfully! Please sign in.' });
+    } catch (error: any) {
+        toast({
+            title: 'Error creating account',
+            description: error.message,
+            variant: 'destructive',
+        });
+    }
+  };
 
   return (
     <div className="relative min-h-screen w-full bg-white dark:bg-black">
@@ -54,7 +91,7 @@ export default function SignInPage() {
               </p>
             </div>
 
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSignIn}>
               <div>
                 <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">Email</Label>
                 <div className="relative mt-1">
@@ -66,6 +103,8 @@ export default function SignInPage() {
                     required 
                     placeholder="name@company.com"
                     className="pl-10 bg-white/70 dark:bg-black/70 border-gray-300 dark:border-gray-700"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                   <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                 </div>
@@ -87,6 +126,8 @@ export default function SignInPage() {
                     required 
                     placeholder="••••••••"
                     className="pl-10 pr-10 bg-white/70 dark:bg-black/70 border-gray-300 dark:border-gray-700"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                   />
                   <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                   <button 
@@ -129,9 +170,9 @@ export default function SignInPage() {
 
              <p className="text-center text-sm text-gray-600 dark:text-gray-400">
               Don&apos;t have an account?{' '}
-              <Link href="#" className="font-medium text-blue-600 hover:underline dark:text-blue-400">
+              <button onClick={handleSignUp} className="font-medium text-blue-600 hover:underline dark:text-blue-400">
                 Sign up
-              </Link>
+              </button>
             </p>
           </div>
         </div>
