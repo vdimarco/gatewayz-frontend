@@ -59,12 +59,25 @@ export default function OrganizationPage() {
   const orgRankingData = useMemo(() => {
     return topModels.find(model => model.organization.toLowerCase() === organizationName.toLowerCase());
   }, [organizationName]);
+  
+  const topRankedModel = useMemo(() => {
+      const orgRankedModels = topModels.filter(m => m.organization.toLowerCase() === organizationName.toLowerCase());
+      if (orgRankedModels.length === 0) return 'N/A';
+      return orgRankedModels.sort((a,b) => b.tokens - a.tokens)[0].name;
+  }, [organizationName]);
 
   const totalTokens = useMemo(() => {
-      const orgRankedModels = topModels.filter(m => m.organization.toLowerCase() === organizationName.toLowerCase());
-      const total = orgRankedModels.reduce((acc, model) => acc + model.tokens, 0);
-      return `${total.toFixed(1)}T`;
-  }, [organizationName]);
+      const total = orgModels.reduce((acc, model) => {
+        const tokenValue = parseFloat(model.tokens);
+        if (model.tokens.includes('B')) return acc + tokenValue * 1e9;
+        if (model.tokens.includes('M')) return acc + tokenValue * 1e6;
+        return acc + tokenValue;
+      }, 0);
+      if (total > 1e12) return `${(total / 1e12).toFixed(1)}T`;
+      if (total > 1e9) return `${(total / 1e9).toFixed(1)}B`;
+      if (total > 1e6) return `${(total / 1e6).toFixed(1)}M`;
+      return total.toLocaleString();
+  }, [orgModels]);
 
 
   if (!organizationName) {
@@ -84,18 +97,18 @@ export default function OrganizationPage() {
         <header className="mb-8">
             <div className="flex items-center gap-4 mb-4">
                 <Building className="w-10 h-10 text-primary" />
-                <h1 className="text-4xl font-bold">{organizationName}</h1>
+                <h1 className="text-4xl font-bold">{organizationName.charAt(0).toUpperCase() + organizationName.slice(1)}</h1>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                 <StatCard icon={Package} title="Total Models" value={orgModels.length} />
                 <StatCard icon={BarChart} title="Total Tokens" value={totalTokens} />
                 <StatCard icon={HardHat} title="Top Provider" value={orgRankingData?.provider || 'N/A'} />
-                <StatCard icon={Bot} title="Top Model" value={orgRankingData?.name || 'N/A'} />
+                <StatCard icon={Bot} title="Top Model" value={topRankedModel} />
             </div>
         </header>
 
         <main>
-            <h2 className="text-2xl font-bold mb-6">Models by {organizationName}</h2>
+            <h2 className="text-2xl font-bold mb-6">Models by {organizationName.charAt(0).toUpperCase() + organizationName.slice(1)}</h2>
             {orgModels.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {orgModels.map(model => (
