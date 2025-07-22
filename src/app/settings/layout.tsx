@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/settings", label: "Settings" },
   { href: "/settings/credits", label: "Credits" },
+  { href: "/settings/activity", label: "Activity" },
   { href: "/settings/presets", label: "Presets" },
   { href: "/settings/keys", label: "API Keys" },
   { href: "/settings/provisioning", label: "Provisioning Keys" },
