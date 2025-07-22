@@ -1,11 +1,27 @@
+
+"use client";
+
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Menu, Search } from "lucide-react";
 import Link from 'next/link';
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { UserNav } from './user-nav';
 
 export function AppHeader() {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -31,9 +47,13 @@ export function AppHeader() {
             <Link href="/rankings" className="transition-colors hover:text-foreground/80 text-foreground/60">Rankings</Link>
           </nav>
           <div className="hidden md:flex items-center gap-2">
-            <Link href="/signin">
-              <Button variant="outline">Sign In</Button>
-            </Link>
+            {user ? (
+              <UserNav user={user} />
+            ) : (
+              <Link href="/signin">
+                <Button variant="outline">Sign In</Button>
+              </Link>
+            )}
             <ThemeToggle />
           </div>
           <div className="md:hidden">
@@ -51,9 +71,13 @@ export function AppHeader() {
                     <Link href="/rankings" className="transition-colors hover:text-foreground/80 text-foreground/60">Rankings</Link>
                   </nav>
                   <div className="mt-6 flex flex-col gap-2">
-                     <Link href="/signin">
-                       <Button variant="outline" className="w-full">Sign In</Button>
-                     </Link>
+                    {user ? (
+                       <UserNav user={user} />
+                    ) : (
+                       <Link href="/signin">
+                         <Button variant="outline" className="w-full">Sign In</Button>
+                       </Link>
+                    )}
                      <ThemeToggle />
                   </div>
                 </div>
