@@ -127,3 +127,34 @@ export const adjustModelDataForTimeRange = (models: ModelData[], timeRange: 'yea
     positionChange: Math.floor(model.positionChange * (1 + (Math.random() - 0.5) * changeVolatility[timeRange])),
   })).sort((a, b) => b.tokens - a.tokens);
 };
+
+export type AppData = {
+  name: string;
+  description: string;
+  tokens: string;
+  isNew: boolean;
+  iconHint: string;
+};
+
+export const topApps: AppData[] = [
+  { name: 'Cline', description: 'Autonomous coding agent right in...', tokens: '25.7B tokens', isNew: false, iconHint: 'letter C' },
+  { name: 'Kilo Code', description: 'AI coding agent for VS Code', tokens: '23.3B tokens', isNew: false, iconHint: 'code brackets' },
+  { name: 'Roo Code', description: 'A whole dev team of AI agents in...', tokens: '21.4B tokens', isNew: false, iconHint: 'letter R' },
+  { name: 'liteLLM', description: 'Open-source library to simplify L...', tokens: '13.2B tokens', isNew: false, iconHint: 'letter L' },
+  { name: 'SillyTavern', description: 'LLM frontend for power users', tokens: '6.45B tokens', isNew: false, iconHint: 'letter S' },
+  { name: 'HammerAI', description: 'Chat with AI characters for free', tokens: '3.36B tokens', isNew: false, iconHint: 'hammer' },
+  { name: 'Chub AI', description: 'GenAI for everyone', tokens: '2.96B tokens', isNew: false, iconHint: 'letter C chat' },
+  { name: 'forge', description: '', tokens: '1.82B tokens', isNew: true, iconHint: 'anvil' },
+  { name: 'OpenRouter: Chatroom', description: 'Chat with multiple LLMs at once', tokens: '1.7B tokens', isNew: false, iconHint: 'speech bubbles' },
+  { name: 'RolePlai - Ai Chat', description: 'LLM frontend for power users', tokens: '1.59B tokens', isNew: true, iconHint: 'letter R play' },
+  { name: 'Linkd', description: '', tokens: '1.43B tokens', isNew: true, iconHint: 'letter L link' },
+  { name: 'GDevelop', description: '', tokens: '1.22B tokens', isNew: true, iconHint: 'letter G controller' },
+  { name: 'shapes inc', description: 'General purpose social agents', tokens: '1.21B tokens', isNew: false, iconHint: 'shapes' },
+  { name: 'Caveduck', description: 'AI character chat', tokens: '1.04B tokens', isNew: false, iconHint: 'duck' },
+  { name: 'janitorai.com', description: '', tokens: '991M tokens', isNew: true, iconHint: 'janitor broom' },
+  { name: '21st.dev', description: '', tokens: '934M tokens', isNew: true, iconHint: 'number 21' },
+  { name: 'Infinite Worlds', description: 'Build your own adventures, share...', tokens: '890M tokens', isNew: false, iconHint: 'infinity symbol' },
+  { name: 'Open WebUI', description: 'Extensible, self-hosted AI interface', tokens: '863M tokens', isNew: false, iconHint: 'letter O web' },
+  { name: 'Deepwriter', description: 'Research & write anything with ag...', tokens: '748M tokens', isNew: false, iconHint: 'letter D feather' },
+  { name: 'Quack', description: 'Design and interact with characters', tokens: '707M tokens', isNew: false, iconHint: 'duck sound' },
+];

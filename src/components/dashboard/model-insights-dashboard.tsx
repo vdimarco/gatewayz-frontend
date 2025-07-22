@@ -1,6 +1,7 @@
 import TokenGenerationChart from './token-generation-chart';
 import TopModelsTable from './top-models-table';
 import type { ModelData } from '@/lib/data';
+import TopAppsTable from './top-apps-table';
 
 interface ModelInsightsDashboardProps {
   models: ModelData[];
@@ -14,6 +15,7 @@ export default function ModelInsightsDashboard({ models, chartData, timeRange }:
       <div className="flex flex-col gap-8">
         <TokenGenerationChart models={models} chartData={chartData} timeRange={timeRange} />
         <TopModelsTable models={models} />
+        <TopAppsTable />
       </div>
     </div>
   );
