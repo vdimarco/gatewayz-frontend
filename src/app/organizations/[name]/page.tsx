@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { addDays, format } from 'date-fns';
+import { addDays, format, differenceInDays } from 'date-fns';
 
 const ModelCard = ({ model }: { model: Model }) => (
   <Card className="p-6 flex flex-col">
@@ -53,7 +53,7 @@ const StatCard = ({ icon: Icon, title, value }: { icon: React.ElementType, title
     </Card>
 );
 
-type TimeFrame = 'weekly' | 'monthly' | '3months' | '6months' | 'yearly';
+type TimeFrame = 'weekly' | 'monthly' | '3months' | '6months' | 'yearly' | 'alltime';
 
 const generateChartData = (timeFrame: TimeFrame) => {
     const now = new Date();
@@ -63,6 +63,7 @@ const generateChartData = (timeFrame: TimeFrame) => {
         case 'monthly': days = 30; break;
         case '3months': days = 90; break;
         case '6months': days = 180; break;
+        case 'alltime': days = 365 * 5; break; // 5 years for all time
         case 'yearly':
         default: days = 365; break;
     }
@@ -71,10 +72,22 @@ const generateChartData = (timeFrame: TimeFrame) => {
         const date = addDays(now, i - days + 1);
         return {
             date: format(date, 'yyyy-MM-dd'),
-            tokens: Math.floor(Math.random() * 500 + 100 + (i * 2))
+            tokens: Math.floor(Math.random() * 500 + 100 + (i * 2) * (365/days) )
         };
     });
 };
+
+const getTicks = (data: { date: string }[], maxTicks = 6) => {
+    if (!data || data.length === 0) return [];
+    
+    const tickCount = Math.min(data.length, maxTicks);
+    const interval = Math.ceil(data.length / tickCount);
+    
+    return data
+        .map((d, i) => (i % interval === 0 ? d.date : null))
+        .filter(Boolean) as string[];
+};
+
 
 export default function OrganizationPage() {
   const params = useParams();
@@ -114,6 +127,8 @@ export default function OrganizationPage() {
   }, [orgModels]);
 
   const chartData = useMemo(() => generateChartData(timeFrame), [timeFrame]);
+  const chartTicks = useMemo(() => getTicks(chartData), [chartData]);
+
 
   if (!organizationName) {
     return <div>Loading...</div>;
@@ -150,6 +165,7 @@ export default function OrganizationPage() {
                   <SelectItem value="3months">Past 3 Months</SelectItem>
                   <SelectItem value="6months">Past 6 Months</SelectItem>
                   <SelectItem value="yearly">Yearly</SelectItem>
+                  <SelectItem value="alltime">All Time</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -160,11 +176,21 @@ export default function OrganizationPage() {
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" tickFormatter={(str) => format(new Date(str), 'MMM d')} />
+                  <XAxis 
+                    dataKey="date" 
+                    ticks={chartTicks}
+                    tickFormatter={(str) => {
+                      const date = new Date(str);
+                      if (differenceInDays(new Date(chartData[chartData.length - 1].date), new Date(chartData[0].date)) > 365 * 2) {
+                        return format(date, 'yyyy');
+                      }
+                      return format(date, 'MMM d');
+                    }}
+                  />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="tokens" stroke="hsl(var(--primary))" activeDot={{ r: 8 }} />
+                  <Line type="monotone" dataKey="tokens" stroke="hsl(var(--primary))" activeDot={{ r: 8 }} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
