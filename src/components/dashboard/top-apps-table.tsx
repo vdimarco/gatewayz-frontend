@@ -3,11 +3,13 @@
 
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { topApps, type AppData } from '@/lib/data';
+import { topApps, type AppData, adjustAppDataForTimeRange } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronsRight } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import Link from 'next/link';
+import { useState, useMemo } from 'react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const AppItem = ({ app, rank }: { app: AppData; rank: number }) => (
   <li className="flex items-center justify-between py-3">
@@ -34,10 +36,17 @@ const AppItem = ({ app, rank }: { app: AppData; rank: number }) => (
   </li>
 );
 
+type TimeFrameOption = 'Today' | 'Past 7 days' | 'Past Month';
 
 export default function TopAppsTable() {
-  const appsColumn1 = topApps.slice(0, 10);
-  const appsColumn2 = topApps.slice(10, 20);
+  const [timeFrame, setTimeFrame] = useState<TimeFrameOption>('Today');
+
+  const displayedApps = useMemo(() => {
+    return adjustAppDataForTimeRange(topApps, timeFrame);
+  }, [timeFrame]);
+
+  const appsColumn1 = displayedApps.slice(0, 10);
+  const appsColumn2 = displayedApps.slice(10, 20);
 
   return (
     <Card>
@@ -52,9 +61,18 @@ export default function TopAppsTable() {
                     Largest public apps opting into usage tracking on OpenRouter
                 </CardDescription>
             </div>
-            <Button variant="outline" className="mt-4 sm:mt-0">
-                Today <ChevronDown className="w-4 h-4 ml-2" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="mt-4 sm:mt-0 w-full sm:w-[180px] justify-between">
+                  {timeFrame} <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
+                <DropdownMenuItem onSelect={() => setTimeFrame('Today')}>Today</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setTimeFrame('Past 7 days')}>Past 7 days</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setTimeFrame('Past Month')}>Past Month</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
       </CardHeader>
       <CardContent>

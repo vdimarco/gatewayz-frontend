@@ -158,3 +158,33 @@ export const topApps: AppData[] = [
   { name: 'Deepwriter', description: 'Research & write anything with ag...', tokens: '748M tokens', isNew: false, iconHint: 'letter D feather' },
   { name: 'Quack', description: 'Design and interact with characters', tokens: '707M tokens', isNew: false, iconHint: 'duck sound' },
 ];
+
+export const adjustAppDataForTimeRange = (apps: AppData[], timeFrame: 'Today' | 'Past 7 days' | 'Past Month'): AppData[] => {
+  const multiplier = {
+    'Today': 1 / 30, // daily average
+    'Past 7 days': 7 / 30,
+    'Past Month': 1,
+  };
+
+  const formatTokens = (value: number) => {
+    if (value >= 1) return `${value.toFixed(2)}B tokens`;
+    return `${Math.round(value * 1000)}M tokens`;
+  };
+
+  const parseTokens = (tokenStr: string): number => {
+    const value = parseFloat(tokenStr);
+    if (tokenStr.includes('B')) return value;
+    if (tokenStr.includes('M')) return value / 1000;
+    return value;
+  };
+  
+  return apps.map(app => {
+    const baseTokens = parseTokens(app.tokens); // in Billions
+    const adjustedTokens = baseTokens * multiplier[timeFrame] * (1 + (Math.random() - 0.5) * 0.1);
+    
+    return {
+      ...app,
+      tokens: formatTokens(adjustedTokens),
+    };
+  }).sort((a, b) => parseTokens(b.tokens) - parseTokens(a.tokens));
+};
