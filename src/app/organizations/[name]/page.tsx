@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { addDays, format, differenceInDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -83,12 +83,22 @@ const getTicks = (data: { date: string }[], maxTicks = 8) => {
     if (!data || data.length === 0) return [];
     
     const tickCount = Math.min(data.length, maxTicks);
-    if (tickCount === 0) return [];
-    const interval = Math.max(1, Math.floor(data.length / tickCount));
+    if (tickCount <= 1) return [data[0]?.date];
+    const interval = Math.max(1, Math.floor((data.length -1) / (tickCount -1)));
     
-    return data
-        .map((d, i) => (i % interval === 0 ? d.date : null))
-        .filter(Boolean) as string[];
+    const ticks = [];
+    for (let i = 0; i < data.length; i += interval) {
+        ticks.push(data[i].date);
+    }
+    if (ticks[ticks.length - 1] !== data[data.length - 1].date) {
+        if (ticks.length >= maxTicks) {
+            ticks[ticks.length -1] = data[data.length - 1].date;
+        } else {
+            ticks.push(data[data.length - 1].date)
+        }
+    }
+    
+    return ticks;
 };
 
 
@@ -195,10 +205,16 @@ export default function OrganizationPage() {
             </div>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart
+                <AreaChart
                   data={chartData}
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
+                  <defs>
+                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="date" 
@@ -216,16 +232,21 @@ export default function OrganizationPage() {
                     }}
                   />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip 
+                     contentStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        borderColor: 'hsl(var(--border))',
+                      }}
+                  />
                   <Legend />
-                  <Line type="monotone" dataKey="tokens" stroke="hsl(var(--primary))" activeDot={{ r: 8 }} dot={false} />
-                </LineChart>
+                  <Area type="monotone" dataKey="tokens" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#chartGradient)" activeDot={{ r: 8 }} dot={false} />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <StatCard icon={BarChart} title="Total Tokens" value={totalTokens} />
             <StatCard icon={HardHat} title="Top Provider" value={orgRankingData?.provider || 'N/A'} />
             <StatCard icon={Bot} title="Top Model" value={topRankedModel} />
@@ -246,3 +267,5 @@ export default function OrganizationPage() {
     </div>
   );
 }
+
+    
