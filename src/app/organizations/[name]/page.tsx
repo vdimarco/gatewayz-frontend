@@ -2,9 +2,9 @@
 "use client";
 
 import { useParams } from 'next/navigation';
-import { topModels } from '@/lib/data';
+import { topModels, organizationsData } from '@/lib/data';
 import { models as allModelsData, type Model } from '@/lib/models-data';
-import { Building, Bot, BarChart, HardHat, Package, ChevronDown } from 'lucide-react';
+import { Building, Bot, BarChart, HardHat, Package, ChevronDown, Link as LinkIcon, Github, Twitter } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from '@/components/ui/badge';
 import { useMemo, useState } from 'react';
@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/select";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { addDays, format, differenceInDays } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const ModelCard = ({ model }: { model: Model }) => (
   <Card className="p-6 flex flex-col">
@@ -108,6 +110,10 @@ export default function OrganizationPage() {
     return topModels.find(model => model.organization.toLowerCase() === organizationName.toLowerCase());
   }, [organizationName]);
   
+  const orgSocialData = useMemo(() => {
+    return organizationsData.find(org => org.name.toLowerCase() === organizationName.toLowerCase());
+  }, [organizationName]);
+  
   const topRankedModel = useMemo(() => {
       const orgRankedModels = topModels.filter(m => m.organization.toLowerCase() === organizationName.toLowerCase());
       if (orgRankedModels.length === 0) return 'N/A';
@@ -146,9 +152,26 @@ export default function OrganizationPage() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <header className="mb-8">
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
                 <Building className="w-10 h-10 text-primary" />
                 <h1 className="text-4xl font-bold">{organizationName.charAt(0).toUpperCase() + organizationName.slice(1)}</h1>
+                 <div className="flex items-center gap-2">
+                  {orgSocialData?.website && (
+                    <Link href={orgSocialData.website} target="_blank" rel="noopener noreferrer">
+                      <Button variant="ghost" size="icon"><LinkIcon className="h-5 w-5 text-muted-foreground" /></Button>
+                    </Link>
+                  )}
+                  {orgSocialData?.github && (
+                     <Link href={orgSocialData.github} target="_blank" rel="noopener noreferrer">
+                      <Button variant="ghost" size="icon"><Github className="h-5 w-5 text-muted-foreground" /></Button>
+                    </Link>
+                  )}
+                   {orgSocialData?.twitter && (
+                     <Link href={orgSocialData.twitter} target="_blank" rel="noopener noreferrer">
+                      <Button variant="ghost" size="icon"><Twitter className="h-5 w-5 text-muted-foreground" /></Button>
+                    </Link>
+                  )}
+                </div>
             </div>
         </header>
         

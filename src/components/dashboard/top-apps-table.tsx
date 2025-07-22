@@ -28,7 +28,7 @@ const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
                 data-ai-hint={app.iconHint}
             />
             <div>
-                <Link href="#" className="flex items-center gap-1 font-semibold hover:underline">
+                <Link href={app.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 font-semibold hover:underline">
                 {app.name}
                 <ChevronsRight className="w-4 h-4 text-muted-foreground" />
                 </Link>
