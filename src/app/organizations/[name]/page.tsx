@@ -4,10 +4,19 @@
 import { useParams } from 'next/navigation';
 import { topModels } from '@/lib/data';
 import { models as allModelsData, type Model } from '@/lib/models-data';
-import { Building, Bot, BarChart, HardHat, Package } from 'lucide-react';
+import { Building, Bot, BarChart, HardHat, Package, ChevronDown } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from '@/components/ui/badge';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { addDays, format } from 'date-fns';
 
 const ModelCard = ({ model }: { model: Model }) => (
   <Card className="p-6 flex flex-col">
@@ -44,8 +53,33 @@ const StatCard = ({ icon: Icon, title, value }: { icon: React.ElementType, title
     </Card>
 );
 
+type TimeFrame = 'weekly' | 'monthly' | '3months' | '6months' | 'yearly';
+
+const generateChartData = (timeFrame: TimeFrame) => {
+    const now = new Date();
+    let days;
+    switch(timeFrame) {
+        case 'weekly': days = 7; break;
+        case 'monthly': days = 30; break;
+        case '3months': days = 90; break;
+        case '6months': days = 180; break;
+        case 'yearly':
+        default: days = 365; break;
+    }
+
+    return Array.from({ length: days }, (_, i) => {
+        const date = addDays(now, i - days + 1);
+        return {
+            date: format(date, 'yyyy-MM-dd'),
+            tokens: Math.floor(Math.random() * 500 + 100 + (i * 2))
+        };
+    });
+};
+
 export default function OrganizationPage() {
   const params = useParams();
+  const [timeFrame, setTimeFrame] = useState<TimeFrame>('yearly');
+
   const organizationName = useMemo(() => {
     const name = params.name as string;
     return name ? decodeURIComponent(name) : '';
@@ -79,6 +113,7 @@ export default function OrganizationPage() {
       return total.toLocaleString();
   }, [orgModels]);
 
+  const chartData = useMemo(() => generateChartData(timeFrame), [timeFrame]);
 
   if (!organizationName) {
     return <div>Loading...</div>;
@@ -99,13 +134,49 @@ export default function OrganizationPage() {
                 <Building className="w-10 h-10 text-primary" />
                 <h1 className="text-4xl font-bold">{organizationName.charAt(0).toUpperCase() + organizationName.slice(1)}</h1>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                <StatCard icon={Package} title="Total Models" value={orgModels.length} />
-                <StatCard icon={BarChart} title="Total Tokens" value={totalTokens} />
-                <StatCard icon={HardHat} title="Top Provider" value={orgRankingData?.provider || 'N/A'} />
-                <StatCard icon={Bot} title="Top Model" value={topRankedModel} />
-            </div>
         </header>
+        
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Total Tokens Generated</h3>
+              <Select value={timeFrame} onValueChange={(value) => setTimeFrame(value as TimeFrame)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select time frame" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="3months">Past 3 Months</SelectItem>
+                  <SelectItem value="6months">Past 6 Months</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tickFormatter={(str) => format(new Date(str), 'MMM d')} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="tokens" stroke="hsl(var(--primary))" activeDot={{ r: 8 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+            <StatCard icon={Package} title="Total Models" value={orgModels.length} />
+            <StatCard icon={BarChart} title="Total Tokens" value={totalTokens} />
+            <StatCard icon={HardHat} title="Top Provider" value={orgRankingData?.provider || 'N/A'} />
+            <StatCard icon={Bot} title="Top Model" value={topRankedModel} />
+        </div>
 
         <main>
             <h2 className="text-2xl font-bold mb-6">Models by {organizationName.charAt(0).toUpperCase() + organizationName.slice(1)}</h2>
