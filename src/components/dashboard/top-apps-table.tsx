@@ -5,36 +5,46 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { topApps, type AppData, adjustAppDataForTimeRange } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronsRight } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronsRight } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
-const AppItem = ({ app, rank }: { app: AppData; rank: number }) => (
-  <li className="flex items-center justify-between py-3">
-    <div className="flex items-center gap-4">
-      <span className="text-sm font-medium text-muted-foreground w-6 text-right">{rank}.</span>
-      <Image 
-        src={`https://placehold.co/40x40.png`} 
-        alt={`${app.name} logo`}
-        width={40}
-        height={40}
-        className="rounded-lg" 
-        data-ai-hint={app.iconHint}
-      />
-      <div>
-        <Link href="#" className="flex items-center gap-1 font-semibold hover:underline">
-          {app.name}
-          <ChevronsRight className="w-4 h-4 text-muted-foreground" />
-        </Link>
-        <p className="text-sm text-muted-foreground truncate max-w-[200px]">{app.description}</p>
-        {app.isNew && <Badge variant="secondary" className="mt-1">new</Badge>}
-      </div>
-    </div>
-    <span className="text-sm font-semibold">{app.tokens}</span>
-  </li>
-);
+const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
+    const isPositiveChange = app.change >= 0;
+    return (
+        <li className="flex items-center justify-between py-3">
+            <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-muted-foreground w-6 text-right">{rank}.</span>
+            <Image 
+                src={`https://placehold.co/40x40.png`} 
+                alt={`${app.name} logo`}
+                width={40}
+                height={40}
+                className="rounded-lg" 
+                data-ai-hint={app.iconHint}
+            />
+            <div>
+                <Link href="#" className="flex items-center gap-1 font-semibold hover:underline">
+                {app.name}
+                <ChevronsRight className="w-4 h-4 text-muted-foreground" />
+                </Link>
+                <p className="text-sm text-muted-foreground truncate max-w-[200px]">{app.description}</p>
+                {app.isNew && <Badge variant="secondary" className="mt-1">new</Badge>}
+            </div>
+            </div>
+            <div className="flex items-center gap-4">
+                <span className="text-sm font-semibold">{app.tokens}</span>
+                <span className={cn('flex items-center justify-end gap-1 text-xs w-16', isPositiveChange ? 'text-green-400' : 'text-red-400')}>
+                    {isPositiveChange ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                    {Math.abs(app.change)}%
+                </span>
+            </div>
+        </li>
+    )
+};
 
 type TimeFrameOption = 'Today' | 'Past 7 days' | 'Past Month';
 
