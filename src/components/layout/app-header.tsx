@@ -31,7 +31,9 @@ export function AppHeader() {
             <Link href="/rankings" className="transition-colors hover:text-foreground/80 text-foreground/60">Rankings</Link>
           </nav>
           <div className="hidden md:flex items-center gap-2">
-            <Button variant="outline">Sign In</Button>
+            <Link href="/signin">
+              <Button variant="outline">Sign In</Button>
+            </Link>
             <ThemeToggle />
           </div>
           <div className="md:hidden">
@@ -49,7 +51,9 @@ export function AppHeader() {
                     <Link href="/rankings" className="transition-colors hover:text-foreground/80 text-foreground/60">Rankings</Link>
                   </nav>
                   <div className="mt-6 flex flex-col gap-2">
-                     <Button variant="outline">Sign In</Button>
+                     <Link href="/signin">
+                       <Button variant="outline" className="w-full">Sign In</Button>
+                     </Link>
                      <ThemeToggle />
                   </div>
                 </div>
