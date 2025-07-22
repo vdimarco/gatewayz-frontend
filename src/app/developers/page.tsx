@@ -4,18 +4,20 @@
 import { useMemo, useState } from 'react';
 import { models, type Model } from "@/lib/models-data";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Building, Bot, Search, ArrowRight, Package, BarChart } from 'lucide-react';
+import { Bot, Search, ArrowRight, Package, BarChart, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
 type Organization = {
     name: string;
     models: Model[];
     totalTokens: string;
     topModel: string;
+    performanceChange: number; // For trending sort
 }
 
 const OrganizationCard = ({ org }: { org: Organization }) => (
@@ -60,6 +62,14 @@ const OrganizationCard = ({ org }: { org: Organization }) => (
 
 export default function DevelopersPage() {
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeTab, setActiveTab] = useState<'top' | 'trending'>('top');
+    const [timeFrame, setTimeFrame] = useState<'month' | 'week' | 'today'>('month');
+
+    const timeFrameLabels: Record<typeof timeFrame, string> = {
+        month: 'Past Month',
+        week: 'Past Week',
+        today: 'Today',
+    };
 
     const organizations: Organization[] = useMemo(() => {
         const orgMap = new Map<string, Model[]>();
@@ -71,40 +81,72 @@ export default function DevelopersPage() {
             orgMap.get(model.developer)!.push(model);
         });
 
+        const timeMultiplier = {
+            month: 1,
+            week: 1/4,
+            today: 1/30,
+        };
+        const volatility = {
+            month: 1,
+            week: 1.5,
+            today: 3,
+        };
+        
+        const parseTokens = (tokenStr: string) => {
+            const num = parseFloat(tokenStr);
+            if (tokenStr.includes('B')) return num * 1e9;
+            if (tokenStr.includes('M')) return num * 1e6;
+            return num;
+        };
+
         const orgArray = Array.from(orgMap.entries()).map(([name, orgModels]) => {
-            const parseTokens = (tokenStr: string) => {
-                const num = parseFloat(tokenStr);
-                if (tokenStr.includes('B')) return num * 1e9;
-                if (tokenStr.includes('M')) return num * 1e6;
-                return num;
-            };
 
             const total = orgModels.reduce((acc, model) => acc + parseTokens(model.tokens), 0);
+            const adjustedTotal = total * timeMultiplier[timeFrame] * (1 + (Math.random() - 0.5) * 0.1);
             
             let totalTokensFormatted: string;
-            if (total >= 1e9) totalTokensFormatted = `${(total / 1e9).toFixed(1)}B`;
-            else if (total >= 1e6) totalTokensFormatted = `${(total / 1e6).toFixed(1)}M`;
-            else totalTokensFormatted = total.toLocaleString();
+            if (adjustedTotal >= 1e9) totalTokensFormatted = `${(adjustedTotal / 1e9).toFixed(1)}B`;
+            else if (adjustedTotal >= 1e6) totalTokensFormatted = `${(adjustedTotal / 1e6).toFixed(1)}M`;
+            else totalTokensFormatted = adjustedTotal.toLocaleString();
 
             const topModel = orgModels.sort((a,b) => parseTokens(b.tokens) - parseTokens(a.tokens))[0]?.name || 'N/A';
+            
+            // Fake performance change for trending sort
+            const performanceChange = (Math.random() - 0.3) * 20 * volatility[timeFrame];
 
             return {
                 name,
                 models: orgModels,
                 totalTokens: totalTokensFormatted,
-                topModel
+                topModel,
+                performanceChange,
             };
         });
 
         return orgArray;
 
-    }, []);
+    }, [timeFrame]);
 
     const filteredOrgs = useMemo(() => {
-        return organizations.filter(org => 
+        const parseTokens = (tokenStr: string) => {
+            const num = parseFloat(tokenStr);
+            if (tokenStr.includes('B')) return num * 1e9;
+            if (tokenStr.includes('M')) return num * 1e6;
+            return num;
+        };
+
+        const sorted = منظمations.sort((a,b) => {
+            if (activeTab === 'trending') {
+                return b.performanceChange - a.performanceChange;
+            }
+            // Default to top models
+            return parseTokens(b.totalTokens) - parseTokens(a.totalTokens);
+        });
+
+        return sorted.filter(org => 
             org.name.toLowerCase().includes(searchTerm.toLowerCase())
-        ).sort((a,b) => a.name.localeCompare(b.name));
-    }, [organizations, searchTerm]);
+        );
+    }, [organizations, searchTerm, activeTab]);
 
 
     return (
@@ -116,7 +158,7 @@ export default function DevelopersPage() {
                 </p>
             </header>
             
-            <div className="max-w-xl mx-auto mb-8">
+            <div className="max-w-xl mx-auto mb-6">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -126,6 +168,36 @@ export default function DevelopersPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+            </div>
+
+            <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-2">
+                    <Button 
+                        variant={activeTab === 'top' ? 'secondary' : 'ghost'} 
+                        onClick={() => setActiveTab('top')}
+                    >
+                        Top Models
+                    </Button>
+                    <Button 
+                        variant={activeTab === 'trending' ? 'secondary' : 'ghost'}
+                        onClick={() => setActiveTab('trending')}
+                    >
+                        Trending
+                    </Button>
+                </div>
+                
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-[160px] justify-between">
+                        {timeFrameLabels[timeFrame]} <ChevronDown className="w-4 h-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
+                        <DropdownMenuItem onSelect={() => setTimeFrame('month')}>Past Month</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setTimeFrame('week')}>Past Week</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setTimeFrame('today')}>Today</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             <main>
