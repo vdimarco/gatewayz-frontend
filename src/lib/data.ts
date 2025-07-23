@@ -136,29 +136,30 @@ export type AppData = {
   iconHint: string;
   change: number;
   website: string;
+  positionChange: number;
 };
 
 export const topApps: AppData[] = [
-  { name: 'Cline', description: 'Autonomous coding agent right in...', tokens: '25.7B tokens', isNew: false, iconHint: 'letter C', change: 5.2, website: '#' },
-  { name: 'Kilo Code', description: 'AI coding agent for VS Code', tokens: '23.3B tokens', isNew: false, iconHint: 'code brackets', change: 4.8, website: '#' },
-  { name: 'Roo Code', description: 'A whole dev team of AI agents in...', tokens: '21.4B tokens', isNew: false, iconHint: 'letter R', change: -2.1, website: '#' },
-  { name: 'liteLLM', description: 'Open-source library to simplify L...', tokens: '13.2B tokens', isNew: false, iconHint: 'letter L', change: 8.9, website: '#' },
-  { name: 'SillyTavern', description: 'LLM frontend for power users', tokens: '6.45B tokens', isNew: false, iconHint: 'letter S', change: 12.3, website: '#' },
-  { name: 'HammerAI', description: 'Chat with AI characters for free', tokens: '3.36B tokens', isNew: false, iconHint: 'hammer', change: -5.5, website: '#' },
-  { name: 'Chub AI', description: 'GenAI for everyone', tokens: '2.96B tokens', isNew: false, iconHint: 'letter C chat', change: 15.7, website: '#' },
-  { name: 'forge', description: '', tokens: '1.82B tokens', isNew: true, iconHint: 'anvil', change: 20.1, website: '#' },
-  { name: 'OpenRouter: Chatroom', description: 'Chat with multiple LLMs at once', tokens: '1.7B tokens', isNew: false, iconHint: 'speech bubbles', change: 3.2, website: '#' },
-  { name: 'RolePlai - Ai Chat', description: 'LLM frontend for power users', tokens: '1.59B tokens', isNew: true, iconHint: 'letter R play', change: 25.4, website: '#' },
-  { name: 'Linkd', description: '', tokens: '1.43B tokens', isNew: true, iconHint: 'letter L link', change: 18.9, website: '#' },
-  { name: 'GDevelop', description: '', tokens: '1.22B tokens', isNew: true, iconHint: 'letter G controller', change: -10.3, website: '#' },
-  { name: 'shapes inc', description: 'General purpose social agents', tokens: '1.21B tokens', isNew: false, iconHint: 'shapes', change: 1.1, website: '#' },
-  { name: 'Caveduck', description: 'AI character chat', tokens: '1.04B tokens', isNew: false, iconHint: 'duck', change: 7.6, website: '#' },
-  { name: 'janitorai.com', description: '', tokens: '991M tokens', isNew: true, iconHint: 'janitor broom', change: 30.5, website: '#' },
-  { name: '21st.dev', description: '', tokens: '934M tokens', isNew: true, iconHint: 'number 21', change: 11.8, website: '#' },
-  { name: 'Infinite Worlds', description: 'Build your own adventures, share...', tokens: '890M tokens', isNew: false, iconHint: 'infinity symbol', change: -3.7, website: '#' },
-  { name: 'Open WebUI', description: 'Extensible, self-hosted AI interface', tokens: '863M tokens', isNew: false, iconHint: 'letter O web', change: 6.4, website: '#' },
-  { name: 'Deepwriter', description: 'Research & write anything with ag...', tokens: '748M tokens', isNew: false, iconHint: 'letter D feather', change: 9.9, website: '#' },
-  { name: 'Quack', description: 'Design and interact with characters', tokens: '707M tokens', isNew: false, iconHint: 'duck sound', change: -1.2, website: '#' },
+  { name: 'Cline', description: 'Autonomous coding agent right in...', tokens: '25.7B tokens', isNew: false, iconHint: 'letter C', change: 5.2, website: '#', positionChange: 0 },
+  { name: 'Kilo Code', description: 'AI coding agent for VS Code', tokens: '23.3B tokens', isNew: false, iconHint: 'code brackets', change: 4.8, website: '#', positionChange: 1 },
+  { name: 'Roo Code', description: 'A whole dev team of AI agents in...', tokens: '21.4B tokens', isNew: false, iconHint: 'letter R', change: -2.1, website: '#', positionChange: -1 },
+  { name: 'liteLLM', description: 'Open-source library to simplify L...', tokens: '13.2B tokens', isNew: false, iconHint: 'letter L', change: 8.9, website: '#', positionChange: 3 },
+  { name: 'SillyTavern', description: 'LLM frontend for power users', tokens: '6.45B tokens', isNew: false, iconHint: 'letter S', change: 12.3, website: '#', positionChange: 0 },
+  { name: 'HammerAI', description: 'Chat with AI characters for free', tokens: '3.36B tokens', isNew: false, iconHint: 'hammer', change: -5.5, website: '#', positionChange: -2 },
+  { name: 'Chub AI', description: 'GenAI for everyone', tokens: '2.96B tokens', isNew: false, iconHint: 'letter C chat', change: 15.7, website: '#', positionChange: 2 },
+  { name: 'forge', description: '', tokens: '1.82B tokens', isNew: true, iconHint: 'anvil', change: 20.1, website: '#', positionChange: 5 },
+  { name: 'OpenRouter: Chatroom', description: 'Chat with multiple LLMs at once', tokens: '1.7B tokens', isNew: false, iconHint: 'speech bubbles', change: 3.2, website: '#', positionChange: 0 },
+  { name: 'RolePlai - Ai Chat', description: 'LLM frontend for power users', tokens: '1.59B tokens', isNew: true, iconHint: 'letter R play', change: 25.4, website: '#', positionChange: 4 },
+  { name: 'Linkd', description: '', tokens: '1.43B tokens', isNew: true, iconHint: 'letter L link', change: 18.9, website: '#', positionChange: 1 },
+  { name: 'GDevelop', description: '', tokens: '1.22B tokens', isNew: true, iconHint: 'letter G controller', change: -10.3, website: '#', positionChange: -3 },
+  { name: 'shapes inc', description: 'General purpose social agents', tokens: '1.21B tokens', isNew: false, iconHint: 'shapes', change: 1.1, website: '#', positionChange: 0 },
+  { name: 'Caveduck', description: 'AI character chat', tokens: '1.04B tokens', isNew: false, iconHint: 'duck', change: 7.6, website: '#', positionChange: 1 },
+  { name: 'janitorai.com', description: '', tokens: '991M tokens', isNew: true, iconHint: 'janitor broom', change: 30.5, website: '#', positionChange: 6 },
+  { name: '21st.dev', description: '', tokens: '934M tokens', isNew: true, iconHint: 'number 21', change: 11.8, website: '#', positionChange: 2 },
+  { name: 'Infinite Worlds', description: 'Build your own adventures, share...', tokens: '890M tokens', isNew: false, iconHint: 'infinity symbol', change: -3.7, website: '#', positionChange: -2 },
+  { name: 'Open WebUI', description: 'Extensible, self-hosted AI interface', tokens: '863M tokens', isNew: false, iconHint: 'letter O web', change: 6.4, website: '#', positionChange: 0 },
+  { name: 'Deepwriter', description: 'Research & write anything with ag...', tokens: '748M tokens', isNew: false, iconHint: 'letter D feather', change: 9.9, website: '#', positionChange: 1 },
+  { name: 'Quack', description: 'Design and interact with characters', tokens: '707M tokens', isNew: false, iconHint: 'duck sound', change: -1.2, website: '#', positionChange: -1 },
 ];
 
 export const adjustAppDataForTimeRange = (apps: AppData[], timeFrame: 'Today' | 'Past 7 days' | 'Past Month'): AppData[] => {
@@ -195,6 +196,7 @@ export const adjustAppDataForTimeRange = (apps: AppData[], timeFrame: 'Today' | 
       ...app,
       tokens: formatTokens(adjustedTokens),
       change: parseFloat(adjustedChange.toFixed(1)),
+      positionChange: Math.floor(app.positionChange * (1 + (Math.random() - 0.5) * changeVolatility[timeFrame])),
     };
   }).sort((a, b) => parseTokens(b.tokens) - parseTokens(a.tokens));
 };

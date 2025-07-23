@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { topApps, type AppData, adjustAppDataForTimeRange } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronsRight } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronsRight, Minus, Triangle } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
@@ -15,10 +15,25 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 
 const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
     const isPositiveChange = app.change >= 0;
+
+    const getPositionChangeColor = () => {
+        if (app.positionChange > 0) return 'text-green-400';
+        if (app.positionChange < 0) return 'text-red-400';
+        return 'text-muted-foreground';
+    };
+
     return (
         <li className="flex items-center justify-between py-3">
             <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-muted-foreground w-6 text-right">{rank}.</span>
+                <div className="flex items-center gap-2 w-12">
+                     <div className={cn("flex items-center gap-1 text-xs w-6", getPositionChangeColor())}>
+                        {app.positionChange !== 0 && (
+                           <Triangle className={cn("h-2 w-2 fill-current", app.positionChange > 0 ? 'transform rotate-180' : '')} />
+                        )}
+                        {app.positionChange !== 0 ? Math.abs(app.positionChange) : <Minus className="h-2 w-2" />}
+                      </div>
+                    <span className="font-semibold text-lg">{rank}.</span>
+                </div>
             <Image 
                 src={`https://placehold.co/40x40.png`} 
                 alt={`${app.name} logo`}
