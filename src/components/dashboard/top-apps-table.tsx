@@ -28,7 +28,7 @@ const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
                 <div className="flex items-center gap-2 w-12">
                      <div className={cn("flex items-center gap-1 text-xs w-6", getPositionChangeColor())}>
                         {app.positionChange !== 0 && (
-                           <Triangle className={cn("h-2 w-2 fill-current", app.positionChange > 0 ? 'transform rotate-180' : '')} />
+                           <Triangle className={cn("h-2 w-2 fill-current", app.positionChange < 0 ? 'transform rotate-180' : '')} />
                         )}
                         {app.positionChange !== 0 ? Math.abs(app.positionChange) : <Minus className="h-2 w-2" />}
                       </div>
