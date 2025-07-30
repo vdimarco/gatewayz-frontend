@@ -83,7 +83,7 @@ export default function TokenGenerationChart({ models, chartData: rawChartData, 
   };
   
   return (
-    <Card className="border-border/40">
+    <Card className="border-border">
       <CardHeader>
         <CardTitle>Tokens Generated</CardTitle>
         <CardDescription>Unit: Trillions of Tokens</CardDescription>
