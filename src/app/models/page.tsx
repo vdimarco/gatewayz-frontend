@@ -28,6 +28,7 @@ import { models, type Model } from "@/lib/models-data";
 import { BookText, Bot, ChevronDown, ChevronUp, Code, FileText, ImageIcon, LayoutGrid, LayoutList, Search, Sliders as SlidersIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { stringToColor } from '@/lib/utils';
 
 const ModelCard = ({ model }: { model: Model }) => (
   <Link href={`/models/${encodeURIComponent(model.name)}`}>
@@ -37,7 +38,7 @@ const ModelCard = ({ model }: { model: Model }) => (
           <h3 className="text-lg font-semibold flex items-center gap-2">
             {model.name} {model.isFree && <Badge>Free</Badge>}
           </h3>
-          <Badge variant="outline" className="mt-2">{model.category}</Badge>
+          <Badge variant="outline" className="mt-2" style={{ backgroundColor: stringToColor(model.category) }}>{model.category}</Badge>
         </div>
         <div className="text-sm text-muted-foreground whitespace-nowrap">{model.tokens}</div>
       </div>

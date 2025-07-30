@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ModelData } from '@/lib/data';
 import { ArrowUp, ArrowDown, Bot, Building, Eye, MessageSquare, Boxes, Server, Box, Code, Sliders, Puzzle, Dna, Mic, Minus, Triangle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, stringToColor } from '@/lib/utils';
 import Link from 'next/link';
 
 const categoryIcons: Record<ModelData['category'], React.ElementType> = {
@@ -42,7 +42,7 @@ interface TopModelsTableProps {
 const CategoryCell = ({ model }: { model: ModelData }) => {
   const CategoryIcon = categoryIcons[model.category] || Box;
   const content = (
-    <Badge variant="outline" className="flex items-center gap-1.5 w-fit">
+    <Badge variant="outline" className="flex items-center gap-1.5 w-fit" style={{ backgroundColor: stringToColor(model.category) }}>
       <CategoryIcon className="h-3 w-3" />
       {model.category}
     </Badge>

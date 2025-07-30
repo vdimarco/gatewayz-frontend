@@ -20,6 +20,7 @@ import { addDays, format, differenceInDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
+import { stringToColor } from '@/lib/utils';
 
 const ModelCard = ({ model }: { model: Model }) => (
   <Card className="p-6 flex flex-col">
@@ -28,7 +29,7 @@ const ModelCard = ({ model }: { model: Model }) => (
         <h3 className="text-lg font-semibold flex items-center gap-2">
           {model.name} {model.isFree && <Badge>Free</Badge>}
         </h3>
-        <Badge variant="outline" className="mt-2">{model.category}</Badge>
+        <Badge variant="outline" className="mt-2" style={{ backgroundColor: stringToColor(model.category) }}>{model.category}</Badge>
       </div>
       <div className="text-sm text-muted-foreground whitespace-nowrap">{model.tokens}</div>
     </div>
