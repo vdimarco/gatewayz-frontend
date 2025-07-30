@@ -8,7 +8,7 @@ body {
 
 @layer base {
   :root {
-    --background: 45 82% 77%;
+    --background: 45 82% 87%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 89.4%;
     --card-foreground: 0 0% 3.9%;
@@ -101,7 +101,7 @@ body {
 
 @layer components {
   .btn-gradient-border {
-    @apply relative bg-card border border-input;
+    @apply relative bg-card border border-border;
   }
 
   .btn-gradient-border::before {
