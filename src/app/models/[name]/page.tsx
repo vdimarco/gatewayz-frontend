@@ -19,8 +19,8 @@ import { providerData } from '@/lib/provider-data';
 import { generateChartData, generateStatsTable } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-const Section = ({ title, description, children }: { title: string, description?: string, children: React.ReactNode }) => (
-    <section className="py-8">
+const Section = ({ title, description, children, className }: { title: string, description?: string, children: React.ReactNode, className?: string }) => (
+    <section className={cn("py-8", className)}>
         <h2 className="text-2xl font-semibold">{title}</h2>
         {description && <p className="text-muted-foreground mt-2">{description}</p>}
         <div className="mt-6">{children}</div>
@@ -179,6 +179,7 @@ export default function ModelProfilePage() {
                 <Section 
                   title={`Providers for ${model.name}`}
                   description="OpenRouter routes requests to the best providers that are able to handle your prompt size and parameters, with fallbacks to maximize uptime."
+                  className="pt-8 pb-0"
                 >
                     <ProvidersDisplay modelName={model.name} />
                 </Section>
