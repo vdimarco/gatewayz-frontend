@@ -116,10 +116,10 @@ export default function TopModelsTable({ models }: TopModelsTableProps) {
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
+                    <Link href={`/models/${encodeURIComponent(model.name)}`} className="flex items-center gap-2 hover:underline">
                       <Bot className="h-4 w-4 text-muted-foreground" />
                       <span>{model.name}</span>
-                    </div>
+                    </Link>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">
                     <Link href={`/organizations/${encodeURIComponent(model.organization)}`} className="flex items-center gap-2 hover:underline">
