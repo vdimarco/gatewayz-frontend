@@ -27,26 +27,29 @@ import { Slider } from "@/components/ui/slider";
 import { models, type Model } from "@/lib/models-data";
 import { BookText, Bot, ChevronDown, ChevronUp, Code, FileText, ImageIcon, LayoutGrid, LayoutList, Search, Sliders as SlidersIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 const ModelCard = ({ model }: { model: Model }) => (
-  <Card className="p-6 flex flex-col">
-    <div className="flex justify-between items-start">
-      <div>
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          {model.name} {model.isFree && <Badge>Free</Badge>}
-        </h3>
-        <Badge variant="outline" className="mt-2">{model.category}</Badge>
+  <Link href={`/models/${encodeURIComponent(model.name)}`}>
+    <Card className="p-6 flex flex-col h-full hover:border-primary">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            {model.name} {model.isFree && <Badge>Free</Badge>}
+          </h3>
+          <Badge variant="outline" className="mt-2">{model.category}</Badge>
+        </div>
+        <div className="text-sm text-muted-foreground whitespace-nowrap">{model.tokens}</div>
       </div>
-      <div className="text-sm text-muted-foreground whitespace-nowrap">{model.tokens}</div>
-    </div>
-    <p className="text-muted-foreground mt-4 text-sm flex-grow">{model.description}</p>
-    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-4 pt-4 border-t">
-      <span>by {model.developer}</span>
-      <span>{model.context}K context</span>
-      <span>${model.inputCost}/M input</span>
-      <span>${model.outputCost}/M output</span>
-    </div>
-  </Card>
+      <p className="text-muted-foreground mt-4 text-sm flex-grow">{model.description}</p>
+      <div className="flex items-center gap-4 text-xs text-muted-foreground mt-4 pt-4 border-t">
+        <span>by {model.developer}</span>
+        <span>{model.context}K context</span>
+        <span>${model.inputCost}/M input</span>
+        <span>${model.outputCost}/M output</span>
+      </div>
+    </Card>
+  </Link>
 );
 
 export default function ModelsPage() {
