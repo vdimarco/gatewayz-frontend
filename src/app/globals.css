@@ -101,7 +101,7 @@ body {
 
 @layer components {
   .btn-gradient-border {
-    @apply relative bg-background border border-input;
+    @apply relative bg-card border border-input;
   }
 
   .btn-gradient-border::before {
