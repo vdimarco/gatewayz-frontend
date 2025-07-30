@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { addDays, format } from 'date-fns';
 import TopAppsTable from '@/components/dashboard/top-apps-table';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const chartData = Array.from({ length: 30 }, (_, i) => ({
     date: format(addDays(new Date(), -29 + i), 'MMM d'),
@@ -59,6 +60,7 @@ export default function ModelProfilePage() {
     }
 
     return (
+      <TooltipProvider>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <header className="mb-8">
                 <div className="flex flex-wrap items-center justify-between gap-4">
@@ -183,6 +185,6 @@ export default function ModelProfilePage() {
                 </Section>
             </main>
         </div>
+        </TooltipProvider>
     );
 }
-
