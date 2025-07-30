@@ -117,6 +117,15 @@ const ChartCard = ({ modelName, title, dataKey, yAxisFormatter }: { modelName: s
     )
 }
 
+const stringToColor = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const h = hash % 360;
+    return `hsl(${h}, 70%, 80%)`;
+};
+
 
 export default function ModelProfilePage() {
     const params = useParams();
@@ -151,8 +160,8 @@ export default function ModelProfilePage() {
                     <div>
                         <h1 className="text-3xl font-bold">{model.name}</h1>
                         <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline">{model.category}</Badge>
-                            <Badge variant="outline">{model.series}</Badge>
+                            <Badge variant="outline" style={{ backgroundColor: stringToColor(model.category) }}>{model.category}</Badge>
+                            <Badge variant="outline" style={{ backgroundColor: stringToColor(model.series) }}>{model.series}</Badge>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -240,3 +249,5 @@ export default function ModelProfilePage() {
         </TooltipProvider>
     );
 }
+
+    
