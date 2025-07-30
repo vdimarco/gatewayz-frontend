@@ -55,7 +55,7 @@ export default function SettingsLayout({
         </Sidebar>
 
         <SidebarInset className="flex-1 overflow-auto">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="px-4 sm:px-6 lg:px-8 py-8">
              <div className="flex items-center gap-2 mb-6 lg:hidden">
                 <SidebarTrigger />
                 <h1 className="text-2xl font-bold">Settings</h1>
