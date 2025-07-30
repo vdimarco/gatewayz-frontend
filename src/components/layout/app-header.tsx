@@ -36,7 +36,7 @@ export function AppHeader() {
           </Link>
            <div className="relative hidden sm:block w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input type="search" placeholder="Search..." className="pl-9 pr-4 h-9" />
+              <Input type="search" placeholder="Search..." className="pl-9 pr-4 h-9 bg-input" />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground border rounded-sm px-1.5 py-0.5">/</div>
            </div>
         </div>

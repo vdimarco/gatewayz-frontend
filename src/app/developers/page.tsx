@@ -140,7 +140,7 @@ export default function DevelopersPage() {
                 return b.performanceChange - a.performanceChange;
             }
             // Default to top models
-            return parseTokens(b.totalTokens) - parseTokens(a.totalTokens);
+            return parseTokens(b.totalTokens) - a.totalTokens;
         });
 
         return sorted.filter(org => 
@@ -163,7 +163,7 @@ export default function DevelopersPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Filter developers..."
-                        className="pl-9"
+                        className="pl-9 bg-input"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
