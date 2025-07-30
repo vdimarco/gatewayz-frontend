@@ -78,9 +78,6 @@ const ProviderCard = ({ provider }: { provider: ProviderInfo }) => {
           </div>
           <div className="flex items-center justify-end gap-2">
             <UptimeIndicator uptime={provider.uptime} />
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-                <ChevronDown className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </div>
