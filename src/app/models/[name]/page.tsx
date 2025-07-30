@@ -8,11 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { addDays, format } from 'date-fns';
 import TopAppsTable from '@/components/dashboard/top-apps-table';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { ProvidersDisplay } from '@/components/models/provider-card';
 
 const chartData = Array.from({ length: 30 }, (_, i) => ({
     date: format(addDays(new Date(), -29 + i), 'MMM d'),
@@ -93,29 +93,11 @@ export default function ModelProfilePage() {
             </nav>
 
             <main>
-                <Section title={`Providers for ${model.name}`}>
-                    <Card>
-                        <CardContent>
-                             <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Provider</TableHead>
-                                        <TableHead>Context</TableHead>
-                                        <TableHead>Input</TableHead>
-                                        <TableHead>Output</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    <TableRow>
-                                        <TableCell className="font-semibold">{model.developer}</TableCell>
-                                        <TableCell>{model.context}K</TableCell>
-                                        <TableCell>${model.inputCost}/M</TableCell>
-                                        <TableCell>${model.outputCost}/M</TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
+                <Section 
+                  title={`Providers for ${model.name}`}
+                  description="OpenRouter routes requests to the best providers that are able to handle your prompt size and parameters, with fallbacks to maximize uptime."
+                >
+                    <ProvidersDisplay modelName={model.name} />
                 </Section>
                 
                 <Section title="Throughput">
