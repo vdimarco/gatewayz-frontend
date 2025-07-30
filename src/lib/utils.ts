@@ -12,5 +12,5 @@ export const stringToColor = (str: string) => {
   }
   const h = hash % 360;
   // Use a slightly different HSL range for better pastel colors
-  return `hsl(${h}, 50%, 90%)`;
+  return `hsl(${h}, 60%, 85%)`;
 };
