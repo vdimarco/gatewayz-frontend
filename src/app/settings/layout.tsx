@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
+import { SidebarProvider, Sidebar, SidebarContent, SidebarInset, SidebarTrigger, SidebarGroup } from "@/components/ui/sidebar";
 
 const navItems = [
   { href: "/settings", label: "Settings" },
@@ -24,31 +25,45 @@ export default function SettingsLayout({
   const pathname = usePathname();
 
   return (
-    <div className="container mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col md:flex-row gap-12">
-        <aside className="w-full md:w-1/5">
-          <nav className="flex flex-col space-y-1">
-            {navItems.map((item) => (
-               <Link 
-                key={item.href} 
-                href={item.href} 
-                className={cn(
-                  "px-3 py-2 rounded-md text-sm",
-                  pathname === item.href
-                    ? "font-semibold text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        </aside>
+    <SidebarProvider>
+      <div className="relative flex h-[calc(100vh-theme(spacing.14))]">
+        <Sidebar
+          variant="sidebar"
+          collapsible="icon"
+          className="hidden lg:flex"
+        >
+          <SidebarContent className="p-4">
+            <SidebarGroup>
+              <nav className="flex flex-col space-y-1">
+                {navItems.map((item) => (
+                   <Link 
+                    key={item.href} 
+                    href={item.href} 
+                    className={cn(
+                      "px-3 py-2 rounded-md text-sm",
+                      pathname === item.href
+                        ? "font-semibold text-primary bg-sidebar-accent"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            </SidebarGroup>
+          </SidebarContent>
+        </Sidebar>
 
-        <main className="flex-1">
-          {children}
-        </main>
+        <SidebarInset className="flex-1 overflow-auto">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+             <div className="flex items-center gap-2 mb-6 lg:hidden">
+                <SidebarTrigger />
+                <h1 className="text-2xl font-bold">Settings</h1>
+            </div>
+            {children}
+          </div>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
