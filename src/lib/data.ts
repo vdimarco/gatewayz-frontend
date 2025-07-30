@@ -258,12 +258,12 @@ export const generateChartData = (providers: ProviderInfo[], dataKey: 'latency' 
 
 export const generateStatsTable = (providers: ProviderInfo[], dataKey: 'latency' | 'throughput') => {
     return providers.map(provider => {
-        const median = provider[dataKey] || 0;
+        const avg = provider[dataKey] || 0;
         return {
             provider: provider.name,
-            median: median,
-            p95: median * (1 + (Math.random() * 0.2 + 0.1)), // P95 is 10-30% higher
-            p99: median * (1 + (Math.random() * 0.3 + 0.2)), // P99 is 20-50% higher
+            min: avg * (1 - (Math.random() * 0.2 + 0.1)),
+            max: avg * (1 + (Math.random() * 0.3 + 0.2)),
+            avg: avg,
         }
     });
 };

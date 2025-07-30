@@ -95,18 +95,18 @@ const ChartCard = ({ modelName, title, dataKey, yAxisFormatter }: { modelName: s
                     <TableHeader>
                         <TableRow>
                             <TableHead>Provider</TableHead>
-                            <TableHead className="text-right">Median {title}</TableHead>
-                            <TableHead className="text-right">P95 {title}</TableHead>
-                            <TableHead className="text-right">P99 {title}</TableHead>
+                            <TableHead className="text-right">Min {title}</TableHead>
+                            <TableHead className="text-right">Max {title}</TableHead>
+                            <TableHead className="text-right">Avg {title}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {statsTable.map(stat => (
                             <TableRow key={stat.provider}>
                                 <TableCell className="font-medium">{stat.provider}</TableCell>
-                                <TableCell className="text-right">{stat.median.toFixed(2)}{dataKey === 'latency' ? 's' : ' tps'}</TableCell>
-                                <TableCell className="text-right">{stat.p95.toFixed(2)}{dataKey === 'latency' ? 's' : ' tps'}</TableCell>
-                                <TableCell className="text-right">{stat.p99.toFixed(2)}{dataKey === 'latency' ? 's' : ' tps'}</TableCell>
+                                <TableCell className="text-right">{stat.min.toFixed(2)}{dataKey === 'latency' ? 's' : ' tps'}</TableCell>
+                                <TableCell className="text-right">{stat.max.toFixed(2)}{dataKey === 'latency' ? 's' : ' tps'}</TableCell>
+                                <TableCell className="text-right">{stat.avg.toFixed(2)}{dataKey === 'latency' ? 's' : ' tps'}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
