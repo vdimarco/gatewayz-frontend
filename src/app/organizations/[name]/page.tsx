@@ -23,7 +23,7 @@ import Image from 'next/image';
 import { stringToColor } from '@/lib/utils';
 
 const ModelCard = ({ model }: { model: Model }) => (
-  <Card className="p-6 flex flex-col">
+  <Card className="p-6 flex flex-col h-full hover:border-primary">
     <div className="flex justify-between items-start">
       <div>
         <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -266,7 +266,9 @@ export default function OrganizationPage() {
             {orgModels.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {orgModels.map(model => (
-                        <ModelCard key={model.name} model={model} />
+                        <Link key={model.name} href={`/models/${encodeURIComponent(model.name)}`}>
+                            <ModelCard model={model} />
+                        </Link>
                     ))}
                 </div>
             ) : (
@@ -276,5 +278,3 @@ export default function OrganizationPage() {
     </div>
   );
 }
-
-    
