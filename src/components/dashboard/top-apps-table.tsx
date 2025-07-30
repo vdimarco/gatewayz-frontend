@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { topApps, type AppData, adjustAppDataForTimeRange } from '@/lib/data';
+import { AppData, topApps } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronsRight, Minus, Triangle } from 'lucide-react';
 import { Badge } from '../ui/badge';
@@ -12,6 +12,7 @@ import { useState, useMemo } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useModelData } from '@/hooks/useModelData';
 
 const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
     const isPositiveChange = app.change >= 0;
@@ -71,17 +72,15 @@ const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
     )
 };
 
-type TimeFrameOption = 'Today' | 'Past 7 days' | 'Past Month';
+export type TimeFrameOption = 'Today' | 'Past 7 days' | 'Past Month';
 
 export default function TopAppsTable() {
   const [timeFrame, setTimeFrame] = useState<TimeFrameOption>('Today');
+  const { adjustedApps } = useModelData('year', 'All', timeFrame);
 
-  const displayedApps = useMemo(() => {
-    return adjustAppDataForTimeRange(topApps, timeFrame);
-  }, [timeFrame]);
 
-  const appsColumn1 = displayedApps.slice(0, 10);
-  const appsColumn2 = displayedApps.slice(10, 20);
+  const appsColumn1 = adjustedApps.slice(0, 10);
+  const appsColumn2 = adjustedApps.slice(10, 20);
 
   return (
     <Card>

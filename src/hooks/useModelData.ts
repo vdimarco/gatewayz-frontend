@@ -1,11 +1,13 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import type { ModelData } from '@/lib/data';
-import { topModels, monthlyModelTokenData, weeklyModelTokenData, yearlyModelTokenData, adjustModelDataForTimeRange } from '@/lib/data';
+import type { ModelData, AppData } from '@/lib/data';
+import { topModels, monthlyModelTokenData, weeklyModelTokenData, yearlyModelTokenData, adjustModelDataForTimeRange, topApps, adjustAppDataForTimeRange } from '@/lib/data';
+import type { TimeFrameOption } from '@/components/dashboard/top-apps-table';
+
 
 export type TimeRange = 'year' | 'month' | 'week';
 
-export function useModelData(selectedTimeRange: TimeRange, selectedCategory: ModelData['category'] | 'All') {
+export function useModelData(selectedTimeRange: TimeRange, selectedCategory: ModelData['category'] | 'All', appTimeFrame?: TimeFrameOption) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -42,5 +44,12 @@ export function useModelData(selectedTimeRange: TimeRange, selectedCategory: Mod
     return categoryFilteredModels.slice(0, 20);
   }, [isClient, selectedTimeRange, selectedCategory]);
 
-  return { filteredModels, chartData };
+  const adjustedApps = useMemo(() => {
+    if (!isClient || !appTimeFrame) {
+        return topApps.slice(0, 20);
+    }
+    return adjustAppDataForTimeRange(topApps, appTimeFrame);
+  }, [isClient, appTimeFrame]);
+
+  return { filteredModels, chartData, adjustedApps };
 }
