@@ -65,7 +65,7 @@ const ChartCard = ({ modelName, title, dataKey, yAxisFormatter }: { modelName: s
                     </div>
                 </CardContent>
             </Card>
-             <DialogContent className="max-w-4xl h-auto flex flex-col">
+             <DialogContent className="max-w-4xl h-auto flex flex-col" style={{backgroundColor: '#e4e4e4', color: 'black'}}>
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
                      <p className="text-sm text-muted-foreground">Median {title} of the top providers for this model.</p>
