@@ -76,7 +76,9 @@ export function UserNav({ user }: UserNavProps) {
           <Link href="/settings/credits">
             <DropdownMenuItem>Credits</DropdownMenuItem>
           </Link>
-          <DropdownMenuItem>Keys</DropdownMenuItem>
+          <Link href="/settings/keys">
+            <DropdownMenuItem>Keys</DropdownMenuItem>
+          </Link>
           <Link href="/settings/activity">
             <DropdownMenuItem>Activity</DropdownMenuItem>
           </Link>
