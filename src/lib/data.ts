@@ -1,4 +1,6 @@
 
+import type { ProviderInfo } from "./provider-data";
+
 export type ModelData = {
   name: string;
   organization: string;
@@ -67,7 +69,7 @@ export const topModels: ModelData[] = [
 ].sort((a, b) => b.tokens - a.tokens);
 
 
-const generateChartData = (numPoints: number, timeUnit: 'days' | 'weeks' | 'months', modelMetrics: any[]) => {
+const generateChartDataSingle = (numPoints: number, timeUnit: 'days' | 'weeks' | 'months', modelMetrics: any[]) => {
   const data = [];
   const today = new Date();
 
@@ -103,9 +105,9 @@ const modelMetrics = modelNames.map((name, i) => ({
   growth: 1.05 + Math.random() * 0.1
 }));
 
-export const yearlyModelTokenData = generateChartData(52, 'weeks', modelMetrics);
-export const monthlyModelTokenData = generateChartData(30, 'days', modelMetrics);
-export const weeklyModelTokenData = generateChartData(7, 'days', modelMetrics);
+export const yearlyModelTokenData = generateChartDataSingle(52, 'weeks', modelMetrics);
+export const monthlyModelTokenData = generateChartDataSingle(30, 'days', modelMetrics);
+export const weeklyModelTokenData = generateChartDataSingle(7, 'days', modelMetrics);
 
 export const adjustModelDataForTimeRange = (models: ModelData[], timeRange: 'year' | 'month' | 'week'): ModelData[] => {
   const multiplier = {
@@ -201,7 +203,6 @@ export const adjustAppDataForTimeRange = (apps: AppData[], timeFrame: 'Today' | 
   }).sort((a, b) => parseTokens(b.tokens) - parseTokens(a.tokens));
 };
 
-
 export type OrganizationData = {
   name: string;
   website?: string;
@@ -232,3 +233,37 @@ export const organizationsData: OrganizationData[] = [
     { name: 'TU Berlin', website: '#', github: '#', twitter: '#' },
     { name: 'BAAI', website: 'https://www.baai.ac.cn/en/', github: 'https://github.com/FlagAI-Open', twitter: '' },
 ];
+
+
+export const generateChartData = (providers: ProviderInfo[], dataKey: 'latency' | 'throughput'): any[] => {
+    const data = [];
+    const today = new Date();
+
+    for (let i = 29; i >= 0; i--) {
+        const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+        const dataPoint: { [key: string]: any } = {
+            date: date.toISOString().split('T')[0]
+        };
+
+        providers.forEach(provider => {
+            const baseValue = provider[dataKey] || 0;
+            const fluctuation = baseValue * (Math.random() - 0.4) * 0.2;
+            dataPoint[provider.name] = Math.max(0, parseFloat((baseValue + fluctuation).toFixed(2)));
+        });
+
+        data.push(dataPoint);
+    }
+    return data;
+};
+
+export const generateStatsTable = (providers: ProviderInfo[], dataKey: 'latency' | 'throughput') => {
+    return providers.map(provider => {
+        const median = provider[dataKey] || 0;
+        return {
+            provider: provider.name,
+            median: median,
+            p95: median * (1 + (Math.random() * 0.2 + 0.1)), // P95 is 10-30% higher
+            p99: median * (1 + (Math.random() * 0.3 + 0.2)), // P99 is 20-50% higher
+        }
+    });
+};

@@ -8,20 +8,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { addDays, format } from 'date-fns';
 import TopAppsTable from '@/components/dashboard/top-apps-table';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ProvidersDisplay } from '@/components/models/provider-card';
 import { Maximize } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-
-const chartData = Array.from({ length: 30 }, (_, i) => ({
-    date: format(addDays(new Date(), -29 + i), 'MMM d'),
-    throughput: Math.floor(Math.random() * 100 + 10),
-    latency: parseFloat((Math.random() * 0.5 + 0.2).toFixed(2)),
-}));
-
+import { providerData } from '@/lib/provider-data';
+import { generateChartData, generateStatsTable } from '@/lib/data';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const Section = ({ title, description, children }: { title: string, description?: string, children: React.ReactNode }) => (
     <section className="py-8">
@@ -31,7 +27,11 @@ const Section = ({ title, description, children }: { title: string, description?
     </section>
 );
 
-const ChartCard = ({ title, dataKey, yAxisFormatter }: { title: string; dataKey: "throughput" | "latency"; yAxisFormatter: (value: any) => string; }) => {
+const ChartCard = ({ modelName, title, dataKey, yAxisFormatter }: { modelName: string, title: string; dataKey: "throughput" | "latency"; yAxisFormatter: (value: any) => string; }) => {
+    const providers = useMemo(() => providerData[modelName] || [], [modelName]);
+    const chartData = useMemo(() => generateChartData(providers, dataKey), [providers, dataKey]);
+    const statsTable = useMemo(() => generateStatsTable(providers, dataKey), [providers, dataKey]);
+    
     return (
         <Dialog>
             <Card>
@@ -46,45 +46,71 @@ const ChartCard = ({ title, dataKey, yAxisFormatter }: { title: string; dataKey:
                 <CardContent>
                      <div className="h-[200px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData}>
+                            <LineChart data={chartData}>
                                 <Tooltip
-                                    formatter={(value) => [`${value}${dataKey === 'latency' ? 's' : ' tps'}`, title]}
+                                    formatter={(value, name) => [`${value}${dataKey === 'latency' ? 's' : ' tps'}`, name]}
                                     labelFormatter={(label) => format(new Date(label), "PPP")}
                                      contentStyle={{
                                         backgroundColor: 'hsl(var(--background))',
                                         borderColor: 'hsl(var(--border))',
                                       }}
                                 />
-                                <Area type="monotone" dataKey={dataKey} stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.1)" />
+                                {providers.map((p, i) => (
+                                     <Line key={p.name} type="monotone" dataKey={p.name} stroke={`hsl(var(--chart-${(i % 5) + 1}))`} dot={false} strokeWidth={2} />
+                                ))}
                                 <XAxis dataKey="date" tickLine={false} axisLine={false} tick={false} />
                                 <YAxis tickLine={false} axisLine={false} tickFormatter={yAxisFormatter} />
-                            </AreaChart>
+                            </LineChart>
                         </ResponsiveContainer>
                     </div>
                 </CardContent>
             </Card>
-             <DialogContent className="max-w-4xl h-3/4 flex flex-col">
+             <DialogContent className="max-w-4xl h-auto flex flex-col">
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
+                     <p className="text-sm text-muted-foreground">Median {title} of the top providers for this model.</p>
                 </DialogHeader>
-                <div className="flex-grow">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
+                <div className="flex-grow my-4">
+                    <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" />
-                             <XAxis dataKey="date" />
+                             <XAxis dataKey="date" tickFormatter={(label) => format(new Date(label), 'MMM d')} />
                              <YAxis tickFormatter={yAxisFormatter} />
                             <Tooltip
-                                formatter={(value) => [`${value}${dataKey === 'latency' ? 's' : ' tps'}`, title]}
+                                formatter={(value, name) => [`${value}${dataKey === 'latency' ? 's' : ' tps'}`, name]}
                                 labelFormatter={(label) => format(new Date(label), "PPP")}
                                  contentStyle={{
                                     backgroundColor: 'hsl(var(--background))',
                                     borderColor: 'hsl(var(--border))',
                                   }}
                              />
-                            <Area type="monotone" dataKey={dataKey} stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.2)" />
-                        </AreaChart>
+                            <Legend />
+                            {providers.map((p, i) => (
+                                <Line key={p.name} type="monotone" dataKey={p.name} stroke={`hsl(var(--chart-${(i % 5) + 1}))`} />
+                            ))}
+                        </LineChart>
                     </ResponsiveContainer>
                 </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Provider</TableHead>
+                            <TableHead className="text-right">Median {title}</TableHead>
+                            <TableHead className="text-right">P95 {title}</TableHead>
+                            <TableHead className="text-right">P99 {title}</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {statsTable.map(stat => (
+                            <TableRow key={stat.provider}>
+                                <TableCell className="font-medium">{stat.provider}</TableCell>
+                                <TableCell className="text-right">{stat.median.toFixed(2)}{dataKey === 'latency' ? 's' : ' tps'}</TableCell>
+                                <TableCell className="text-right">{stat.p95.toFixed(2)}{dataKey === 'latency' ? 's' : ' tps'}</TableCell>
+                                <TableCell className="text-right">{stat.p99.toFixed(2)}{dataKey === 'latency' ? 's' : ' tps'}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             </DialogContent>
         </Dialog>
     )
@@ -159,11 +185,13 @@ export default function ModelProfilePage() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
                     <ChartCard 
+                        modelName={model.name}
                         title="Throughput"
                         dataKey="throughput"
                         yAxisFormatter={(value) => `${value} tps`}
                     />
                      <ChartCard 
+                        modelName={model.name}
                         title="Latency"
                         dataKey="latency"
                         yAxisFormatter={(value) => `${value}s`}
@@ -176,11 +204,11 @@ export default function ModelProfilePage() {
                     <Card>
                         <CardContent className="h-[200px] p-2">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={chartData}>
+                                <AreaChart data={generateChartData([], 'throughput').slice(0,30)}>
                                     <Tooltip 
                                         formatter={(value) => [value, "Uptime"]}
                                     />
-                                    <Area type="monotone" dataKey="throughput" strokeWidth={2} stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2) / 0.1)" />
+                                    <Area type="monotone" dataKey="value" strokeWidth={2} stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2) / 0.1)" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </CardContent>

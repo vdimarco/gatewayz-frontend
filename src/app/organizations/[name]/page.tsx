@@ -19,6 +19,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { addDays, format, differenceInDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const ModelCard = ({ model }: { model: Model }) => (
   <Card className="p-6 flex flex-col">
@@ -163,7 +164,14 @@ export default function OrganizationPage() {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <header className="mb-8">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
-                <Building className="w-10 h-10 text-primary" />
+                <Image
+                    src={`https://placehold.co/40x40.png`}
+                    alt={`${organizationName} logo`}
+                    width={40}
+                    height={40}
+                    className="rounded-lg"
+                    data-ai-hint={`${organizationName} logo`}
+                />
                 <h1 className="text-4xl font-bold">{organizationName.charAt(0).toUpperCase() + organizationName.slice(1)}</h1>
                  <div className="flex items-center gap-2">
                   {orgSocialData?.website && (
