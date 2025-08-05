@@ -8,7 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup 
+} from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
@@ -51,6 +56,21 @@ export default function SignInPage() {
             description: error.message,
             variant: 'destructive',
         });
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      toast({ title: 'Success', description: 'Signed in with Google successfully!' });
+      router.push('/');
+    } catch (error: any) {
+      toast({
+        title: 'Error signing in with Google',
+        description: error.message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -145,7 +165,7 @@ export default function SignInPage() {
             </div>
 
             <div>
-                <Button variant="outline" className="w-full bg-white/70 dark:bg-black/70 border-gray-300 dark:border-gray-700">
+                <Button variant="outline" className="w-full bg-white/70 dark:bg-black/70 border-gray-300 dark:border-gray-700" onClick={handleGoogleSignIn}>
                     <GoogleIcon className="w-5 h-5 mr-2"/>
                     Sign in with Google
                 </Button>
