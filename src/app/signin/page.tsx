@@ -19,18 +19,6 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-    </svg>
-);
-
-const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <path fill="currentColor" d="M17.435 12.334c0-2.865 2.129-4.116 2.2-4.164a4.42 4.42 0 0 0-3.55-2.032c-1.536-.11-3.034.931-3.82 2.033-.822 1.101-1.464 2.897-1.232 4.62.978.143 2.13.036 3.035-.358.214-.08.45-.18.715-.32-1.39-2.03-1.11-4.49.566-5.923.368.305.565.63.737.958.07.129.13.257.18.385.12.301.18.583.18.887a3.84 3.84 0 0 1-.36 1.652c-.4.8-1.028 1.4-1.857 1.732-.07.03-.13.04-.2.06-.55.19-1.2.32-1.87.36-.6.04-.9.04-1.2.04h-.1s.03-.17.03-.18c.24-1.37.9-2.9 1.9-3.9 1.04-1.1 2.3-1.8 3.7-1.8.14 0 .28.01.42.02a4.34 4.34 0 0 1-.02-1.5c0-.07.02-.13.02-.2.01-.2.03-.4.05-.6.18-1.07.72-2.1 1.58-2.8.04.03 2.38 1.38 2.38 4.64 0 .8-.2 1.6-.6 2.3-.5.7-1.2 1.2-2.1 1.4-.9.2-1.9.1-2.8-.4-.1-.04-.17-.1-.25-.15zM12.02 21.24c1.6 0 3.1-.7 4.1-2.1.9-1.2 1.4-2.8 1.3-4.3-.8.03-1.6-.1-2.4-.4-.8-.3-1.6-.8-2.2-1.5-.7-.7-1.1-1.6-1.2-2.6-.1-.9.1-1.9.4-2.8.2-.7.5-1.3.9-1.9a5.1 5.1 0 0 0-4.2-2.1C7.32 3.54 4 6.74 4 10.74c0 2.2.9 4.3 2.5 5.7s3.8 2.1 5.52 2.1z"/>
-    </svg>
-);
-
 export default function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -156,15 +144,10 @@ export default function SignInPage() {
               </div>
             </div>
 
-            <div className="flex justify-center space-x-4">
-                <Button variant="outline" size="icon" className="bg-white/70 dark:bg-black/70 border-gray-300 dark:border-gray-700">
-                    <GoogleIcon className="w-5 h-5"/>
-                </Button>
-                 <Button variant="outline" size="icon" className="bg-white/70 dark:bg-black/70 border-gray-300 dark:border-gray-700">
-                    <FacebookIcon className="w-5 h-5"/>
-                </Button>
-                 <Button variant="outline" size="icon" className="bg-white/70 dark:bg-black/70 border-gray-300 dark:border-gray-700 text-black dark:text-white">
-                    <AppleIcon className="w-5 h-5"/>
+            <div>
+                <Button variant="outline" className="w-full bg-white/70 dark:bg-black/70 border-gray-300 dark:border-gray-700">
+                    <GoogleIcon className="w-5 h-5 mr-2"/>
+                    Sign in with Google
                 </Button>
             </div>
 
