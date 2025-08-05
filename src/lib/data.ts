@@ -118,15 +118,15 @@ export const adjustModelDataForTimeRange = (models: ModelData[], timeRange: 'yea
 
   const changeVolatility = {
     year: 1,
-    month: 2.5,
-    week: 4,
+    month: 1.2,
+    week: 1.5,
   }
 
-  return models.map(model => ({
+  return models.map((model, index) => ({
     ...model,
-    tokens: parseFloat((model.tokens * multiplier[timeRange] * (1 + (Math.random() - 0.5) * 0.1)).toFixed(1)),
-    change: parseFloat((model.change * (1 + (Math.random() - 0.5) * changeVolatility[timeRange])).toFixed(1)),
-    positionChange: Math.floor(model.positionChange * (1 + (Math.random() - 0.5) * changeVolatility[timeRange])),
+    tokens: parseFloat((model.tokens * multiplier[timeRange]).toFixed(1)),
+    change: parseFloat((model.change * changeVolatility[timeRange]).toFixed(1)),
+    positionChange: Math.floor(model.positionChange * changeVolatility[timeRange] - (index % 3)), // Minor deterministic position shift
   })).sort((a, b) => b.tokens - a.tokens);
 };
 
@@ -172,8 +172,8 @@ export const adjustAppDataForTimeRange = (apps: AppData[], timeFrame: 'Today' | 
   };
 
   const changeVolatility = {
-    'Today': 3,
-    'Past 7 days': 1.5,
+    'Today': 1.5,
+    'Past 7 days': 1.1,
     'Past Month': 1,
   };
 
@@ -189,16 +189,16 @@ export const adjustAppDataForTimeRange = (apps: AppData[], timeFrame: 'Today' | 
     return value;
   };
   
-  return apps.map(app => {
+  return apps.map((app, index) => {
     const baseTokens = parseTokens(app.tokens); // in Billions
-    const adjustedTokens = baseTokens * multiplier[timeFrame] * (1 + (Math.random() - 0.5) * 0.1);
-    const adjustedChange = app.change * (1 + (Math.random() - 0.5) * changeVolatility[timeFrame]);
+    const adjustedTokens = baseTokens * multiplier[timeFrame];
+    const adjustedChange = app.change * changeVolatility[timeFrame];
     
     return {
       ...app,
       tokens: formatTokens(adjustedTokens),
       change: parseFloat(adjustedChange.toFixed(1)),
-      positionChange: Math.floor(app.positionChange * (1 + (Math.random() - 0.5) * changeVolatility[timeFrame])),
+      positionChange: Math.floor(app.positionChange * changeVolatility[timeFrame] - (index % 2)),
     };
   }).sort((a, b) => parseTokens(b.tokens) - parseTokens(a.tokens));
 };
@@ -245,9 +245,12 @@ export const generateChartData = (providers: ProviderInfo[], dataKey: 'latency' 
             date: date.toISOString().split('T')[0]
         };
 
-        providers.forEach(provider => {
+        providers.forEach((provider, pIndex) => {
             const baseValue = provider[dataKey] || 0;
-            const fluctuation = baseValue * (Math.random() - 0.4) * 0.2;
+            // Use a deterministic seed based on date and provider index
+            const seed = date.getDate() + pIndex;
+            const pseudoRandom = Math.sin(seed) * 10000;
+            const fluctuation = baseValue * ( (pseudoRandom - Math.floor(pseudoRandom)) - 0.4) * 0.2;
             dataPoint[provider.name] = Math.max(0, parseFloat((baseValue + fluctuation).toFixed(2)));
         });
 
@@ -257,13 +260,18 @@ export const generateChartData = (providers: ProviderInfo[], dataKey: 'latency' 
 };
 
 export const generateStatsTable = (providers: ProviderInfo[], dataKey: 'latency' | 'throughput') => {
-    return providers.map(provider => {
+    return providers.map((provider, index) => {
         const avg = provider[dataKey] || 0;
+        // Use a deterministic seed for stats
+        const pseudoRandomMin = Math.sin(index) * 10000;
+        const pseudoRandomMax = Math.cos(index) * 10000;
         return {
             provider: provider.name,
-            min: avg * (1 - (Math.random() * 0.2 + 0.1)),
-            max: avg * (1 + (Math.random() * 0.3 + 0.2)),
+            min: avg * (1 - ((pseudoRandomMin - Math.floor(pseudoRandomMin)) * 0.2 + 0.1)),
+            max: avg * (1 + ((pseudoRandomMax - Math.floor(pseudoRandomMax)) * 0.3 + 0.2)),
             avg: avg,
         }
     });
 };
+
+    
