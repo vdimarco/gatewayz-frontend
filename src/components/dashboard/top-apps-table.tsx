@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useModelData } from '@/hooks/useModelData';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
     const isPositiveChange = app.change >= 0;
@@ -26,14 +27,14 @@ const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
     return (
         <li className="flex items-center justify-between py-3">
             <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 w-12">
+                <div className="flex items-center gap-2 w-12 text-sm">
                      <div className={cn("flex items-center gap-1 text-xs w-6", getPositionChangeColor())}>
                         {app.positionChange !== 0 && (
                            <Triangle className={cn("h-2 w-2 fill-current", app.positionChange < 0 ? 'transform rotate-180' : '')} />
                         )}
                         {app.positionChange !== 0 ? Math.abs(app.positionChange) : <Minus className="h-2 w-2" />}
                       </div>
-                    <span className="font-semibold text-lg">{rank}.</span>
+                    <span className="font-semibold text-base">{rank}.</span>
                 </div>
             <Image 
                 src={`https://placehold.co/40x40.png`} 
@@ -43,7 +44,7 @@ const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
                 className="rounded-lg" 
                 data-ai-hint={app.iconHint}
             />
-            <div>
+            <div className="w-48">
                 <Link href={app.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 font-semibold hover:underline">
                 {app.name}
                 <ChevronsRight className="w-4 h-4 text-muted-foreground" />
@@ -51,7 +52,7 @@ const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
                 {app.description ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <p className="text-sm text-muted-foreground truncate max-w-[200px] cursor-default">{app.description}</p>
+                      <p className="text-sm text-muted-foreground truncate cursor-default">{app.description}</p>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="max-w-xs">{app.description}</p>
@@ -62,7 +63,7 @@ const AppItem = ({ app, rank }: { app: AppData; rank: number }) => {
             </div>
             </div>
             <div className="flex items-center gap-4">
-                <span className="text-sm font-semibold">{app.tokens}</span>
+                <span className="text-sm font-semibold w-24 text-right">{app.tokens}</span>
                 <span className={cn('flex items-center justify-end gap-1 text-xs w-16', isPositiveChange ? 'text-green-400' : 'text-red-400')}>
                     {isPositiveChange ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
                     {Math.abs(app.change)}%
@@ -110,18 +111,21 @@ export default function TopAppsTable() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
-          <ul>
-            {appsColumn1.map((app, index) => (
-              <AppItem key={app.name} app={app} rank={index + 1} />
-            ))}
-          </ul>
-          <ul className="border-t md:border-t-0 mt-4 pt-4 md:mt-0 md:pt-0">
-            {appsColumn2.map((app, index) => (
-              <AppItem key={app.name} app={app} rank={index + 11} />
-            ))}
-          </ul>
-        </div>
+        <ScrollArea className="w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 min-w-[700px] md:min-w-full">
+              <ul className="divide-y">
+                {appsColumn1.map((app, index) => (
+                  <AppItem key={app.name} app={app} rank={index + 1} />
+                ))}
+              </ul>
+              <ul className="divide-y border-t md:border-t-0 mt-4 pt-4 md:mt-0 md:pt-0 md:border-l md:pl-6">
+                {appsColumn2.map((app, index) => (
+                  <AppItem key={app.name} app={app} rank={index + 11} />
+                ))}
+              </ul>
+            </div>
+            <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </CardContent>
     </Card>
   );
