@@ -44,6 +44,7 @@ export function AppHeader() {
         <div className="flex items-center gap-4">
           <nav className="hidden md:flex items-center gap-6 text-sm">
             <Link href="/models" className="transition-colors hover:text-foreground/80 text-foreground/60">Models</Link>
+            <Link href="/chat" className="transition-colors hover:text-foreground/80 text-foreground/60">Chat</Link>
             <Link href="/developers" className="transition-colors hover:text-foreground/80 text-foreground/60">Developers</Link>
             <Link href="/rankings" className="transition-colors hover:text-foreground/80 text-foreground/60">Rankings</Link>
           </nav>
@@ -69,6 +70,7 @@ export function AppHeader() {
                 <div className="p-4">
                   <nav className="flex flex-col gap-4 text-lg">
                     <Link href="/models" className="transition-colors hover:text-foreground/80 text-foreground/60">Models</Link>
+                    <Link href="/chat" className="transition-colors hover:text-foreground/80 text-foreground/60">Chat</Link>
                     <Link href="/developers" className="transition-colors hover:text-foreground/80 text-foreground/60">Developers</Link>
                     <Link href="/rankings" className="transition-colors hover:text-foreground/80 text-foreground/60">Rankings</Link>
                   </nav>
