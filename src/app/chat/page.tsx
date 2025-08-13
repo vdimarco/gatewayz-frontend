@@ -123,7 +123,7 @@ export default function ChatPage() {
                 <ModelSuggestionCard title="Best coding models" icon={Code}/>
                 <ModelSuggestionCard title="Reasoning models" icon={BrainCircuit}/>
             </div>
-             <ScrollArea className="w-full pb-4">
+             <ScrollArea className="w-full pb-4" orientation="horizontal">
                 <div className="flex gap-4">
                     <ExamplePrompt title="Nutritional Advanc..." subtitle="higher education."/>
                     <ExamplePrompt title="9.9 vs 9.11" subtitle="Which one is larger?"/>
@@ -131,7 +131,6 @@ export default function ChatPage() {
                     <ExamplePrompt title="Poem Riddle" subtitle="Compose a 12-line poem"/>
                     <ExamplePrompt title="Personal Financ..." subtitle="Draft up a portfolio"/>
                 </div>
-                <ScrollBar orientation="horizontal"/>
              </ScrollArea>
         </div>
 
