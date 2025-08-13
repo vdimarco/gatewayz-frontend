@@ -77,9 +77,8 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
                     <CommandItem
                         key={model.value}
                         value={model.value}
-                        onSelect={(currentValue) => {
-                            const newSelectedModel = allModels.find(m => m.value === currentValue);
-                            onSelectModel(currentValue === selectedModel?.value ? null : newSelectedModel || null);
+                        onSelect={() => {
+                            onSelectModel(model.value === selectedModel?.value ? null : model);
                             setOpen(false)
                         }}
                     >
