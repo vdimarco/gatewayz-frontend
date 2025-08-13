@@ -51,7 +51,7 @@ const ExamplePrompt = ({ title, subtitle }: { title: string, subtitle: string })
 )
 
 const ChatSidebar = () => (
-    <aside className="chat-sidebar flex flex-col gap-4 bg-muted/20 p-4">
+    <aside className="chat-sidebar flex flex-col gap-4 bg-[#f7f8fa] dark:bg-muted/20 p-4">
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
                 <MessageSquare className="h-6 w-6" />
