@@ -19,6 +19,7 @@ import { providerData } from '@/lib/provider-data';
 import { generateChartData, generateStatsTable } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { stringToColor } from '@/lib/utils';
 
 const Section = ({ title, description, children, className }: { title: string, description?: string, children: React.ReactNode, className?: string }) => (
     <section className={cn("py-8", className)}>
@@ -66,7 +67,7 @@ const ChartCard = ({ modelName, title, dataKey, yAxisFormatter }: { modelName: s
                     </div>
                 </CardContent>
             </Card>
-             <DialogContent className="max-w-4xl h-auto flex flex-col" style={{backgroundColor: '#e4e4e4', color: 'black'}}>
+             <DialogContent className="max-w-4xl h-auto flex flex-col bg-card text-card-foreground">
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
                      <p className="text-sm text-muted-foreground">Median {title} of the top providers for this model.</p>
@@ -116,16 +117,6 @@ const ChartCard = ({ modelName, title, dataKey, yAxisFormatter }: { modelName: s
         </Dialog>
     )
 }
-
-const stringToColor = (str: string) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const h = hash % 360;
-    return `hsl(${h}, 70%, 80%)`;
-};
-
 
 export default function ModelProfilePage() {
     const params = useParams();
