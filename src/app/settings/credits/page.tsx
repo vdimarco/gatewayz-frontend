@@ -1,13 +1,22 @@
 
 "use client";
 
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Info, RefreshCw, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { Info, RefreshCw, ArrowUpRight, ChevronLeft, ChevronRight, CreditCard } from "lucide-react";
 import Link from "next/link";
 
 export default function CreditsPage() {
+  const [cardName, setCardName] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [cvc, setCvc] = useState('');
+
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-2">
@@ -51,7 +60,46 @@ export default function CreditsPage() {
             <p className="text-sm text-muted-foreground">
               To activate auto-top-up, you&apos;ll need a payment method that supports offline charging.
             </p>
-            <Button variant="secondary" className="w-full">Add a Payment Method</Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="secondary" className="w-full">Add a Payment Method</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add a Payment Method</DialogTitle>
+                  <DialogDescription>
+                    Enter your payment details below. Your payment information is securely stored.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="card-name">Cardholder Name</Label>
+                    <Input id="card-name" placeholder="John Doe" value={cardName} onChange={(e) => setCardName(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="card-number">Card Number</Label>
+                    <div className="relative">
+                      <Input id="card-number" placeholder="**** **** **** 1234" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} />
+                      <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="expiry-date">Expiry Date</Label>
+                      <Input id="expiry-date" placeholder="MM/YY" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cvc">CVC</Label>
+                      <Input id="cvc" placeholder="123" value={cvc} onChange={(e) => setCvc(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="secondary">Cancel</Button>
+                  <Button type="submit">Save Card</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       </div>
