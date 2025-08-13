@@ -54,12 +54,14 @@ export default function SettingsLayout({
           </SidebarContent>
         </Sidebar>
 
-        <SidebarInset className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+        <SidebarInset className="flex-1 overflow-auto">
+          <div className="p-4 sm:p-6 lg:p-8">
             <div className="flex items-center gap-2 mb-6 lg:hidden">
                 <SidebarTrigger />
                 <h1 className="text-2xl font-bold">Settings</h1>
             </div>
             {children}
+          </div>
         </SidebarInset>
       </div>
     </SidebarProvider>
