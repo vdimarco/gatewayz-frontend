@@ -55,7 +55,7 @@ export default function SettingsLayout({
         </Sidebar>
 
         <SidebarInset className="flex-1 overflow-auto">
-          <div className="w-full">
+          <div className="flex-1 w-full max-w-none">
              <div className="flex items-center gap-2 mb-6 lg:hidden p-4">
                 <SidebarTrigger />
                 <h1 className="text-2xl font-bold">Settings</h1>
