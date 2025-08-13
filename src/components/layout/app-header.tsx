@@ -27,11 +27,6 @@ export function AppHeader() {
       <div className="container flex h-14 max-w-screen-2xl items-center px-4 sm:px-6 lg:px-8 mx-auto">
         <div className="flex items-center gap-6 mr-auto">
           <Link href="/" className="flex items-center space-x-2">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="h-6 w-6">
-              <rect width="256" height="256" fill="none"></rect>
-              <path d="M168,40a40,40,0,1,1-80,0c0,48,80,64,80,112H88c0-48,80-64,80-112" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></path>
-              <path d="M128,216a40,40,0,0,1-40-40c0-48,80-64,80-112h-8c0,48-80,64-80,112a40,40,0,0,1,40,40Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></path>
-            </svg>
             <span className="font-bold sm:inline-block">GATEWAYZ</span>
           </Link>
            <div className="relative hidden sm:block w-full max-w-sm">
