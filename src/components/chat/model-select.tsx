@@ -21,7 +21,13 @@ import {
 } from "@/components/ui/popover"
 import { models } from "@/lib/models-data"
 
-const allModels = models.map(model => ({
+export type ModelOption = {
+    value: string;
+    label: string;
+    category: string;
+};
+
+const allModels: ModelOption[] = models.map(model => ({
     value: model.name.toLowerCase(),
     label: model.name,
     category: model.series
@@ -37,9 +43,13 @@ const modelGroups = allModels.reduce((groups, model) => {
 }, {} as Record<string, typeof allModels>);
 
 
-export function ModelSelect() {
+interface ModelSelectProps {
+    selectedModel: ModelOption | null;
+    onSelectModel: (model: ModelOption | null) => void;
+}
+
+export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) {
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("")
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -50,8 +60,8 @@ export function ModelSelect() {
           aria-expanded={open}
           className="w-[200px] justify-between"
         >
-          {value
-            ? allModels.find((model) => model.value === value)?.label
+          {selectedModel
+            ? selectedModel.label
             : "Select model..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -68,14 +78,15 @@ export function ModelSelect() {
                         key={model.value}
                         value={model.value}
                         onSelect={(currentValue) => {
-                        setValue(currentValue === value ? "" : currentValue)
-                        setOpen(false)
+                            const newSelectedModel = allModels.find(m => m.value === currentValue);
+                            onSelectModel(currentValue === selectedModel?.value ? null : newSelectedModel || null);
+                            setOpen(false)
                         }}
                     >
                         <Check
                         className={cn(
                             "mr-2 h-4 w-4",
-                            value === model.value ? "opacity-100" : "opacity-0"
+                            selectedModel?.value === model.value ? "opacity-100" : "opacity-0"
                         )}
                         />
                         {model.label}

@@ -26,7 +26,7 @@ import {
   BrainCircuit,
   Box
 } from 'lucide-react';
-import { ModelSelect } from '@/components/chat/model-select';
+import { ModelSelect, type ModelOption } from '@/components/chat/model-select';
 import './chat.css';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -89,6 +89,7 @@ const ChatSidebar = () => (
 
 export default function ChatPage() {
     const [message, setMessage] = useState('');
+    const [selectedModel, setSelectedModel] = useState<ModelOption | null>(null);
 
   return (
     <div className="flex h-[calc(100vh-theme(spacing.14))]">
@@ -108,10 +109,10 @@ export default function ChatPage() {
                         </SheetContent>
                     </Sheet>
                  </div>
-                <h1 className="text-xl font-semibold">OpenRouter</h1>
+                <h1 className="text-xl font-semibold">{selectedModel ? selectedModel.label : 'Select a Model'}</h1>
             </div>
             <div className="flex items-center gap-2">
-                 <ModelSelect />
+                 <ModelSelect selectedModel={selectedModel} onSelectModel={setSelectedModel} />
             </div>
         </header>
 
