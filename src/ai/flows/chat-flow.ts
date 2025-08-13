@@ -3,7 +3,6 @@
  * @fileOverview A chat flow that interacts with a selected AI model.
  */
 import {ai} from '@/ai/genkit';
-import {generate} from 'genkit/generate';
 import {z} from 'zod';
 
 const ChatInputSchema = z.object({
@@ -28,7 +27,7 @@ const chatFlow = ai.defineFlow(
     
     console.log(`Using model: ${modelName} with prompt: "${prompt}"`);
 
-    const llmResponse = await generate({
+    const llmResponse = await ai.generate({
       prompt: prompt,
       model: ai.model, // Uses the default model for now.
       config: {
@@ -37,7 +36,7 @@ const chatFlow = ai.defineFlow(
       },
     });
 
-    return llmResponse.text();
+    return llmResponse.text;
   }
 );
 
