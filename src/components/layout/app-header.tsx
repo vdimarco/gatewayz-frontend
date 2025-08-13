@@ -32,7 +32,7 @@ export function AppHeader() {
               <path d="M168,40a40,40,0,1,1-80,0c0,48,80,64,80,112H88c0-48,80-64,80-112" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></path>
               <path d="M128,216a40,40,0,0,1-40-40c0-48,80-64,80-112h-8c0,48-80,64-80,112a40,40,0,0,1,40,40Z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="16"></path>
             </svg>
-            <span className="font-bold sm:inline-block">MODELZ</span>
+            <span className="font-bold sm:inline-block">GATEWAYZ</span>
           </Link>
            <div className="relative hidden sm:block w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
