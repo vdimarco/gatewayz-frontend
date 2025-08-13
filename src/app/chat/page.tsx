@@ -112,7 +112,6 @@ export default function ChatPage() {
             </div>
             <div className="flex items-center gap-2">
                  <ModelSelect />
-                 <Button variant="outline"><Plus className="mr-2 h-4 w-4" /> Add Model</Button>
             </div>
         </header>
 

@@ -1,7 +1,7 @@
 
 "use client"
 
-import * as React from "react"
+import * as React from "use-client"
 import { Check, ChevronsUpDown, PlusCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -13,7 +13,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -60,8 +59,8 @@ export function ModelSelect() {
       <PopoverContent className="w-[300px] p-0">
         <Command>
           <CommandInput placeholder="Search model..." />
-           <CommandList>
-          <CommandEmpty>No model found.</CommandEmpty>
+          <CommandList>
+            <CommandEmpty>No model found.</CommandEmpty>
             {Object.entries(modelGroups).map(([groupName, groupModels]) => (
                 <CommandGroup key={groupName} heading={groupName}>
                     {groupModels.map((model) => (
@@ -90,4 +89,3 @@ export function ModelSelect() {
     </Popover>
   )
 }
-
