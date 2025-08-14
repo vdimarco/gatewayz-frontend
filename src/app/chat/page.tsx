@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,10 +34,18 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { chat } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { format, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
 
 type Message = {
     role: 'user' | 'assistant';
     content: string;
+};
+
+type ChatSession = {
+    id: string;
+    title: string;
+    startTime: Date;
+    messages: Message[];
 };
 
 const ModelSuggestionCard = ({ title, icon: Icon }: { title: string, icon: React.ElementType }) => (
@@ -60,7 +68,27 @@ const ExamplePrompt = ({ title, subtitle }: { title: string, subtitle: string })
     </Card>
 )
 
-const ChatSidebar = () => (
+const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewChat }: { sessions: ChatSession[], activeSessionId: string | null, setActiveSessionId: (id: string) => void, createNewChat: () => void }) => {
+    
+    const groupChatsByDate = (chatSessions: ChatSession[]) => {
+        return chatSessions.reduce((groups, session) => {
+            const date = session.startTime;
+            let groupName = format(date, 'MMMM d, yyyy');
+            if (isToday(date)) groupName = 'Today';
+            else if (isYesterday(date)) groupName = 'Yesterday';
+
+            if (!groups[groupName]) {
+                groups[groupName] = [];
+            }
+            groups[groupName].push(session);
+            return groups;
+
+        }, {} as Record<string, ChatSession[]>);
+    };
+
+    const groupedSessions = groupChatsByDate(sessions);
+
+    return (
     <aside className="chat-sidebar flex flex-col gap-4 bg-[#f7f8fa] dark:bg-muted/20 p-4">
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -70,7 +98,7 @@ const ChatSidebar = () => (
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" onClick={createNewChat}>
                             <Pencil className="h-4 w-4" />
                         </Button>
                     </TooltipTrigger>
@@ -84,18 +112,30 @@ const ChatSidebar = () => (
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search rooms..." className="pl-9" />
         </div>
-        <div className="flex-grow">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase my-2">Today</h3>
-            <ul>
-                <li>
-                    <Button variant="ghost" className="w-full justify-start">
-                        Untitled Chat
-                    </Button>
-                </li>
-            </ul>
-        </div>
+        <ScrollArea className="flex-grow">
+             {Object.entries(groupedSessions).map(([groupName, chatSessions]) => (
+                <div key={groupName}>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase my-2 px-3">{groupName}</h3>
+                    <ul>
+                        {chatSessions.map(session => (
+                            <li key={session.id}>
+                                <Button 
+                                    variant={activeSessionId === session.id ? "secondary" : "ghost"}
+                                    className="w-full justify-start items-start text-left flex flex-col h-auto py-2"
+                                    onClick={() => setActiveSessionId(session.id)}
+                                >
+                                    <span className="font-medium truncate w-full">{session.title}</span>
+                                    <span className="text-xs text-muted-foreground">{formatDistanceToNow(session.startTime, { addSuffix: true })}</span>
+                                </Button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ))}
+        </ScrollArea>
     </aside>
-)
+    )
+}
 
 const ChatMessage = ({ message, modelName }: { message: Message, modelName: string | undefined}) => {
     const isUser = message.role === 'user';
@@ -125,7 +165,8 @@ const ChatSkeleton = () => (
 
 export default function ChatPage() {
     const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [sessions, setSessions] = useState<ChatSession[]>([]);
+    const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [selectedModel, setSelectedModel] = useState<ModelOption | null>(
         allModels.find(m => m.value === 'gpt-4o mini') || null
@@ -133,24 +174,81 @@ export default function ChatPage() {
     const { toast } = useToast();
     const chatContainerRef = useRef<HTMLDivElement>(null);
 
+     const activeSession = useMemo(() => {
+        return sessions.find(s => s.id === activeSessionId) || null;
+    }, [sessions, activeSessionId]);
+    
+    const messages = activeSession?.messages || [];
+
+    useEffect(() => {
+        // Load sessions from local storage on mount
+        const savedSessions = localStorage.getItem('chatSessions');
+        if (savedSessions) {
+            const parsedSessions = JSON.parse(savedSessions, (key, value) => {
+                if(key === 'startTime') return new Date(value);
+                return value;
+            });
+            setSessions(parsedSessions);
+            if(parsedSessions.length > 0) {
+                 setActiveSessionId(parsedSessions[0].id);
+            } else {
+                 createNewChat();
+            }
+        } else {
+            createNewChat();
+        }
+    }, []);
+
+    useEffect(() => {
+        // Save sessions to local storage whenever they change
+        if(sessions.length > 0) {
+            localStorage.setItem('chatSessions', JSON.stringify(sessions));
+        }
+    }, [sessions]);
+
      useEffect(() => {
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
     }, [messages]);
 
+    const createNewChat = () => {
+        const newSession: ChatSession = {
+            id: `chat-${Date.now()}`,
+            title: 'Untitled Chat',
+            startTime: new Date(),
+            messages: [],
+        };
+        setSessions(prev => [newSession, ...prev]);
+        setActiveSessionId(newSession.id);
+    }
+
     const handleSendMessage = async () => {
-        if (!message.trim() || !selectedModel) {
+        if (!message.trim() || !selectedModel || !activeSessionId) {
             toast({
                 title: "Cannot send message",
-                description: !selectedModel ? "Please select a model first." : "Please enter a message.",
+                description: !selectedModel ? "Please select a model first." : !activeSessionId ? "No active chat." : "Please enter a message.",
                 variant: 'destructive'
             });
             return;
         }
+        
+        const isFirstMessage = messages.length === 0;
 
-        const newMessages: Message[] = [...messages, { role: 'user', content: message }];
-        setMessages(newMessages);
+        const updatedMessages: Message[] = [...messages, { role: 'user', content: message }];
+        
+        const updatedSessions = sessions.map(session => {
+            if (session.id === activeSessionId) {
+                return { 
+                    ...session,
+                    title: isFirstMessage ? message : session.title,
+                    messages: updatedMessages
+                };
+            }
+            return session;
+        });
+        setSessions(updatedSessions);
+        
         setMessage('');
         setLoading(true);
 
@@ -159,14 +257,31 @@ export default function ChatPage() {
                 modelName: selectedModel.value,
                 prompt: message,
             });
-            setMessages([...newMessages, { role: 'assistant', content: response }]);
+             const finalSessions = sessions.map(session => {
+                if (session.id === activeSessionId) {
+                    return { 
+                        ...session,
+                        title: isFirstMessage ? message : session.title,
+                        messages: [...updatedMessages, { role: 'assistant', content: response }]
+                    };
+                }
+                return session;
+            });
+             setSessions(finalSessions);
         } catch (error) {
             toast({
                 title: "Error",
                 description: `An error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
                 variant: 'destructive'
             });
-             setMessages(newMessages); // Revert to previous state if API fails
+             // Revert message update on error
+             const revertedSessions = sessions.map(session => {
+                if (session.id === activeSessionId) {
+                    return { ...session, messages };
+                }
+                return session;
+            });
+             setSessions(revertedSessions);
         } finally {
             setLoading(false);
         }
@@ -175,7 +290,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-[calc(100vh-theme(spacing.14))]">
         <div className="hidden lg:flex">
-            <ChatSidebar />
+            <ChatSidebar sessions={sessions} activeSessionId={activeSessionId} setActiveSessionId={setActiveSessionId} createNewChat={createNewChat} />
         </div>
       <main className="flex-1 flex flex-col p-4 md:p-6 lg:p-8 items-center bg-background">
         <header className="w-full max-w-4xl flex items-center justify-between mb-8">
@@ -186,11 +301,11 @@ export default function ChatPage() {
                             <Button variant="ghost" size="icon"><Menu/></Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="w-[300px] p-0">
-                            <ChatSidebar />
+                            <ChatSidebar sessions={sessions} activeSessionId={activeSessionId} setActiveSessionId={setActiveSessionId} createNewChat={createNewChat} />
                         </SheetContent>
                     </Sheet>
                  </div>
-                <h1 className="text-xl font-semibold">{selectedModel ? selectedModel.label : 'Select a Model'}</h1>
+                <h1 className="text-xl font-semibold">{activeSession ? activeSession.title : 'Select a Model'}</h1>
             </div>
             <div className="flex items-center gap-2">
                  <ModelSelect selectedModel={selectedModel} onSelectModel={setSelectedModel} />
