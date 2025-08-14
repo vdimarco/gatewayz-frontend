@@ -1,0 +1,50 @@
+
+"use client";
+
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from '@/components/ui/popover';
+import { organizationsData } from '@/lib/data';
+import Link from 'next/link';
+import { ProviderIcon } from './provider-icons';
+
+
+export function SearchBar() {
+    const [open, setOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredProviders = organizationsData.filter(org => org.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverAnchor asChild>
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                        type="search" 
+                        placeholder="Search..." 
+                        className="pl-9 pr-4 h-9" 
+                        onFocus={() => setOpen(true)}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground border rounded-sm px-1.5 py-0.5">/</div>
+                </div>
+            </PopoverAnchor>
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-1">
+                 <div className="flex flex-col">
+                    <p className="text-xs font-medium text-muted-foreground px-3 py-2">Providers</p>
+                    <div className="flex flex-col">
+                        {filteredProviders.slice(0, 7).map(org => (
+                             <Link key={org.name} href={`/organizations/${encodeURIComponent(org.name)}`} className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-accent" onClick={() => setOpen(false)}>
+                                <ProviderIcon provider={org.name} className="h-5 w-5"/>
+                                <span className="text-sm">{org.name}</span>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+}
