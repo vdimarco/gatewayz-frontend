@@ -11,10 +11,13 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, Info, PlusCircle } from "lucide-react";
+import { ChevronLeft, Info, PlusCircle, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-
+import { models, type Model } from "@/lib/models-data";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
 
 const ParameterInput = ({ label, description, includeSwitch = true }: { label: string, description: string, includeSwitch?: boolean }) => {
     return (
@@ -31,8 +34,28 @@ const ParameterInput = ({ label, description, includeSwitch = true }: { label: s
     )
 }
 
+const modelGroups = models.reduce((groups, model) => {
+    const category = model.series;
+    if (!groups[category]) {
+        groups[category] = [];
+    }
+    groups[category].push(model);
+    return groups;
+}, {} as Record<string, Model[]>);
+
 export default function NewPresetPage() {
     const [providerPrefs, setProviderPrefs] = useState(false);
+    const [selectedModels, setSelectedModels] = useState<Model[]>([]);
+    const [open, setOpen] = useState(false);
+
+    const handleModelSelect = (model: Model) => {
+        setSelectedModels(prev => 
+            prev.find(m => m.name === model.name)
+                ? prev.filter(m => m.name !== model.name)
+                : [...prev, model]
+        );
+    };
+
 
   return (
     <div className="space-y-8">
@@ -84,10 +107,48 @@ export default function NewPresetPage() {
                     <CardTitle>Models</CardTitle>
                     <CardDescription>Specify which model of this preset is for and OpenRouter will use it automatically. If multiple models are selected, then all will be billable.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <Button variant="outline">
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Model
-                    </Button>
+                <CardContent className="flex flex-wrap items-center gap-2">
+                     <Popover open={open} onOpenChange={setOpen}>
+                        <PopoverTrigger asChild>
+                             <Button variant="outline">
+                                <PlusCircle className="mr-2 h-4 w-4" /> Add Model
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0">
+                            <Command>
+                                <CommandInput placeholder="Search model..." />
+                                <CommandList>
+                                    <CommandEmpty>No model found.</CommandEmpty>
+                                    {Object.entries(modelGroups).map(([groupName, groupModels]) => (
+                                        <CommandGroup key={groupName} heading={groupName}>
+                                            {groupModels.map((model) => (
+                                                <CommandItem
+                                                    key={model.name}
+                                                    value={model.name}
+                                                    onSelect={() => handleModelSelect(model)}
+                                                    className="flex items-center justify-between"
+                                                >
+                                                    <span>{model.name}</span>
+                                                    <Checkbox
+                                                        checked={selectedModels.some(m => m.name === model.name)}
+                                                        className="mr-2"
+                                                    />
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    ))}
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                    {selectedModels.map(model => (
+                        <Badge key={model.name} variant="secondary" className="flex items-center gap-1">
+                            {model.name}
+                            <button onClick={() => handleModelSelect(model)} className="rounded-full hover:bg-muted-foreground/20 p-0.5">
+                                <X className="h-3 w-3" />
+                            </button>
+                        </Badge>
+                    ))}
                 </CardContent>
             </Card>
 
@@ -170,3 +231,5 @@ const ProviderRoutingSection = ({title, description}: {title: string, descriptio
         </div>
     </div>
 )
+
+    
