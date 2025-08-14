@@ -3,90 +3,62 @@
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 @layer base {
   :root {
-    --background: 45 82% 77%;
-    --foreground: 0 0% 3.9%;
-    --card: 220 17% 97%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 220 13% 96.5%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 220 13% 96.5%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 220 13% 96.5%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 28.2%;
-    --input: 220 13% 96.5%;
-    --ring: 221 83% 53%;
-    --chart-1: 43 74% 66%;
-    --chart-2: 173 58% 59%;
-    --chart-3: 197 57% 64%;
-    --chart-4: 27 87% 67%;
-    --chart-5: 210 60% 75%;
-    --chart-6: 300 76% 72%;
-    --chart-7: 30 90% 70%;
-    --chart-8: 160 60% 65%;
-    --chart-9: 250 62% 72%;
-    --chart-10: 12 76% 71%;
-    --chart-11: 220 70% 68%;
-    --radius: 0.5rem;
-    --sidebar-background: 220 13% 96.5%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-  .dark {
-    --background: 0 0% 0%;
+    --background: 260 20% 7%; /* #141219 */
     --foreground: 0 0% 98%;
-    --card: 0 0% 8.2%;
+    --card: 260 15% 11%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 8.2%;
+    --popover: 260 20% 7%;
     --popover-foreground: 0 0% 98%;
-    --primary: 221 83% 53%;
+    --primary: 278 100% 42%; /* #9400D3 */
     --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 8.2%;
+    --secondary: 260 15% 15%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 8.2%;
+    --muted: 260 15% 15%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 180 100% 50%; /* #00FFFF */
+    --accent-foreground: 260 20% 7%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 8.2%;
-    --input: 0 0% 8.2%;
-    --ring: 221 83% 53%;
+    --border: 260 15% 20%;
+    --input: 260 15% 15%;
+    --ring: 180 100% 50%;
     --chart-1: 43 74% 66%;
     --chart-2: 173 58% 59%;
     --chart-3: 197 57% 64%;
     --chart-4: 27 87% 67%;
     --chart-5: 210 60% 75%;
-    --chart-6: 300 76% 72%;
-    --chart-7: 30 90% 70%;
-    --chart-8: 160 60% 65%;
-    --chart-9: 250 62% 72%;
-    --chart-10: 12 76% 71%;
-    --chart-11: 220 70% 68%;
-    --sidebar-background: 0 0% 8.2%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 0 0% 98%;
-    --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 0 0% 8.2%;
-    --sidebar-ring: 0 0% 98%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 260 20% 7%; /* #141219 */
+    --foreground: 0 0% 98%;
+    --card: 260 15% 11%;
+    --card-foreground: 0 0% 98%;
+    --popover: 260 20% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 278 100% 42%; /* #9400D3 */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 260 15% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 260 15% 15%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 180 100% 50%; /* #00FFFF */
+    --accent-foreground: 260 20% 7%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 260 15% 20%;
+    --input: 260 15% 15%;
+    --ring: 180 100% 50%;
+    --chart-1: 43 74% 66%;
+    --chart-2: 173 58% 59%;
+    --chart-3: 197 57% 64%;
+    --chart-4: 27 87% 67%;
+    --chart-5: 210 60% 75%;
   }
 }
 
@@ -96,45 +68,5 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-  }
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'%3E%3Cg fill='none' stroke='%23000' stroke-width='1'%3E%3Cpath d='M-500 75c0 0 125-37.5 125-37.5S-250 0-250 0s125 37.5 125 37.5S0 75 0 75s125-37.5 125-37.5S250 0 250 0s125 37.5 125 37.5S500 75 500 75s125-37.5 125-37.5S750 0 750 0s125 37.5 125 37.5S1000 75 1000 75'/%3E%3Cpath d='M-500 225c0 0 125-37.5 125-37.5S-250 150-250 150s125 37.5 125 37.5S0 225 0 225s125-37.5 125-37.5S250 150 250 150s125 37.5 125 37.5S500 225 500 225s125-37.5 125-37.5S750 150 750 150s125 37.5 125 37.5S1000 225 1000 225'/%3E%3Cpath d='M-500 375c0 0 125-37.5 125-37.5S-250 300-250 300s125 37.5 125 37.5S0 375 0 375s125-37.5 125-37.5S250 300 250 300s125 37.5 125 37.5S500 375 500 375s125-37.5 125-37.5S750 300 750 300s125 37.5 125 37.5S1000 375 1000 375'/%3E%3Cpath d='M-500 525c0 0 125-37.5 125-37.5S-250 450-250 450s125 37.5 125 37.5S0 525 0 525s125-37.5 125-37.5S250 450 250 450s125 37.5 125 37.5S500 525 500 525s125-37.5 125-37.5S750 450 750 450s125 37.5 125 37.5S1000 525 1000 525'/%3E%3Cpath d='M-500 675c0 0 125-37.5 125-37.5S-250 600-250 600s125 37.5 125 37.5S0 675 0 675s125-37.5 125-37.5S250 600 250 600s125 37.5 125 37.5S500 675 500 675s125-37.5 125-37.5S750 600 750 600s125 37.5 125 37.5S1000 675 1000 675'/%3E%3Cpath d='M-500 825c0 0 125-37.5 125-37.5S-250 750-250 750s125 37.5 125 37.5S0 825 0 825s125-37.5 125-37.5S250 750 250 750s125 37.5 125 37.5S500 825 500 825s125-37.5 125-37.5S750 750 750 750s125 37.5 125 37.5S1000 825 1000 825'/%3E%3C/g%3E%3C/svg%3E");
-    background-size: 200px;
-    opacity: 0.02;
-    z-index: -1;
-    pointer-events: none;
-  }
-}
-
-@layer components {
-  .btn-gradient-border {
-    @apply relative bg-card border border-border;
-  }
-
-  .btn-gradient-border::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: -1;
-    margin: -2px; /* border thickness */
-    border-radius: inherit; /* inherit parent's border radius */
-    background: conic-gradient(from var(--gradient-angle), theme('colors.gradient.blue'), theme('colors.gradient.green'), theme('colors.gradient.orange'), theme('colors.gradient.blue'));
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-  }
-
-  .btn-gradient-border:hover::before,
-  .btn-gradient-border:focus-visible::before {
-    opacity: 1;
-    animation: gradient-spin 2.5s linear infinite;
   }
 }
