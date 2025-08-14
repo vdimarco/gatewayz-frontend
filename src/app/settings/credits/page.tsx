@@ -26,7 +26,7 @@ export default function CreditsPage() {
         </Button>
       </div>
 
-      <Card className="max-w-md">
+      <Card>
         <CardContent className="p-6 flex items-center justify-between">
           <span className="text-4xl font-semibold">$0.00</span>
           <Info className="h-5 w-5 text-muted-foreground" />
@@ -58,7 +58,7 @@ export default function CreditsPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-center">
             <p className="text-sm text-muted-foreground">
-              To activate auto-top-up, you&apos;ll need a payment method that supports offline charging.
+              To activate auto-top-up, you'll need a payment method that supports offline charging.
             </p>
             <Dialog>
               <DialogTrigger asChild>
