@@ -3,17 +3,17 @@
 
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { Search, Link } from 'lucide-react';
+import { Search, Bot } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { organizationsData } from '@/lib/data';
-import { ProviderIcon } from './provider-icons';
+import { topModels } from '@/lib/data';
+import Link from 'next/link';
 
 
 export function SearchBar() {
     const [open, setOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredProviders = organizationsData.filter(org => org.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filteredModels = topModels.filter(model => model.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -33,12 +33,12 @@ export function SearchBar() {
             </PopoverTrigger>
             <PopoverContent className="w-[--radix-popover-trigger-width] p-1">
                  <div className="flex flex-col">
-                    <p className="text-xs font-medium text-muted-foreground px-3 py-2">Providers</p>
+                    <p className="text-xs font-medium text-muted-foreground px-3 py-2">Top Models</p>
                     <div className="flex flex-col">
-                        {filteredProviders.slice(0, 7).map(org => (
-                             <Link key={org.name} href={`/organizations/${encodeURIComponent(org.name)}`} className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-accent" onClick={() => setOpen(false)}>
-                                <ProviderIcon provider={org.name} className="h-5 w-5"/>
-                                <span className="text-sm">{org.name}</span>
+                        {filteredModels.slice(0, 7).map(model => (
+                             <Link key={model.name} href={`/models/${encodeURIComponent(model.name)}`} className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-accent" onClick={() => setOpen(false)}>
+                                <Bot className="h-5 w-5"/>
+                                <span className="text-sm">{model.name}</span>
                             </Link>
                         ))}
                     </div>
