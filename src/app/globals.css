@@ -46,11 +46,11 @@ body {
   }
  
   .dark {
-    --background: 260 20% 7%; /* #141219 */
+    --background: 0 0% 4%; /* #0A0A0A */
     --foreground: 0 0% 98%;
     --card: 260 15% 11%;
     --card-foreground: 0 0% 98%;
-    --popover: 260 20% 7%;
+    --popover: 0 0% 4%;
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 100%; /* #FFFFFF */
     --primary-foreground: 260 20% 7%; /* dark text */
