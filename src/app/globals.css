@@ -52,8 +52,8 @@ body {
     --card-foreground: 0 0% 98%;
     --popover: 260 20% 7%;
     --popover-foreground: 0 0% 98%;
-    --primary: 278 100% 42%; /* #9400D3 */
-    --primary-foreground: 0 0% 98%;
+    --primary: 0 0% 100%; /* #FFFFFF */
+    --primary-foreground: 260 20% 7%; /* dark text */
     --secondary: 260 15% 15%;
     --secondary-foreground: 0 0% 98%;
     --muted: 260 15% 15%;
