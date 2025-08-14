@@ -27,7 +27,7 @@ export type ModelOption = {
     category: string;
 };
 
-const allModels: ModelOption[] = models.map(model => ({
+export const allModels: ModelOption[] = models.map(model => ({
     value: model.name.toLowerCase(),
     label: model.name,
     category: model.series
@@ -77,9 +77,10 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
                     <CommandItem
                         key={model.value}
                         value={model.value}
-                        onSelect={() => {
-                            onSelectModel(model.value === selectedModel?.value ? null : model);
-                            setOpen(false)
+                        onSelect={(currentValue) => {
+                            const selected = allModels.find(m => m.value === currentValue);
+                            onSelectModel(selected || null);
+                            setOpen(false);
                         }}
                     >
                         <Check

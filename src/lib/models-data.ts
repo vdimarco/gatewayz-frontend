@@ -16,6 +16,20 @@ export type Model = {
 
 export const models: Model[] = [
   {
+    name: 'GPT-4o mini',
+    isFree: false,
+    tokens: '21B tokens',
+    category: 'Multimodal',
+    description: 'A smaller, faster, and cheaper version of GPT-4o, with the same level of intelligence.',
+    developer: 'openai',
+    context: 128,
+    inputCost: 0.15,
+    outputCost: 0.60,
+    modalities: ['Text', 'Image'],
+    series: 'GPT',
+    supportedParameters: ['tools', 'temperature', 'top_p'],
+  },
+  {
     name: 'Qwen: Qwen2 72B A16B 2507',
     isFree: true,
     tokens: '142M tokens',

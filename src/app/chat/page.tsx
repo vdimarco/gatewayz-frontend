@@ -28,7 +28,7 @@ import {
   Box,
   User
 } from 'lucide-react';
-import { ModelSelect, type ModelOption } from '@/components/chat/model-select';
+import { ModelSelect, type ModelOption, allModels } from '@/components/chat/model-select';
 import './chat.css';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { chat } from '@/app/actions';
@@ -127,7 +127,9 @@ export default function ChatPage() {
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
-    const [selectedModel, setSelectedModel] = useState<ModelOption | null>(null);
+    const [selectedModel, setSelectedModel] = useState<ModelOption | null>(
+        allModels.find(m => m.value === 'gpt-4o mini') || null
+    );
     const { toast } = useToast();
     const chatContainerRef = useRef<HTMLDivElement>(null);
 
