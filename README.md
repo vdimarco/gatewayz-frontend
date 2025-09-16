@@ -1,8 +1,10 @@
-# GatewayZ - Summary
+# Gatewayz
+
+## Summary
 
 GatewayZ is a comprehensive AI model management platform, providing a unified interface for accessing and managing various Large Language Models (LLMs). The platform offers model browsing, interactive chat functionality, performance analytics, and developer tools.
 
-## 🚀 Features
+## Features
 
 ### Core Functionality
 - **Unified Model Access**: Browse and access 300+ AI models from 60+ providers through a single interface
