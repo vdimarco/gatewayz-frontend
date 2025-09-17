@@ -33,7 +33,7 @@ export default function CreditsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -104,7 +104,7 @@ export default function CreditsPage() {
         </Card>
       </div>
 
-      <Card className="max-w-4xl">
+      <Card className="">
         <CardHeader>
           <CardTitle className="text-lg">Recent Transactions</CardTitle>
         </CardHeader>
