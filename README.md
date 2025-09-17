@@ -1,7 +1,5 @@
 # Gatewayz
 
-## Summary
-
 GatewayZ is a comprehensive AI model management platform, providing a unified interface for accessing and managing various Large Language Models (LLMs). The platform offers model browsing, interactive chat functionality, performance analytics, and developer tools.
 
 ## Features
@@ -208,3 +206,11 @@ For support and questions:
 - Create an issue in the repository
 - Check the documentation in the `docs/` folder
 - Review the component examples in `src/components/`
+=======
+To get started, take a look at src/app/page.tsx.
+
+Install and run
+
+- cd src
+- npm install
+- npm run dev
