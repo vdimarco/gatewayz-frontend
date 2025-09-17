@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Plus, 
@@ -235,7 +235,7 @@ export default function ChatPage() {
         
         const isFirstMessage = messages.length === 0;
 
-        const updatedMessages: Message[] = [...messages, { role: 'user', content: message }];
+        const updatedMessages: Message[] = [...messages, { role: 'user' as const, content: message }];
         
         const updatedSessions = sessions.map(session => {
             if (session.id === activeSessionId) {
@@ -262,7 +262,7 @@ export default function ChatPage() {
                     return { 
                         ...session,
                         title: isFirstMessage ? message : session.title,
-                        messages: [...updatedMessages, { role: 'assistant', content: response }]
+                        messages: [...updatedMessages, { role: 'assistant' as const, content: response }]
                     };
                 }
                 return session;
@@ -301,6 +301,7 @@ export default function ChatPage() {
                             <Button variant="ghost" size="icon"><Menu/></Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="w-[300px] p-0">
+                            <SheetTitle className="sr-only">Chat Sidebar</SheetTitle>
                             <ChatSidebar sessions={sessions} activeSessionId={activeSessionId} setActiveSessionId={setActiveSessionId} createNewChat={createNewChat} />
                         </SheetContent>
                     </Sheet>
