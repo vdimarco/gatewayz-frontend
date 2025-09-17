@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import Link from 'next/link';
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { UserNav } from './user-nav';
@@ -60,6 +60,7 @@ export function AppHeader() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right">
+                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="p-4">
                   <nav className="flex flex-col gap-4 text-lg">
                     <Link href="/models" className="transition-colors hover:text-foreground/80 text-foreground/60">Models</Link>

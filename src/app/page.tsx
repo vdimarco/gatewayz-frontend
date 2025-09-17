@@ -171,7 +171,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-center items-center text-sm text-muted-foreground">
-            <p>&copy; 2024 GATEWAYZ</p>
+            <p>&copy; 2025 GATEWAYZ</p>
           </div>
       </footer>
     </div>
