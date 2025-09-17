@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { ModelSelect, type ModelOption, allModels } from '@/components/chat/model-select';
 import './chat.css';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { chat } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -322,7 +322,7 @@ export default function ChatPage() {
                         <ModelSuggestionCard title="Best coding models" icon={Code}/>
                         <ModelSuggestionCard title="Reasoning models" icon={BrainCircuit}/>
                     </div>
-                     <ScrollArea className="w-full pb-4" orientation="horizontal">
+                     <ScrollArea className="w-full pb-4">
                         <div className="flex gap-4">
                             <ExamplePrompt title="Nutritional Advanc..." subtitle="higher education."/>
                             <ExamplePrompt title="9.9 vs 9.11" subtitle="Which one is larger?"/>
@@ -330,6 +330,7 @@ export default function ChatPage() {
                             <ExamplePrompt title="Poem Riddle" subtitle="Compose a 12-line poem"/>
                             <ExamplePrompt title="Personal Financ..." subtitle="Draft up a portfolio"/>
                         </div>
+                        <ScrollBar orientation="horizontal" />
                      </ScrollArea>
                 </div>
             )}
