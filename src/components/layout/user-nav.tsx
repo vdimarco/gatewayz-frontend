@@ -53,11 +53,10 @@ export function UserNav({ user }: UserNavProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user.photoURL ?? ""} alt={user.email ?? ""} />
-            <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
-          </Avatar>
+        <Button variant="outline" className="relative h-10 w-10 rounded-lg bg-white border-gray-200 hover:bg-white p-0">
+          <div className="h-7 w-7 rounded-full bg-card flex items-center justify-center border border-gray-200">
+            <span className="text-black font-bold text-lg">{getInitials(user.email)}</span>
+          </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
