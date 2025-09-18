@@ -54,8 +54,8 @@ export function UserNav({ user }: UserNavProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="relative h-10 w-10 rounded-lg bg-white border-gray-200 hover:bg-white p-0">
-          <div className="h-7 w-7 rounded-full bg-card flex items-center justify-center border border-gray-200">
-            <span className="text-black text-lg">{getInitials(user.email)}</span>
+          <div className="h-7 w-7 rounded-full bg-card flex items-center justify-center border border-gray-300">
+            <span className="text-black text-lg">{getInitials(user.displayName)}</span>
           </div>
         </Button>
       </DropdownMenuTrigger>
@@ -72,6 +72,9 @@ export function UserNav({ user }: UserNavProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
+          <Link href="/settings/account">
+            <DropdownMenuItem>Account</DropdownMenuItem>
+          </Link>
           <Link href="/settings/credits">
             <DropdownMenuItem>Credits</DropdownMenuItem>
           </Link>
