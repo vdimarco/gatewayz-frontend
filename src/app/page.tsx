@@ -232,7 +232,7 @@ export default function Home() {
                 <Button variant="link" className="text-sm">View Trending 
                   <span>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M2.66671 8H13.3334M13.3334 8L9.33337 12M13.3334 8L9.33337 4" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2.66671 8H13.3334M13.3334 8L9.33337 12M13.3334 8L9.33337 4" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </span>
                 </Button>
@@ -338,7 +338,7 @@ export default function Home() {
                </button>
              </div>   
              <span className="flex-1">
-             <Button className="w-full bg-black text-white" variant="outline">Gnerate API Key</Button>    
+             <Button className="w-full bg-black text-white h-12" variant="outline">Generate API Key</Button>    
              </span>
            </div>
         </section>

@@ -40,7 +40,7 @@ export function AppHeader() {
             <Link href="/models" className="transition-colors hover:text-foreground/80 ">Models</Link>
             <Link href="/chat" className="transition-colors hover:text-foreground/80 ">Chat</Link>
             <Link href="/developers" className="transition-colors hover:text-foreground/80 ">Developers</Link>
-            <Link href="/rankings" className="transition-colors hover:text-foreground/80 ">Rankings</Link>
+            <Link href="/rankings" className="transition-colors hover:text-foreground/80 ">Ranking</Link>
           </nav>
           <div className="hidden md:flex items-center gap-2">
             {user ? (
@@ -66,7 +66,7 @@ export function AppHeader() {
                     <Link href="/models" className="transition-colors hover:text-foreground/80 text-foreground/60">Models</Link>
                     <Link href="/chat" className="transition-colors hover:text-foreground/80 text-foreground/60">Chat</Link>
                     <Link href="/developers" className="transition-colors hover:text-foreground/80 text-foreground/60">Developers</Link>
-                    <Link href="/rankings" className="transition-colors hover:text-foreground/80 text-foreground/60">Rankings</Link>
+                    <Link href="/rankings" className="transition-colors hover:text-foreground/80 text-foreground/60">Ranking</Link>
                   </nav>
                   <div className="mt-6 flex flex-col gap-2">
                     {user ? (
