@@ -16,8 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut as firebaseSignOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, signOutUser } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
@@ -33,7 +32,7 @@ export function UserNav({ user }: UserNavProps) {
 
   const handleSignOut = async () => {
     try {
-      await firebaseSignOut(auth);
+      await signOutUser();
       toast({ title: "Signed out successfully" });
       router.push("/signin");
     } catch (error) {

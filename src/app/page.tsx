@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, ChevronRight, GitMerge, ShieldCheck, TrendingUp, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { AppFooter } from '@/components/layout/app-footer';
 
 const FeaturedModelCard = ({ model, isNew }: { model: { name: string, by: string, tokens: string, latency: string, growth: string, color: string }, isNew?: boolean }) => (
     <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
@@ -168,12 +169,6 @@ export default function Home() {
 
       </main>
 
-      {/* Footer */}
-      <footer className="border-t">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-center items-center text-sm text-muted-foreground">
-            <p>&copy; 2025 GATEWAYZ</p>
-          </div>
-      </footer>
     </div>
   );
 }
