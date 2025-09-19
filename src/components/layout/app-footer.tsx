@@ -6,7 +6,7 @@ import Link from 'next/link';
 export function AppFooter() {
 
   return (
-    <footer className="sticky bottom-0 z-50 w-full h-[65px] border-b bg-header flex items-center">
+    <footer className="z-50 w-full h-[65px] border-b bg-header flex items-center">
       <div className="container flex h-14 justify-center items-center px-4 sm:px-6 lg:px-8 mx-auto">
         <div className="flex items-center gap-6 mx-auto">
           <Link href="/" className="flex items-center space-x-2">
