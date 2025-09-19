@@ -573,7 +573,11 @@ export default function ChatPage() {
       
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col relative">
-      <img src="/logo_transparent.svg" alt="Stats" width="60%" height="60%" style={{position: 'absolute', top: "30px", left: "50%", transform: "translateX(-50%)"}}/>
+      <img 
+        src="/logo_transparent.svg" 
+        alt="Stats" 
+        className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[75vh] h-[75vh]" 
+      />
 
        
         

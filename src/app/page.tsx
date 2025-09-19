@@ -185,7 +185,11 @@ export default function Home() {
     <div className="bg-background text-foreground">
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 " style={{position: 'relative'}}>
         {/* Hero Section */}
-        <img src="/logo_transparent.svg" alt="Stats" width="50%" height="50%" style={{position: 'absolute', top: "30px", left: "50%", transform: "translateX(-50%)"}}/>
+        <img 
+          src="/logo_transparent.svg" 
+          alt="Stats" 
+          className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[450px] h-[450px] lg:w-[640px] lg:h-[640px] xl:w-[768px] xl:h-[768px]" 
+        />
         
         <section className="grid md:grid-cols-1 gap-6 items-center md:py-[140px]" >
           <div className="space-y-6 ">
