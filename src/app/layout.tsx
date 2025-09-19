@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AppHeader } from '@/components/layout/app-header';
+import { AppFooter } from '@/components/layout/app-footer';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Inter } from 'next/font/google';
 
@@ -32,6 +33,7 @@ export default function RootLayout({
           <AppHeader />
           {children}
           <Toaster />
+          <AppFooter />
         </ThemeProvider>
       </body>
     </html>
