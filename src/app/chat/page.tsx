@@ -558,7 +558,7 @@ export default function ChatPage() {
     };
     
   return (
-    <div className="flex h-[calc(100svh-65px)] bg-background">
+    <div className="flex h-[calc(100svh-130px)] bg-background">
       {/* Left Sidebar */}
         <div className="hidden lg:flex w-[32rem] bg-muted/20 border-r justify-end">
           <ChatSidebar 

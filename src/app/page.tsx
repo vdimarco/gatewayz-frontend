@@ -414,11 +414,11 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t">
+      {/* <footer className="border-t">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-[10px] flex justify-center items-center text-sm text-muted-foreground">
             <img src="/logo_black.svg" alt="Stats" width="45px" height="45px" />
           </div>
-      </footer>
+      </footer> */}
     </div>
   );
 }
