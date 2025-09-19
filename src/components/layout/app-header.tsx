@@ -12,7 +12,7 @@ import { auth } from '@/lib/firebase';
 import { UserNav } from './user-nav';
 import { SearchBar } from './search-bar';
 import { GatewayzLogo } from '@/components/ui/gatewayz-logo';
-
+import Image from 'next/image';
 export function AppHeader() {
   const [user, setUser] = useState<User | null>(null);
 
@@ -28,8 +28,16 @@ export function AppHeader() {
       <div className="container flex h-14 max-w-screen-2xl items-center px-4 sm:px-6 lg:px-8 mx-auto">
         <div className="flex items-center gap-6 mr-auto">
           <Link href="/" className="flex items-center space-x-2">
-            <GatewayzLogo size={36} className="text-primary" />
-            {/* <span className="font-bold sm:inline-block">GATEWAYZ</span> */}
+            {/* <GatewayzLogo size={45} className="text-primary" /> */}
+            <div className="w-[45px]">
+              <Image 
+                src="/assets/images/logo.png" 
+                alt="Gatewayz Logo" 
+                width={45} 
+                height={45} 
+                className="object-contain"
+              />
+            </div>
           </Link>
            <div className="relative hidden sm:block w-full max-w-sm">
              <SearchBar />

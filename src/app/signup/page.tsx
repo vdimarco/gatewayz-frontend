@@ -77,24 +77,24 @@ export default function SignUpPage() {
   const isPasswordValid = password.length >= 8;
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4 min-h-[788px]">
+    <div className="flex items-center justify-center p-4 h-[-webkit-fill-available]" style={{ backgroundColor: '#f8f8f8' }}>
       {/* Background Logo behind the form */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <Image 
           src="/assets/images/logo_black.png" 
           alt="Gatewayz Background" 
-          width={700} 
-          height={700} 
+          width={750} 
+          height={750} 
           className="object-contain"
         />
       </div>
       
       <div className="w-full max-w-md relative z-10">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg p-8 space-y-6">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg p-4 space-y-5 w-[460px]">
           {/* Header */}
           <div className="text-center space-y-3">
-            <h1 className="text-2xl font-bold">Sign Up With Email</h1>
-          </div>
+            <h1 className="text-[32px] font-bold font-inter" style={{ fontWeight: 700 }}>Sign Up With Email</h1>
+           </div>
 
           {/* Email/Password Form */}
           <form className="space-y-4" onSubmit={handleSignUp}>
