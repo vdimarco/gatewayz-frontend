@@ -27,7 +27,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} antialiased bg-background min-h-screen flex flex-col justify-start`} suppressHydrationWarning>
         <ThemeProvider
-          defaultTheme="dark"
+          defaultTheme="light"
           storageKey="ui-theme"
         >
           <AppHeader />
