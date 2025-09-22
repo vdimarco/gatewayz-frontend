@@ -77,7 +77,7 @@ export default function SignUpPage() {
   const isPasswordValid = password.length >= 8;
 
   return (
-    <div className="flex items-center justify-center p-4 h-[-webkit-fill-available]" style={{ backgroundColor: '#f8f8f8' }}>
+    <div className=" flex flex-1 items-center justify-center p-4 h-[-webkit-fill-available]" style={{ backgroundColor: '#f8f8f8' }}>
       {/* Background Logo behind the form */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <Image 
