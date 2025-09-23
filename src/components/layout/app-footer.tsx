@@ -1,17 +1,19 @@
-import Image from 'next/image';
+
+"use client";
+
+import Link from 'next/link';
 
 export function AppFooter() {
+
   return (
-    <footer className="border-t h-[65px]">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-center items-center gap-2 text-sm text-muted-foreground">
-        <Image 
-          src="/assets/images/logo.png" 
-          alt="Gatewayz Logo" 
-          width={28} 
-          height={28} 
-          className="object-contain"
-        />
-        {/* <p>&copy; 2025 GATEWAYZ</p> */}
+    <footer className="z-50 w-full h-[65px] border-t border-footer-border bg-header flex items-center">
+      <div className="container flex h-14 justify-center items-center px-4 sm:px-6 lg:px-8 mx-auto">
+        <div className="flex items-center gap-6 mx-auto">
+          <Link href="/" className="flex items-center space-x-2">
+            {/* <span className="font-bold sm:inline-block">GATEWAYZ</span> */}
+            <img src="/logo_black.svg" alt="Gatewayz" style={{ width: "100%", height: "100%" }} />
+          </Link>
+        </div>
       </div>
     </footer>
   );

@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarInset, SidebarTrigger, SidebarGroup } from "@/components/ui/sidebar";
 
 const navItems = [
-  { href: "/settings", label: "Settings" },
+  // { href: "/settings", label: "Settings" },
+  { href: "/settings/account", label: "Account" },
   { href: "/settings/credits", label: "Credits" },
   { href: "/settings/activity", label: "Activity" },
   { href: "/settings/presets", label: "Presets" },
@@ -26,7 +27,7 @@ export default function SettingsLayout({
 
   return (
     <SidebarProvider>
-      <div className="relative flex h-[calc(100vh-theme(spacing.14))]">
+      <div className="relative flex h-[calc(100vh-130px))]">
         <Sidebar
           variant="sidebar"
           collapsible="icon"

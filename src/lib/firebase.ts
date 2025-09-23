@@ -8,6 +8,7 @@ import {
   onAuthStateChanged,
   type User
 } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -23,6 +24,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 // Auth providers
 const googleProvider = new GoogleAuthProvider();
@@ -54,4 +56,4 @@ export const signInWithGithub = async () => {
 
 export const signOutUser = () => signOut(auth);
 
-export { app, auth, onAuthStateChanged, type User };
+export { app, auth, db, onAuthStateChanged, type User };
