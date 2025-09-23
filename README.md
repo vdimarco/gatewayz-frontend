@@ -1,3 +1,8 @@
+# Firebase Studio
+
+This is a NextJS starter in Firebase Studio.
+
+To get started, take a look at src/app/page.tsx.
 # Gatewayz
 
 GatewayZ is a comprehensive AI model management platform, providing a unified interface for accessing and managing various Large Language Models (LLMs). The platform offers model browsing, interactive chat functionality, performance analytics, and developer tools.
