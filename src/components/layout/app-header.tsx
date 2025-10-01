@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import Link from 'next/link';
@@ -10,20 +10,71 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePrivy } from '@privy-io/react-auth';
 import { UserNav } from './user-nav';
 import { SearchBar } from './search-bar';
+import { API_BASE_URL } from '@/lib/config';
+import { processAuthResponse, getApiKey, removeApiKey } from '@/lib/api';
 
 export function AppHeader() {
-  const { user, login, getAccessToken } = usePrivy();
+  const { user, login, logout, getAccessToken } = usePrivy();
 
   useEffect(() => {
-    const get = async () => {
+    const authenticateUser = async () => {
       if(user) {
-        const token = await getAccessToken();
-        console.log({user});
-        console.log({token});
+        try {
+          // Check if we already have an API key for this user
+          const existingApiKey = getApiKey();
+          if (existingApiKey) {
+            console.log('User already authenticated with API key');
+            return;
+          }
+
+          const token = await getAccessToken();
+          console.log({user});
+          console.log({token});
+          
+          const userData = {
+            id: user.id,
+            createdAt: user.createdAt,
+            linkedAccounts: user.linkedAccounts,
+            email: user.email,
+            google: user.google,
+            delegatedWallets: [],
+            mfaMethods: user.mfaMethods,
+            hasAcceptedTerms: user.hasAcceptedTerms,
+            isGuest: user.isGuest
+          };
+
+          const response = await fetch(`${API_BASE_URL}/auth`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData)
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Authentication successful:', result);
+            
+            // Process and save the API key and user data
+            processAuthResponse(result);
+          } else {
+            console.error('Authentication failed:', response.status, response.statusText);
+            logout();
+            removeApiKey();
+          }
+        } catch (error) {
+          console.error('Error during authentication:', error);
+          logout();
+          removeApiKey();
+        }
+      } else {
+        // User logged out, remove stored API key
+        removeApiKey();
       }
     }
-    get();
-  }, [user])
+    
+    authenticateUser();
+  }, [user, getAccessToken])
 
   return (
     <header className="sticky top-0 z-50 w-full h-[65px] border-b bg-header flex items-center">
