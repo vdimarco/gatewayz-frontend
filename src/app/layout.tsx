@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { PrivyProviderWrapper } from '@/components/providers/privy-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Inter } from 'next/font/google';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -38,6 +39,7 @@ export default function RootLayout({
               {children}
               <Toaster />
               <AppFooter />
+              <SpeedInsights />
             </PrivyProviderWrapper>
           </ErrorBoundary>
         </ThemeProvider>
