@@ -99,9 +99,7 @@ export function AppHeader() {
             {user ? (
               <UserNav user={user} />
             ) : (
-              // <Link href="/signin">
-                <Button variant="outline" onClick={() => login()}>Sign In</Button>
-              // </Link>
+              <Button variant="outline" onClick={() => login()}>Sign In</Button>
             )}
             <ThemeToggle />
           </div>
@@ -125,9 +123,7 @@ export function AppHeader() {
                     {user ? (
                        <UserNav user={user} />
                     ) : (
-                      // <Link href="/signin">
                       <Button variant="outline" onClick={() => login()}>Sign In</Button>
-                      // </Link>
                     )}
                      <ThemeToggle />
                   </div>

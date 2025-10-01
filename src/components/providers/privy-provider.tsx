@@ -1,7 +1,6 @@
 "use client";
 
 import { PrivyProvider } from '@privy-io/react-auth';
-import { privyConfig } from '@/lib/privy';
 import { ReactNode } from 'react';
 
 interface PrivyProviderWrapperProps {
@@ -9,10 +8,23 @@ interface PrivyProviderWrapperProps {
 }
 
 export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
+  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+
+  if (!appId) {
+    throw new Error('NEXT_PUBLIC_PRIVY_APP_ID is not set');
+  }
+
   return (
     <PrivyProvider
-      appId={privyConfig.appId}
-      config={privyConfig.config}
+      appId={appId}
+      config={{
+        loginMethods: ['email', 'google', 'github'],
+        appearance: {
+          theme: 'light',
+          accentColor: '#000000',
+          logo: '/logo_black.svg',
+        },
+      }}
     >
       {children}
     </PrivyProvider>
