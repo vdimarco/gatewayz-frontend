@@ -24,14 +24,14 @@ const FeaturedModelCard = ({
       className={`h-[144px] bg-card border rounded-lg shadow-sm hover:shadow-md transition-all duration-700 ease-in-out cursor-pointer overflow-hidden ${
         isActive
           ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-auto min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)] scale-105'
-          : 'border-gray-200 hover:border-gray-300 w-20 min-w-[82px] flex-shrink-0 scale-100'
+          : 'border-gray-200 hover:border-gray-300 w-24 min-w-[96px] flex-shrink-0 scale-100'
       }`}
       onClick={onClick}
     >
       {/* Compact view - always visible */}
       {!isActive && (
-      <div className="p-3 flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100">
+      <div className="p-2 flex flex-col items-center justify-center h-full gap-2">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 flex-shrink-0">
           {model.by === 'google' && (
             <div className="flex">
               <img src="/Google_Logo-black.svg" alt="Google" width="42" height="42" />
@@ -47,6 +47,12 @@ const FeaturedModelCard = ({
               <img src="/Meta_Logo-black.svg" alt="Anthropic" width="42" height="42" />
             </div>
             )}
+          </div>
+          <div className="text-center">
+            <p className={`text-lg font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
+              {model.growth}
+            </p>
+            <p className="text-[10px] text-gray-600 leading-tight">Weekly Growth</p>
           </div>
         </div>
       )}
