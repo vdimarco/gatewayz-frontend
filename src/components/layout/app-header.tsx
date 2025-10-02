@@ -34,8 +34,16 @@ export function AppHeader() {
           const requestBody = {
             user: {
               id: user.id,
-              created_at: user.createdAt,
-              linked_accounts: user.linkedAccounts,
+              created_at: new Date(user.createdAt).getTime() / 1000, // Convert to Unix timestamp
+              linked_accounts: user.linkedAccounts.map((account: any) => ({
+                type: account.type,
+                subject: account.subject,
+                email: account.email,
+                name: account.name,
+                verified_at: account.verifiedAt ? new Date(account.verifiedAt).getTime() / 1000 : undefined,
+                first_verified_at: account.firstVerifiedAt ? new Date(account.firstVerifiedAt).getTime() / 1000 : undefined,
+                latest_verified_at: account.latestVerifiedAt ? new Date(account.latestVerifiedAt).getTime() / 1000 : undefined,
+              })),
               mfa_methods: user.mfaMethods,
               has_accepted_terms: user.hasAcceptedTerms,
               is_guest: user.isGuest
