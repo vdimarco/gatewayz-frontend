@@ -323,17 +323,17 @@ export default function ApiKeysPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8 px-4 sm:px-0">
       <div className="flex justify-center">
-        <h1 className="text-3xl font-bold">API Keys</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">API Keys</h1>
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Your API Keys</h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h2 className="text-base sm:text-lg font-semibold">Your API Keys</h2>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-black text-white h-12 px-10">Generate API Key</Button>
+              <Button className="bg-black text-white h-10 sm:h-12 px-6 sm:px-10 text-sm sm:text-base w-full sm:w-auto">Generate API Key</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>

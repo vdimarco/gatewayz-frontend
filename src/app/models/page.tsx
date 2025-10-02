@@ -54,22 +54,22 @@ const ModelCard = ({ model }: { model: Model }) => {
 
   return (
     <Link href={`/models/${encodeURIComponent(model.id)}`}>
-      <Card className="p-6 flex flex-col h-full hover:border-primary">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              {model.name} {isFree && <Badge>Free</Badge>}
+      <Card className="p-4 sm:p-6 flex flex-col h-full hover:border-primary">
+        <div className="flex justify-between items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2 flex-wrap">
+              <span className="truncate">{model.name}</span> {isFree && <Badge>Free</Badge>}
             </h3>
-            <Badge variant="outline" className="mt-2" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
+            <Badge variant="outline" className="mt-2 text-xs" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
           </div>
-          <div className="text-sm text-muted-foreground whitespace-nowrap">{contextK}K</div>
+          <div className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap flex-shrink-0">{contextK}K</div>
         </div>
-        <p className="text-muted-foreground mt-4 text-sm flex-grow">{model.description}</p>
-        <div className="flex items-center gap-4 text-xs text-muted-foreground mt-4 pt-4 border-t">
-          <span>by {model.provider_slug}</span>
-          <span>{contextK}K context</span>
-          <span>${inputCost}/M input</span>
-          <span>${outputCost}/M output</span>
+        <p className="text-muted-foreground mt-3 sm:mt-4 text-xs sm:text-sm flex-grow line-clamp-3">{model.description}</p>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
+          <span className="whitespace-nowrap">by {model.provider_slug}</span>
+          <span className="whitespace-nowrap">{contextK}K context</span>
+          <span className="whitespace-nowrap">${inputCost}/M in</span>
+          <span className="whitespace-nowrap">${outputCost}/M out</span>
         </div>
       </Card>
     </Link>
@@ -207,14 +207,14 @@ export default function ModelsPage() {
 
         <SidebarInset className="flex-1 overflow-auto">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
               <div className="flex items-center gap-2">
                   <SidebarTrigger className="lg:hidden" />
-                  <h1 className="text-2xl font-bold">Models</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold">Models</h1>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground">{filteredModels.length} models</span>
-                <Button variant="ghost" onClick={resetFilters}>Reset Filters</Button>
+              <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                <span className="text-xs sm:text-sm text-muted-foreground">{filteredModels.length} models</span>
+                <Button variant="ghost" size="sm" onClick={resetFilters}>Reset</Button>
               </div>
           </div>
 

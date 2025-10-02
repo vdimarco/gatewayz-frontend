@@ -23,8 +23,8 @@ const FeaturedModelCard = ({
     <div
       className={`h-[144px] bg-card border rounded-lg shadow-sm hover:shadow-md cursor-pointer overflow-hidden relative ${
         isActive
-          ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-auto min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)]'
-          : 'border-gray-200 hover:border-gray-300 w-24 min-w-[96px] flex-shrink-0'
+          ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-auto min-w-[280px] sm:min-w-[350px] md:min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)]'
+          : 'border-gray-200 hover:border-gray-300 w-20 sm:w-24 min-w-[80px] sm:min-w-[96px] flex-shrink-0'
       }`}
       style={{
         transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -64,48 +64,48 @@ const FeaturedModelCard = ({
 
       {/* Expanded view */}
       <div
-        className={`absolute inset-0 px-4 py-3 transition-opacity duration-500 ${
+        className={`absolute inset-0 px-2 sm:px-4 py-2 sm:py-3 transition-opacity duration-500 ${
           isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
-        <div className="flex gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100">
+        <div className="flex gap-2 sm:gap-3 mb-2 sm:mb-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-gray-100 flex-shrink-0">
               {model.by === 'google' && (
                 <div className="flex">
-                  <img src="/Google_Logo-black.svg" alt="Google" width="42" height="42" />
+                  <img src="/Google_Logo-black.svg" alt="Google" className="w-8 h-8 sm:w-10 sm:h-10" />
                 </div>
               )}
               {model.by === 'openai' && (
                 <div className="flex">
-                  <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="42" height="42" />
+                  <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-8 h-8 sm:w-10 sm:h-10" />
                 </div>
               )}
               {model.by === 'anthropic' && (
                 <div className="flex">
-                  <img src="/Meta_Logo-black.svg" alt="Anthropic" width="42" height="42" />
+                  <img src="/Meta_Logo-black.svg" alt="Anthropic" className="w-8 h-8 sm:w-10 sm:h-10" />
                 </div>
               )}
             </div>
             <div>
-              <h3 className="font-bold text-base text-black">{model.name}</h3>
-              <span>By</span><span className="text-sm text-blue-600"> {model.by.charAt(0).toUpperCase() + model.by.slice(1)}</span>
+              <h3 className="font-bold text-sm sm:text-base text-black">{model.name}</h3>
+              <span className="text-xs sm:text-sm">By</span><span className="text-xs sm:text-sm text-blue-600"> {model.by.charAt(0).toUpperCase() + model.by.slice(1)}</span>
             </div>
           </div>
-          
-        <div className="grid grid-cols-3 gap-4">
+
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <div className="text-center">
-            <p className="text-2xl font-bold text-black">{model.tokens}</p>
-            <p className="text-sm text-gray-600">Tokens/Sec</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold text-black">{model.tokens}</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">Tokens/Sec</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-black">{model.latency}</p>
-            <p className="text-sm text-gray-600">Latency</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold text-black">{model.latency}</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">Latency</p>
           </div>
           <div className="text-center">
-            <p className={`text-2xl font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
+            <p className={`text-lg sm:text-xl md:text-2xl font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
               {model.growth}
             </p>
-            <p className="text-sm text-gray-600">Weekly Growth</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">Weekly Growth</p>
           </div>
         </div>
       </div>
@@ -216,11 +216,11 @@ export default function Home() {
           className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[450px] h-[450px] lg:w-[640px] lg:h-[640px] xl:w-[768px] xl:h-[768px]" 
         />
         
-        <section className="grid md:grid-cols-1 gap-6 items-center md:py-[140px]" >
-          <div className="space-y-6 ">
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-center" style={{  fontFamily: 'Inter, sans-serif',}}>One Interface To </h1>
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-center">Work With Any LLM</h1>
-            <p className="text-lg  text-center">From Idea To Production, Gatewayz Gives AI Teams The Toolkit, Savings, And Reliability They Need.</p>
+        <section className="grid md:grid-cols-1 gap-6 items-center py-8 md:py-[140px]" >
+          <div className="space-y-4 md:space-y-6 px-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tighter text-center" style={{  fontFamily: 'Inter, sans-serif',}}>One Interface To </h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tighter text-center">Work With Any LLM</h1>
+            <p className="text-sm sm:text-base md:text-lg text-center px-4">From Idea To Production, Gatewayz Gives AI Teams The Toolkit, Savings, And Reliability They Need.</p>
           </div>
           <div className="relative">
             <Input 
@@ -240,13 +240,13 @@ export default function Home() {
               </svg>
             </button>
           </div>
-          <div>
-            <div className="flex justify-between pb-2 relative z-10">
+          <div className="overflow-hidden">
+            <div className="flex justify-between pb-2 relative z-10 overflow-x-auto gap-2 scrollbar-hide">
                 {featuredModels.map((model, i) => (
-                  <FeaturedModelCard 
-                    key={i} 
-                    model={model} 
-                    isNew={model.name.includes('GPT-5')} 
+                  <FeaturedModelCard
+                    key={i}
+                    model={model}
+                    isNew={model.name.includes('GPT-5')}
                     isActive={activeModelIndex === i}
                     onClick={() => handleModelClick(i)}
                   />
@@ -278,11 +278,11 @@ export default function Home() {
             <StatItem value="400+" label="Models" />
         </section> */}
 
-        <section className="mb-24">
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-center">Connected TO 1000+ AI Models</h2>
+        <section className="mb-12 md:mb-24 px-4">
+          <div className="mb-8 md:mb-12">
+            <h2 className="text-xl sm:text-2xl font-bold text-center">Connected TO 1000+ AI Models</h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 ">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-8 items-center justify-items-center">
             <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="80%" height="80%" />
             <img src="/Google_Logo-black.svg" alt="Google" width="70%" height="70%" />
             <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" width="80%" height="80%" />
