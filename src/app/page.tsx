@@ -21,16 +21,22 @@ const FeaturedModelCard = ({
   onClick?: () => void
 }) => (
     <div
-      className={`h-[144px] bg-card border rounded-lg shadow-sm hover:shadow-md transition-all duration-700 ease-in-out cursor-pointer overflow-hidden ${
+      className={`h-[144px] bg-card border rounded-lg shadow-sm hover:shadow-md cursor-pointer overflow-hidden relative ${
         isActive
-          ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-auto min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)] scale-105'
-          : 'border-gray-200 hover:border-gray-300 w-24 min-w-[96px] flex-shrink-0 scale-100'
+          ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-auto min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)]'
+          : 'border-gray-200 hover:border-gray-300 w-24 min-w-[96px] flex-shrink-0'
       }`}
+      style={{
+        transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)'
+      }}
       onClick={onClick}
     >
-      {/* Compact view - always visible */}
-      {!isActive && (
-      <div className="p-2 flex flex-col items-center justify-center h-full gap-2">
+      {/* Compact view */}
+      <div
+        className={`absolute inset-0 p-2 flex flex-col items-center justify-center gap-2 transition-opacity duration-500 ${
+          isActive ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+      >
         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 flex-shrink-0">
           {model.by === 'google' && (
             <div className="flex">
@@ -46,21 +52,23 @@ const FeaturedModelCard = ({
             <div className="flex">
               <img src="/Meta_Logo-black.svg" alt="Anthropic" width="42" height="42" />
             </div>
-            )}
-          </div>
-          <div className="text-center">
-            <p className={`text-lg font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
-              {model.growth}
-            </p>
-            <p className="text-[10px] text-gray-600 leading-tight">Weekly Growth</p>
-          </div>
+          )}
         </div>
-      )}
+        <div className="text-center">
+          <p className={`text-lg font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
+            {model.growth}
+          </p>
+          <p className="text-[10px] text-gray-600 leading-tight">Weekly Growth</p>
+        </div>
+      </div>
 
-      {/* Expanded view - only visible when active */}
-      {isActive && (
-        <div className="px-4 py-3 animate-in fade-in duration-500">
-          <div className="flex gap-3 mb-4">
+      {/* Expanded view */}
+      <div
+        className={`absolute inset-0 px-4 py-3 transition-opacity duration-500 ${
+          isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="flex gap-3 mb-4">
             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100">
               {model.by === 'google' && (
                 <div className="flex">
@@ -84,24 +92,23 @@ const FeaturedModelCard = ({
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-black">{model.tokens}</p>
-              <p className="text-sm text-gray-600">Tokens/Sec</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-black">{model.latency}</p>
-              <p className="text-sm text-gray-600">Latency</p>
-            </div>
-            <div className="text-center">
-              <p className={`text-2xl font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
-                {model.growth}
-              </p>
-              <p className="text-sm text-gray-600">Weekly Growth</p>
-            </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-black">{model.tokens}</p>
+            <p className="text-sm text-gray-600">Tokens/Sec</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-black">{model.latency}</p>
+            <p className="text-sm text-gray-600">Latency</p>
+          </div>
+          <div className="text-center">
+            <p className={`text-2xl font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
+              {model.growth}
+            </p>
+            <p className="text-sm text-gray-600">Weekly Growth</p>
           </div>
         </div>
-      )}
+      </div>
     </div>
 )
 
