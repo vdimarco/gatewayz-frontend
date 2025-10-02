@@ -64,7 +64,7 @@ const ApiKeyRow = ({
 
   const maskedKey = showFullKey
     ? apiKey.api_key
-    : `${apiKey.api_key.substring(0, 20)}...${apiKey.api_key.substring(apiKey.api_key.length - 4)}`;
+    : `${apiKey.api_key.substring(0, 12)}...${apiKey.api_key.substring(apiKey.api_key.length - 4)}`;
 
   const usage = apiKey.max_requests
     ? `${apiKey.requests_used} / ${apiKey.max_requests}`
@@ -84,8 +84,8 @@ const ApiKeyRow = ({
             <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">Inactive</span>
           )}
         </div>
-        <div className="font-medium flex items-center gap-2">
-          <span className="font-mono text-xs">{maskedKey}</span>
+        <div className="font-medium flex items-center gap-2 min-w-0">
+          <span className="font-mono text-xs truncate">{maskedKey}</span>
           <Button
             variant="ghost"
             size="sm"
