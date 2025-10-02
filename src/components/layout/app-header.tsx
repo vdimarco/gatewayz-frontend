@@ -30,17 +30,17 @@ export function AppHeader() {
           const token = await getAccessToken();
           console.log({user});
           console.log({token});
-          
-          const userData = {
-            id: user.id,
-            createdAt: user.createdAt,
-            linkedAccounts: user.linkedAccounts,
-            email: user.email,
-            google: user.google,
-            delegatedWallets: [],
-            mfaMethods: user.mfaMethods,
-            hasAcceptedTerms: user.hasAcceptedTerms,
-            isGuest: user.isGuest
+
+          const requestBody = {
+            user: {
+              id: user.id,
+              created_at: user.createdAt,
+              linked_accounts: user.linkedAccounts,
+              mfa_methods: user.mfaMethods,
+              has_accepted_terms: user.hasAcceptedTerms,
+              is_guest: user.isGuest
+            },
+            token: token || ''
           };
 
           const response = await fetch(`${API_BASE_URL}/auth`, {
@@ -48,7 +48,7 @@ export function AppHeader() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(userData)
+            body: JSON.stringify(requestBody)
           });
 
           if (response.ok) {
