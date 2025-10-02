@@ -185,18 +185,13 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [featuredModels.length]);
 
-  // Scroll to keep active card at the leftmost position
-  useEffect(() => {
-    if (carouselRef.current && activeModelIndex !== null) {
-      const activeCard = carouselRef.current.children[activeModelIndex] as HTMLElement;
-      if (activeCard) {
-        carouselRef.current.scrollTo({
-          left: activeCard.offsetLeft,
-          behavior: 'smooth'
-        });
-      }
-    }
-  }, [activeModelIndex]);
+  // Reorder models so active card is always first
+  const reorderedModels = activeModelIndex !== null
+    ? [
+        ...featuredModels.slice(activeModelIndex),
+        ...featuredModels.slice(0, activeModelIndex)
+      ]
+    : featuredModels;
 
   const handleModelClick = (index: number) => {
     setActiveModelIndex(index);
@@ -260,13 +255,19 @@ export default function Home() {
               className="flex pb-2 relative z-10 overflow-x-auto gap-2 scrollbar-hide scroll-smooth"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-                {featuredModels.map((model, i) => (
+                {reorderedModels.map((model, i) => (
                   <FeaturedModelCard
-                    key={i}
+                    key={`${model.name}-${i}`}
                     model={model}
                     isNew={model.name.includes('GPT-5')}
-                    isActive={activeModelIndex === i}
-                    onClick={() => handleModelClick(i)}
+                    isActive={i === 0}
+                    onClick={() => {
+                      // Calculate the original index in the featuredModels array
+                      const originalIndex = activeModelIndex !== null
+                        ? (activeModelIndex + i) % featuredModels.length
+                        : i;
+                      handleModelClick(originalIndex);
+                    }}
                   />
                 ))}
             </div>
