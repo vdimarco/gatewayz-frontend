@@ -85,18 +85,27 @@ const ApiKeyRow = ({
         </div>
         <div className="font-medium flex items-center gap-2 min-w-0">
           <span className="font-mono text-xs truncate">{maskedKey}</span>
-          <TooltipProvider>
-            <Tooltip open={showFullKey} onOpenChange={setShowFullKey}>
+          <TooltipProvider delayDuration={0}>
+            <Tooltip open={showFullKey}>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-6 w-6 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowFullKey(!showFullKey);
+                  }}
+                  onMouseEnter={(e) => e.preventDefault()}
+                  onMouseLeave={(e) => e.preventDefault()}
                 >
                   {showFullKey ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="max-w-md p-3">
+              <TooltipContent
+                className="max-w-md p-3"
+                onPointerDownOutside={() => setShowFullKey(false)}
+              >
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-xs break-all">{apiKey.api_key}</span>
                   <Button
@@ -106,6 +115,7 @@ const ApiKeyRow = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       handleCopyClick();
+                      setShowFullKey(false);
                     }}
                   >
                     <Copy className="h-3 w-3" />
