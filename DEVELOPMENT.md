@@ -67,3 +67,30 @@ For production testing:
 # .env.local
 NEXT_PUBLIC_API_BASE_URL=https://api.gatewayz.ai
 ```
+
+## Deployment to Vercel
+
+### Environment Variables Setup
+After removing the old environment variable from Vercel, you need to add it back with the correct value:
+
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Select your frontend project
+3. Navigate to **Settings** → **Environment Variables**
+4. Add the following variables:
+
+| Variable Name | Value | Environment |
+|--------------|-------|-------------|
+| `NEXT_PUBLIC_API_BASE_URL` | `https://api.gatewayz.ai` | Production, Preview, Development |
+| `NEXT_PUBLIC_PRIVY_APP_ID` | `<your-privy-app-id>` | Production, Preview, Development |
+
+5. Click **Save**
+6. Trigger a new deployment or push a commit to deploy
+
+### Verifying Deployment
+After deployment, check that the auth endpoint is working:
+```bash
+# Should call https://api.gatewayz.ai/auth
+curl -X POST https://beta.gatewayz.ai/api-endpoint-test
+```
+
+The frontend should now correctly call `https://api.gatewayz.ai/auth` instead of the malformed URL.
