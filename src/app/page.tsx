@@ -6,25 +6,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, ChevronRight, GitMerge, ShieldCheck, TrendingUp, User, Zap } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-const FeaturedModelCard = ({ 
-  model, 
-  isNew, 
-  isActive, 
-  onClick 
-}: { 
-  model: { name: string, by: string, tokens: string, latency: string, growth: string, color: string }, 
+const FeaturedModelCard = ({
+  model,
+  isNew,
+  isActive,
+  onClick
+}: {
+  model: { name: string, by: string, tokens: string, latency: string, growth: string, color: string },
   isNew?: boolean,
   isActive?: boolean,
   onClick?: () => void
 }) => (
-    <div 
-      className={`h-[144px] bg-card border rounded-lg shadow-sm hover:shadow-md transition-all duration-500 ease-in-out cursor-pointer overflow-hidden ${
-        isActive 
-          ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-auto min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)]' 
-          : 'border-gray-200 hover:border-gray-300 w-20 min-w-[82px] flex-shrink-0'
+    <div
+      className={`h-[144px] bg-card border rounded-lg shadow-sm hover:shadow-md transition-all duration-700 ease-in-out cursor-pointer overflow-hidden ${
+        isActive
+          ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-auto min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)] scale-105'
+          : 'border-gray-200 hover:border-gray-300 w-20 min-w-[82px] flex-shrink-0 scale-100'
       }`}
       onClick={onClick}
     >
@@ -53,7 +53,7 @@ const FeaturedModelCard = ({
 
       {/* Expanded view - only visible when active */}
       {isActive && (
-        <div className="px-4 py-3">
+        <div className="px-4 py-3 animate-in fade-in duration-500">
           <div className="flex gap-3 mb-4">
             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100">
               {model.by === 'google' && (
@@ -158,6 +158,18 @@ export default function Home() {
       { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400' },
       { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400' }
   ];
+
+  // Auto-advance carousel every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveModelIndex((prev) => {
+        if (prev === null) return 0;
+        return (prev + 1) % featuredModels.length;
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [featuredModels.length]);
 
   const handleModelClick = (index: number) => {
     setActiveModelIndex(index);
