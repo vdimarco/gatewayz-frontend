@@ -43,6 +43,8 @@ export function AppHeader() {
             token: token || ''
           };
 
+          console.log('Sending auth request:', JSON.stringify(requestBody, null, 2));
+
           const response = await fetch(`${API_BASE_URL}/auth`, {
             method: 'POST',
             headers: {
@@ -58,7 +60,9 @@ export function AppHeader() {
             // Process and save the API key and user data
             processAuthResponse(result);
           } else {
+            const errorText = await response.text();
             console.error('Authentication failed:', response.status, response.statusText);
+            console.error('Error response:', errorText);
             logout();
             removeApiKey();
           }
