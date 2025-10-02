@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Info, ChevronDown, Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState, useEffect } from "react";
 import { getApiKey, makeAuthenticatedRequest } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
@@ -62,9 +63,7 @@ const ApiKeyRow = ({
     }
   };
 
-  const maskedKey = showFullKey
-    ? apiKey.api_key
-    : `${apiKey.api_key.substring(0, 12)}...${apiKey.api_key.substring(apiKey.api_key.length - 4)}`;
+  const maskedKey = `${apiKey.api_key.substring(0, 12)}...${apiKey.api_key.substring(apiKey.api_key.length - 4)}`;
 
   const usage = apiKey.max_requests
     ? `${apiKey.requests_used} / ${apiKey.max_requests}`
@@ -86,14 +85,35 @@ const ApiKeyRow = ({
         </div>
         <div className="font-medium flex items-center gap-2 min-w-0">
           <span className="font-mono text-xs truncate">{maskedKey}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0"
-            onClick={() => setShowFullKey(!showFullKey)}
-          >
-            {showFullKey ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-          </Button>
+          <TooltipProvider>
+            <Tooltip open={showFullKey} onOpenChange={setShowFullKey}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                >
+                  {showFullKey ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-md p-3">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs break-all">{apiKey.api_key}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 flex-shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCopyClick();
+                    }}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <Button
             variant="ghost"
             size="sm"
