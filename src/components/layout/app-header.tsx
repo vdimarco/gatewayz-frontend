@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import Link from 'next/link';
@@ -12,9 +12,11 @@ import { UserNav } from './user-nav';
 import { SearchBar } from './search-bar';
 import { API_BASE_URL } from '@/lib/config';
 import { processAuthResponse, getApiKey, removeApiKey } from '@/lib/api';
+import { Separator } from "@/components/ui/separator";
 
 export function AppHeader() {
   const { user, login, logout, getAccessToken } = usePrivy();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const authenticateUser = async () => {
@@ -116,28 +118,121 @@ export function AppHeader() {
             <ThemeToggle />
           </div>
           <div className="md:hidden">
-            <Sheet>
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Open menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right">
-                <div className="p-4">
-                  <nav className="flex flex-col gap-4 text-lg">
-                    <Link href="/models" className="transition-colors hover:text-foreground/80 text-foreground/60">Models</Link>
-                    <Link href="/chat" className="transition-colors hover:text-foreground/80 text-foreground/60">Chat</Link>
-                    <Link href="/developers" className="transition-colors hover:text-foreground/80 text-foreground/60">Developers</Link>
-                    <Link href="/rankings" className="transition-colors hover:text-foreground/80 text-foreground/60">Ranking</Link>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <div className="flex flex-col h-full py-6">
+                  <nav className="flex flex-col gap-4 text-base">
+                    <Link
+                      href="/models"
+                      className="transition-colors hover:text-foreground/80 text-foreground/60 py-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Models
+                    </Link>
+                    <Link
+                      href="/chat"
+                      className="transition-colors hover:text-foreground/80 text-foreground/60 py-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Chat
+                    </Link>
+                    <Link
+                      href="/developers"
+                      className="transition-colors hover:text-foreground/80 text-foreground/60 py-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Developers
+                    </Link>
+                    <Link
+                      href="/rankings"
+                      className="transition-colors hover:text-foreground/80 text-foreground/60 py-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Ranking
+                    </Link>
                   </nav>
-                  <div className="mt-6 flex flex-col gap-2">
-                    {user ? (
-                       <UserNav user={user} />
-                    ) : (
-                      <Button variant="outline" onClick={() => login()}>Sign In</Button>
-                    )}
-                     <ThemeToggle />
+
+                  {user && (
+                    <>
+                      <Separator className="my-4" />
+                      <div className="flex flex-col gap-2">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase px-2">
+                          Account
+                        </p>
+                        <Link
+                          href="/settings/account"
+                          className="transition-colors hover:text-foreground/80 text-foreground/60 py-2 px-2 rounded-md hover:bg-accent"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          Account Settings
+                        </Link>
+                        <Link
+                          href="/settings/credits"
+                          className="transition-colors hover:text-foreground/80 text-foreground/60 py-2 px-2 rounded-md hover:bg-accent"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          Credits
+                        </Link>
+                        <Link
+                          href="/settings/keys"
+                          className="transition-colors hover:text-foreground/80 text-foreground/60 py-2 px-2 rounded-md hover:bg-accent"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          API Keys
+                        </Link>
+                        <Link
+                          href="/settings/activity"
+                          className="transition-colors hover:text-foreground/80 text-foreground/60 py-2 px-2 rounded-md hover:bg-accent"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          Activity
+                        </Link>
+                        <Link
+                          href="/settings"
+                          className="transition-colors hover:text-foreground/80 text-foreground/60 py-2 px-2 rounded-md hover:bg-accent"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          Settings
+                        </Link>
+                      </div>
+                      <Separator className="my-4" />
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          logout();
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        Sign Out
+                      </Button>
+                    </>
+                  )}
+
+                  {!user && (
+                    <>
+                      <Separator className="my-4" />
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          login();
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        Sign In
+                      </Button>
+                    </>
+                  )}
+
+                  <div className="mt-auto pt-4">
+                    <ThemeToggle />
                   </div>
                 </div>
               </SheetContent>
