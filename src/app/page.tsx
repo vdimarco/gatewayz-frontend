@@ -39,12 +39,12 @@ const FeaturedModelCard = ({
           )}
           {model.by === 'openai' && (
             <div className="flex">
-              <img src="/OpenAi_Logo-black.svg" alt="OpenAI" width="42" height="42" />
+              <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="42" height="42" />
             </div>
           )}
           {model.by === 'anthropic' && (
             <div className="flex">
-              <img src="/Anthropic_Logo-black.svg" alt="Anthropic" width="42" height="42" />
+              <img src="/Meta_Logo-black.svg" alt="Anthropic" width="42" height="42" />
             </div>
             )}
           </div>
@@ -63,12 +63,12 @@ const FeaturedModelCard = ({
               )}
               {model.by === 'openai' && (
                 <div className="flex">
-                  <img src="/OpenAi_Logo-black.svg" alt="OpenAI" width="42" height="42" />
+                  <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="42" height="42" />
                 </div>
               )}
               {model.by === 'anthropic' && (
                 <div className="flex">
-                  <img src="/Anthropic_Logo-black.svg" alt="Anthropic" width="42" height="42" />
+                  <img src="/Meta_Logo-black.svg" alt="Anthropic" width="42" height="42" />
                 </div>
               )}
             </div>
@@ -258,21 +258,21 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-center">Connected TO 1000+ AI Models</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8 ">
-            <img src="/OpenAi_Logo-black.svg" alt="OpenAI" width="80%" height="80%" />
+            <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="80%" height="80%" />
             <img src="/Google_Logo-black.svg" alt="Google" width="70%" height="70%" />
             <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" width="80%" height="80%" />
             <img src="/Meta_Logo-black.svg" alt="Meta" width="80%" height="80%" />
-            <img src="/Anthropic_Logo-black.svg" alt="Anthropic" width="80%" height="80%" />
-            <img src="/Mistral_Logo-black.svg" alt="Mistral" width="80%" height="80%" />
-            <img src="/Cohere_Logo-black.svg" alt="Cohere" width="70%" height="70%" />
-            <img src="/OpenAi_Logo-black.svg" alt="OpenAI" width="80%" height="80%" />
+            <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="80%" height="80%" />
+            <img src="/Google_Logo-black.svg" alt="Google" width="80%" height="80%" />
+            <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" width="70%" height="70%" />
+            <img src="/Meta_Logo-black.svg" alt="Meta" width="80%" height="80%" />
+            <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="80%" height="80%" />
             <img src="/Google_Logo-black.svg" alt="Google" width="80%" height="80%" />
             <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" width="80%" height="80%" />
-            <img src="/Meta_Logo-black.svg" alt="Meta" width="80%" height="80%" />
-            <img src="/Anthropic_Logo-black.svg" alt="Anthropic" width="70%" height="70%" />
-            <img src="/Mistral_Logo-black.svg" alt="Mistral" width="80%" height="80%" />
-            <img src="/Cohere_Logo-black.svg" alt="Cohere" width="80%" height="80%" />
-            <img src="/OpenAi_Logo-black.svg" alt="OpenAI" width="80%" height="80%" />
+            <img src="/Meta_Logo-black.svg" alt="Meta" width="70%" height="70%" />
+            <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="80%" height="80%" />
+            <img src="/Google_Logo-black.svg" alt="Google" width="80%" height="80%" />
+            <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" width="80%" height="80%" />
             </div>
         </section>
 
