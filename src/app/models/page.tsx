@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,34 +24,57 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Slider } from "@/components/ui/slider";
-import { models, type Model } from "@/lib/models-data";
 import { BookText, Bot, ChevronDown, ChevronUp, Code, FileText, ImageIcon, LayoutGrid, LayoutList, Search, Sliders as SlidersIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { stringToColor } from '@/lib/utils';
+import { API_BASE_URL } from '@/lib/config';
 
-const ModelCard = ({ model }: { model: Model }) => (
-  <Link href={`/models/${encodeURIComponent(model.name)}`}>
-    <Card className="p-6 flex flex-col h-full hover:border-primary">
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            {model.name} {model.isFree && <Badge>Free</Badge>}
-          </h3>
-          <Badge variant="outline" className="mt-2" style={{ backgroundColor: stringToColor(model.category) }}>{model.category}</Badge>
+interface Model {
+  id: string;
+  name: string;
+  description: string;
+  context_length: number;
+  pricing: {
+    prompt: string;
+    completion: string;
+  };
+  architecture: {
+    input_modalities: string[];
+  };
+  supported_parameters: string[];
+  provider_slug: string;
+}
+
+const ModelCard = ({ model }: { model: Model }) => {
+  const isFree = parseFloat(model.pricing.prompt) === 0 && parseFloat(model.pricing.completion) === 0;
+  const inputCost = (parseFloat(model.pricing.prompt) * 1000000).toFixed(2);
+  const outputCost = (parseFloat(model.pricing.completion) * 1000000).toFixed(2);
+  const contextK = Math.round(model.context_length / 1000);
+
+  return (
+    <Link href={`/models/${encodeURIComponent(model.id)}`}>
+      <Card className="p-6 flex flex-col h-full hover:border-primary">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              {model.name} {isFree && <Badge>Free</Badge>}
+            </h3>
+            <Badge variant="outline" className="mt-2" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
+          </div>
+          <div className="text-sm text-muted-foreground whitespace-nowrap">{contextK}K</div>
         </div>
-        <div className="text-sm text-muted-foreground whitespace-nowrap">{model.tokens}</div>
-      </div>
-      <p className="text-muted-foreground mt-4 text-sm flex-grow">{model.description}</p>
-      <div className="flex items-center gap-4 text-xs text-muted-foreground mt-4 pt-4 border-t">
-        <span>by {model.developer}</span>
-        <span>{model.context}K context</span>
-        <span>${model.inputCost}/M input</span>
-        <span>${model.outputCost}/M output</span>
-      </div>
-    </Card>
-  </Link>
-);
+        <p className="text-muted-foreground mt-4 text-sm flex-grow">{model.description}</p>
+        <div className="flex items-center gap-4 text-xs text-muted-foreground mt-4 pt-4 border-t">
+          <span>by {model.provider_slug}</span>
+          <span>{contextK}K context</span>
+          <span>${inputCost}/M input</span>
+          <span>${outputCost}/M output</span>
+        </div>
+      </Card>
+    </Link>
+  );
+};
 
 export default function ModelsPage() {
   const [layout, setLayout] = useState("list");
@@ -59,23 +82,36 @@ export default function ModelsPage() {
   const [selectedModalities, setSelectedModalities] = useState<string[]>([]);
   const [contextLength, setContextLength] = useState(64);
   const [promptPricing, setPromptPricing] = useState(0.5);
-  const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedParameters, setSelectedParameters] = useState<string[]>([]);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('tokens-desc');
+  const [models, setModels] = useState<Model[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/models`);
+        const data = await response.json();
+        setModels(data.data || []);
+      } catch (error) {
+        console.error('Failed to fetch models:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchModels();
+  }, []);
 
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (value: string, checked: boolean) => {
     setter(prev => checked ? [...prev, value] : prev.filter(v => v !== value));
   };
-  
+
   const resetFilters = () => {
     setSearchTerm("");
     setSelectedModalities([]);
     setContextLength(64);
     setPromptPricing(0.5);
-    setSelectedSeries([]);
-    setSelectedCategories([]);
     setSelectedParameters([]);
     setSelectedProviders([]);
     setSortBy('tokens-desc');
@@ -84,23 +120,16 @@ export default function ModelsPage() {
   const filteredModels = useMemo(() => {
     let sortedModels = [...models];
 
-    const parseTokens = (tokenStr: string) => {
-      const num = parseFloat(tokenStr);
-      if (tokenStr.includes('B')) return num * 1e9;
-      if (tokenStr.includes('M')) return num * 1e6;
-      return num;
-    }
-
     sortedModels.sort((a, b) => {
         switch (sortBy) {
             case 'tokens-desc':
-                return parseTokens(b.tokens) - parseTokens(a.tokens);
+                return b.context_length - a.context_length;
             case 'tokens-asc':
-                return parseTokens(a.tokens) - parseTokens(b.tokens);
+                return a.context_length - b.context_length;
             case 'price-desc':
-                return (b.inputCost + b.outputCost) - (a.inputCost + a.outputCost);
+                return (parseFloat(b.pricing.prompt) + parseFloat(b.pricing.completion)) - (parseFloat(a.pricing.prompt) + parseFloat(a.pricing.completion));
             case 'price-asc':
-                return (a.inputCost + a.outputCost) - (b.inputCost + b.outputCost);
+                return (parseFloat(a.pricing.prompt) + parseFloat(a.pricing.completion)) - (parseFloat(b.pricing.prompt) + parseFloat(b.pricing.completion));
             default:
                 return 0;
         }
@@ -110,23 +139,23 @@ export default function ModelsPage() {
       const searchTermMatch =
         model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         model.description.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const modalityMatch = selectedModalities.length === 0 || selectedModalities.every(m => model.modalities.includes(m));
-      const contextMatch = model.context >= contextLength;
-      const priceMatch = (model.inputCost + model.outputCost) / 2 <= promptPricing || model.isFree;
-      const seriesMatch = selectedSeries.length === 0 || selectedSeries.includes(model.series);
-      const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(model.category);
-      const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => model.supportedParameters.includes(p));
-      const providerMatch = selectedProviders.length === 0 || selectedProviders.includes(model.developer);
 
-      return searchTermMatch && modalityMatch && contextMatch && priceMatch && seriesMatch && categoryMatch && parameterMatch && providerMatch;
+      const modalityMatch = selectedModalities.length === 0 || selectedModalities.every(m =>
+        model.architecture.input_modalities.some(im => im.toLowerCase() === m.toLowerCase())
+      );
+      const contextMatch = model.context_length >= contextLength * 1000;
+      const isFree = parseFloat(model.pricing.prompt) === 0 && parseFloat(model.pricing.completion) === 0;
+      const avgPrice = (parseFloat(model.pricing.prompt) + parseFloat(model.pricing.completion)) / 2;
+      const priceMatch = avgPrice <= promptPricing / 1000000 || isFree;
+      const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => model.supported_parameters.includes(p));
+      const providerMatch = selectedProviders.length === 0 || selectedProviders.includes(model.provider_slug);
+
+      return searchTermMatch && modalityMatch && contextMatch && priceMatch && parameterMatch && providerMatch;
     });
-  }, [searchTerm, selectedModalities, contextLength, promptPricing, selectedSeries, selectedCategories, selectedParameters, selectedProviders, sortBy]);
+  }, [models, searchTerm, selectedModalities, contextLength, promptPricing, selectedParameters, selectedProviders, sortBy]);
 
-  const allSeries = useMemo(() => Array.from(new Set(models.map(m => m.series))), []);
-  const allCategories = useMemo(() => Array.from(new Set(models.map(m => m.category))), []);
-  const allParameters = useMemo(() => Array.from(new Set(models.flatMap(m => m.supportedParameters))), []);
-  const allProviders = useMemo(() => Array.from(new Set(models.map(m => m.developer))), []);
+  const allParameters = useMemo(() => Array.from(new Set(models.flatMap(m => m.supported_parameters))), [models]);
+  const allProviders = useMemo(() => Array.from(new Set(models.map(m => m.provider_slug))), [models]);
 
 
   return (
@@ -159,33 +188,19 @@ export default function ModelsPage() {
             <FilterSlider label="Context Length" value={contextLength} onValueChange={setContextLength} min={4} max={1024} step={4} unit="K" />
             <FilterSlider label="Prompt Pricing" value={promptPricing} onValueChange={setPromptPricing} min={0} max={10} step={0.1} unit="$" />
 
-            <FilterDropdown 
-              label="Series" 
-              items={allSeries} 
-              selectedItems={selectedSeries} 
-              onSelectionChange={handleCheckboxChange(setSelectedSeries)}
-              icon={<Bot className="w-4 h-4"/>} 
-            />
-            <FilterDropdown 
-              label="Categories" 
-              items={allCategories} 
-              selectedItems={selectedCategories} 
-              onSelectionChange={handleCheckboxChange(setSelectedCategories)}
-              icon={<Code className="w-4 h-4"/>} 
-            />
-            <FilterDropdown 
-              label="Supported Parameters" 
-              items={allParameters} 
-              selectedItems={selectedParameters} 
+            <FilterDropdown
+              label="Supported Parameters"
+              items={allParameters}
+              selectedItems={selectedParameters}
               onSelectionChange={handleCheckboxChange(setSelectedParameters)}
-              icon={<SlidersIcon className="w-4 h-4"/>} 
+              icon={<SlidersIcon className="w-4 h-4"/>}
             />
-            <FilterDropdown 
-              label="Providers" 
-              items={allProviders} 
-              selectedItems={selectedProviders} 
+            <FilterDropdown
+              label="Providers"
+              items={allProviders}
+              selectedItems={selectedProviders}
               onSelectionChange={handleCheckboxChange(setSelectedProviders)}
-              icon={<ChevronUp className="w-4 h-4"/>} 
+              icon={<Bot className="w-4 h-4"/>}
             />
           </SidebarContent>
         </Sidebar>
@@ -242,17 +257,23 @@ export default function ModelsPage() {
               </div>
           </div>
 
-          <div
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-muted-foreground">Loading models...</p>
+            </div>
+          ) : (
+            <div
               className={
-              layout === 'grid'
+                layout === 'grid'
                   ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6'
                   : 'flex flex-col gap-6'
               }
-          >
+            >
               {filteredModels.map((model) => (
-              <ModelCard key={model.name} model={model} />
+                <ModelCard key={model.id} model={model} />
               ))}
-          </div>
+            </div>
+          )}
           </div>
         </SidebarInset>
       </div>
