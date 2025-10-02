@@ -2,8 +2,7 @@
 "use client";
 
 import { useParams } from 'next/navigation';
-import { useMemo } from 'react';
-import { models, type Model } from '@/lib/models-data';
+import { useMemo, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -20,6 +19,23 @@ import { generateChartData, generateStatsTable } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { stringToColor } from '@/lib/utils';
+import { API_BASE_URL } from '@/lib/config';
+
+interface Model {
+  id: string;
+  name: string;
+  description: string;
+  context_length: number;
+  pricing: {
+    prompt: string;
+    completion: string;
+  };
+  architecture: {
+    input_modalities: string[];
+  };
+  supported_parameters: string[];
+  provider_slug: string;
+}
 
 const Section = ({ title, description, children, className }: { title: string, description?: string, children: React.ReactNode, className?: string }) => (
     <section className={cn("py-8", className)}>
@@ -120,20 +136,45 @@ const ChartCard = ({ modelName, title, dataKey, yAxisFormatter }: { modelName: s
 
 export default function ModelProfilePage() {
     const params = useParams();
-    const modelName = useMemo(() => {
-        const name = params.name as string;
-        return name ? decodeURIComponent(name) : '';
+    const [model, setModel] = useState<Model | null>(null);
+    const [allModels, setAllModels] = useState<Model[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const modelId = useMemo(() => {
+        const id = params.name as string;
+        return id ? decodeURIComponent(id) : '';
     }, [params.name]);
 
-    const model = useMemo(() => {
-        return models.find(m => m.name === modelName);
-    }, [modelName]);
-    
+    useEffect(() => {
+        const fetchModels = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/models`);
+                const data = await response.json();
+                const models = data.data || [];
+                setAllModels(models);
+                const foundModel = models.find((m: Model) => m.id === modelId);
+                setModel(foundModel || null);
+            } catch (error) {
+                console.error('Failed to fetch models:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchModels();
+    }, [modelId]);
+
     const relatedModels = useMemo(() => {
       if(!model) return [];
-      return models.filter(m => m.developer === model.developer && m.name !== model.name).slice(0,3);
-    }, [model])
+      return allModels.filter(m => m.provider_slug === model.provider_slug && m.id !== model.id).slice(0,3);
+    }, [model, allModels]);
 
+    if (loading) {
+        return (
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
+                <p className="text-muted-foreground">Loading model...</p>
+            </div>
+        );
+    }
 
     if (!model) {
         return (
@@ -151,8 +192,8 @@ export default function ModelProfilePage() {
                     <div>
                         <h1 className="text-3xl font-bold">{model.name}</h1>
                         <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline" style={{ backgroundColor: stringToColor(model.category) }}>{model.category}</Badge>
-                            <Badge variant="outline" style={{ backgroundColor: stringToColor(model.series) }}>{model.series}</Badge>
+                            <Badge variant="outline" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
+                            <Badge variant="outline">{Math.round(model.context_length / 1000)}K context</Badge>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -162,7 +203,6 @@ export default function ModelProfilePage() {
                 </div>
                  <div className="mt-4 text-muted-foreground">
                     <p>{model.description}</p>
-                    <Link href="#" className="text-primary hover:underline mt-2 inline-block">Paper &rarr;</Link>
                 </div>
             </header>
 
@@ -221,10 +261,10 @@ export default function ModelProfilePage() {
                     <p className="text-muted-foreground">Yes, your data is private by default. See our <Link href="#" className="text-primary hover:underline">privacy policy</Link>.</p>
                 </Section>
 
-                <Section title={`More models from ${model.developer}`}>
+                <Section title={`More models from ${model.provider_slug}`}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {relatedModels.map(relatedModel => (
-                            <Link key={relatedModel.name} href={`/models/${encodeURIComponent(relatedModel.name)}`}>
+                            <Link key={relatedModel.id} href={`/models/${encodeURIComponent(relatedModel.id)}`}>
                                 <Card className="hover:border-primary h-full">
                                     <CardContent className="p-4">
                                         <h3 className="font-semibold">{relatedModel.name}</h3>
