@@ -9,13 +9,23 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
+interface FeaturedModel {
+  name: string;
+  by: string;
+  tokens: string;
+  latency: string;
+  growth: string;
+  color: string;
+  logo_url?: string;
+}
+
 const FeaturedModelCard = ({
   model,
   isNew,
   isActive,
   onClick
 }: {
-  model: { name: string, by: string, tokens: string, latency: string, growth: string, color: string },
+  model: FeaturedModel,
   isNew?: boolean,
   isActive?: boolean,
   onClick?: () => void
@@ -38,20 +48,26 @@ const FeaturedModelCard = ({
         }`}
       >
         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 flex-shrink-0">
-          {model.by === 'google' && (
-            <div className="flex">
-              <img src="/Google_Logo-black.svg" alt="Google" width="42" height="42" />
-            </div>
-          )}
-          {model.by === 'openai' && (
-            <div className="flex">
-              <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="42" height="42" />
-            </div>
-          )}
-          {model.by === 'anthropic' && (
-            <div className="flex">
-              <img src="/Meta_Logo-black.svg" alt="Anthropic" width="42" height="42" />
-            </div>
+          {model.logo_url ? (
+            <img src={model.logo_url} alt={model.by} width="42" height="42" />
+          ) : (
+            <>
+              {model.by === 'google' && (
+                <div className="flex">
+                  <img src="/Google_Logo-black.svg" alt="Google" width="42" height="42" />
+                </div>
+              )}
+              {model.by === 'openai' && (
+                <div className="flex">
+                  <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="42" height="42" />
+                </div>
+              )}
+              {model.by === 'anthropic' && (
+                <div className="flex">
+                  <img src="/Meta_Logo-black.svg" alt="Anthropic" width="42" height="42" />
+                </div>
+              )}
+            </>
           )}
         </div>
         <div className="text-center">
@@ -70,20 +86,26 @@ const FeaturedModelCard = ({
       >
         <div className="flex gap-2 sm:gap-3 mb-2 sm:mb-4">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-gray-100 flex-shrink-0">
-              {model.by === 'google' && (
-                <div className="flex">
-                  <img src="/Google_Logo-black.svg" alt="Google" className="w-8 h-8 sm:w-10 sm:h-10" />
-                </div>
-              )}
-              {model.by === 'openai' && (
-                <div className="flex">
-                  <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-8 h-8 sm:w-10 sm:h-10" />
-                </div>
-              )}
-              {model.by === 'anthropic' && (
-                <div className="flex">
-                  <img src="/Meta_Logo-black.svg" alt="Anthropic" className="w-8 h-8 sm:w-10 sm:h-10" />
-                </div>
+              {model.logo_url ? (
+                <img src={model.logo_url} alt={model.by} className="w-8 h-8 sm:w-10 sm:h-10" />
+              ) : (
+                <>
+                  {model.by === 'google' && (
+                    <div className="flex">
+                      <img src="/Google_Logo-black.svg" alt="Google" className="w-8 h-8 sm:w-10 sm:h-10" />
+                    </div>
+                  )}
+                  {model.by === 'openai' && (
+                    <div className="flex">
+                      <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-8 h-8 sm:w-10 sm:h-10" />
+                    </div>
+                  )}
+                  {model.by === 'anthropic' && (
+                    <div className="flex">
+                      <img src="/Meta_Logo-black.svg" alt="Anthropic" className="w-8 h-8 sm:w-10 sm:h-10" />
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <div>
@@ -153,27 +175,27 @@ const AnnouncementCard = ({ title, description, date, isNew }: { title: string, 
     </div>
 )
 
-
 export default function Home() {
   const [activeModelIndex, setActiveModelIndex] = useState<number | null>(0);
   const [message, setMessage] = useState('');
   const router = useRouter();
   const [apiKey, setApiKey] = useState('0000000000000000000000000000000000000000');
   const carouselRef = useRef<HTMLDivElement>(null);
-  const featuredModels = [
-      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400' },
-      { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400' },
-      { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400' },
-      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400' },
-      { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400' },
-      { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400' },
-      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400' },
-      { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400' },
-      { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400' },
-      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400' }
-  ];
+  const [carouselOffset, setCarouselOffset] = useState(0);
+  const [featuredModels, setFeaturedModels] = useState<FeaturedModel[]>([
+      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' },
+      { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/openai-logo.svg' },
+      { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' },
+      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' },
+      { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/openai-logo.svg' },
+      { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' },
+      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' },
+      { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/openai-logo.svg' },
+      { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' },
+      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' }
+  ]);
 
-  // Auto-advance carousel every 3 seconds and scroll to keep active card at the left
+  // Auto-advance carousel every 3 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveModelIndex((prev) => {
@@ -185,13 +207,30 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [featuredModels.length]);
 
-  // Reorder models so active card is always first
-  const reorderedModels = activeModelIndex !== null
-    ? [
-        ...featuredModels.slice(activeModelIndex),
-        ...featuredModels.slice(0, activeModelIndex)
-      ]
-    : featuredModels;
+  // Double the models array for infinite scrolling
+  const displayModels = [...featuredModels, ...featuredModels];
+
+  // Calculate offset - just measure collapsed card widths, not the expanded one
+  useEffect(() => {
+    const updateOffset = () => {
+      if (carouselRef.current && activeModelIndex !== null) {
+        // Assume compact cards are ~96px on desktop, ~80px on mobile
+        // Expanded card is ~400px on desktop, ~280px on mobile
+        const compactWidth = window.innerWidth >= 640 ? 96 : 80;
+        const gap = 8;
+
+        // Calculate offset: number of cards before active * (compact width + gap)
+        const offset = activeModelIndex * (compactWidth + gap);
+
+        setCarouselOffset(-offset);
+      }
+    };
+
+    updateOffset();
+    const timer = setTimeout(updateOffset, 100);
+
+    return () => clearTimeout(timer);
+  }, [activeModelIndex]);
 
   const handleModelClick = (index: number) => {
     setActiveModelIndex(index);
@@ -249,27 +288,28 @@ export default function Home() {
               </svg>
             </button>
           </div>
-          <div className="overflow-hidden">
+          <div className="overflow-hidden relative">
             <div
               ref={carouselRef}
-              className="flex pb-2 relative z-10 overflow-x-auto gap-2 scrollbar-hide scroll-smooth"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              className="flex pb-2 relative z-10 gap-2"
+              style={{
+                transform: `translateX(${carouselOffset}px)`,
+                transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
             >
-                {reorderedModels.map((model, i) => (
-                  <FeaturedModelCard
-                    key={`${model.name}-${i}`}
-                    model={model}
-                    isNew={model.name.includes('GPT-5')}
-                    isActive={i === 0}
-                    onClick={() => {
-                      // Calculate the original index in the featuredModels array
-                      const originalIndex = activeModelIndex !== null
-                        ? (activeModelIndex + i) % featuredModels.length
-                        : i;
-                      handleModelClick(originalIndex);
-                    }}
-                  />
-                ))}
+                {displayModels.map((model, i) => {
+                  const modelIndex = i % featuredModels.length;
+                  const isFirstSet = i < featuredModels.length;
+                  return (
+                    <FeaturedModelCard
+                      key={i}
+                      model={model}
+                      isNew={model.name.includes('GPT-5')}
+                      isActive={isFirstSet && modelIndex === activeModelIndex}
+                      onClick={() => handleModelClick(modelIndex)}
+                    />
+                  );
+                })}
             </div>
           </div>
           
