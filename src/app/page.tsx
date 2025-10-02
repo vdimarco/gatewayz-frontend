@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, ChevronRight, GitMerge, ShieldCheck, TrendingUp, User, Zap } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 const FeaturedModelCard = ({
@@ -159,6 +159,7 @@ export default function Home() {
   const [message, setMessage] = useState('');
   const router = useRouter();
   const [apiKey, setApiKey] = useState('0000000000000000000000000000000000000000');
+  const carouselRef = useRef<HTMLDivElement>(null);
   const featuredModels = [
       { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400' },
       { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400' },
@@ -172,7 +173,7 @@ export default function Home() {
       { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400' }
   ];
 
-  // Auto-advance carousel every 3 seconds
+  // Auto-advance carousel every 3 seconds and scroll to keep active card at the left
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveModelIndex((prev) => {
@@ -183,6 +184,19 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [featuredModels.length]);
+
+  // Scroll to keep active card at the leftmost position
+  useEffect(() => {
+    if (carouselRef.current && activeModelIndex !== null) {
+      const activeCard = carouselRef.current.children[activeModelIndex] as HTMLElement;
+      if (activeCard) {
+        carouselRef.current.scrollTo({
+          left: activeCard.offsetLeft,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [activeModelIndex]);
 
   const handleModelClick = (index: number) => {
     setActiveModelIndex(index);
@@ -241,7 +255,11 @@ export default function Home() {
             </button>
           </div>
           <div className="overflow-hidden">
-            <div className="flex justify-between pb-2 relative z-10 overflow-x-auto gap-2 scrollbar-hide">
+            <div
+              ref={carouselRef}
+              className="flex pb-2 relative z-10 overflow-x-auto gap-2 scrollbar-hide scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
                 {featuredModels.map((model, i) => (
                   <FeaturedModelCard
                     key={i}
