@@ -111,11 +111,22 @@ export default function DevelopersPage() {
             try {
                 setLoading(true);
                 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
-                const response = await fetch(`${apiBaseUrl}/ranking/models`);
+                const url = `${apiBaseUrl}/ranking/models`;
+                console.log('Fetching ranking models from:', url);
+
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
+                console.log('Received data:', data.success, 'models count:', data.data?.length);
 
                 if (data.success && data.data) {
                     setRankingModels(data.data);
+                    console.log('Set ranking models:', data.data.length);
                 }
             } catch (error) {
                 console.error('Failed to fetch ranking models:', error);
@@ -267,8 +278,8 @@ export default function DevelopersPage() {
 
                 <main>
                     {loading ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {Array.from({ length: 8 }).map((_, i) => (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {Array.from({ length: 12 }).map((_, i) => (
                                 <Card key={i} className="flex flex-col bg-card border rounded-lg">
                                     <CardContent className="p-6">
                                         <div className="animate-pulse space-y-4">
@@ -289,7 +300,7 @@ export default function DevelopersPage() {
                             ))}
                         </div>
                     ) : filteredOrgs.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredOrgs.map(org => (
                                 <OrganizationCard key={org.id} org={org} />
                             ))}
