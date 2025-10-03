@@ -602,14 +602,17 @@ function ChatPageContent() {
                 return;
             }
 
-            // Simple fetch for now
-            const response = await fetch('/api/chat', {
+            // Call backend API directly
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
+            const response = await fetch(`${apiBaseUrl}/v1/chat/completions`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                },
                 body: JSON.stringify({
-                    model: selectedModel.value,
-                    message: userMessage,
-                    apiKey,
+                    model: selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value,
+                    messages: [{ role: 'user', content: userMessage }],
                 }),
             });
 
@@ -618,7 +621,8 @@ function ChatPageContent() {
             }
 
             const data = await response.json();
-            const content = data.response || 'No response';
+            // Parse OpenAI-compatible response format
+            const content = data.choices?.[0]?.message?.content || data.response || 'No response';
 
             const finalSessions = sessions.map(session => {
                 if (session.id === activeSessionId) {
