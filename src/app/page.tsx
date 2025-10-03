@@ -264,23 +264,27 @@ export default function Home() {
           className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[450px] h-[450px] lg:w-[640px] lg:h-[640px] xl:w-[768px] xl:h-[768px]" 
         />
         
-        <section className="grid md:grid-cols-1 gap-6 items-center py-8 md:py-[140px]" >
-          <div className="space-y-4 md:space-y-6 px-4">
+        <section className="grid md:grid-cols-1 gap-8 items-center py-8 md:py-[140px] mb-16 md:mb-32 max-w-5xl mx-auto px-4" >
+          <div className="space-y-6 md:space-y-8 px-4">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tighter text-center" style={{  fontFamily: 'Inter, sans-serif',}}>One Interface To </h1>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tighter text-center">Work With Any LLM</h1>
-            <p className="text-sm sm:text-base md:text-lg text-center px-4">From Idea To Production, Gatewayz Gives AI Teams The Toolkit, Savings, And Reliability They Need.</p>
+            <p className="text-sm sm:text-base md:text-lg text-center px-4 py-6">From Idea To Production, Gatewayz Gives AI Teams The Toolkit, Savings, And Reliability They Need.</p>
           </div>
-          <div className="relative">
-            <Input 
-              placeholder="Start a message..." 
-              className="h-12 pr-14 bg-input" 
+          <div className="relative mt-4">
+            <Input
+              placeholder="Start a message..."
+              className="h-12 pr-14 bg-input"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
+              autoComplete="off"
+              data-form-type="other"
+              type="text"
             />
-            <button 
+            <button
               className="absolute right-2 top-1/2 -translate-y-1/2"
               onClick={handleSendMessage}
+              type="button"
             >
               <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="34" height="34" rx="8" fill="black"/>
@@ -288,7 +292,7 @@ export default function Home() {
               </svg>
             </button>
           </div>
-          <div className="overflow-hidden relative">
+          <div className="overflow-hidden relative -mx-4 mt-6">
             <div
               ref={carouselRef}
               className="flex pb-2 relative z-10 gap-2"
@@ -312,12 +316,12 @@ export default function Home() {
                 })}
             </div>
           </div>
-          
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm z-10">
+
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm z-10 mt-6">
               <div className=" px-6 py-[10px] flex flex-row items-center justify-between">
                 <div className="font-bold tracking-tight text-lg">Top Models This Month</div>
               <Link href="/rankings">
-                <Button variant="link" className="text-sm">View Trending 
+                <Button variant="link" className="text-sm">View Trending
                   <span>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2.66671 8H13.3334M13.3334 8L9.33337 12M13.3334 8L9.33337 4" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

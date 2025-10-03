@@ -102,3 +102,25 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .ranking-row {
+    display: grid;
+    grid-template-columns: repeat(24, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    align-items: center;
+    min-height: 48px;
+  }
+
+  .ranking-logo {
+    @apply w-8 h-8 flex-shrink-0 flex items-center justify-center bg-white p-0.5 rounded;
+  }
+
+  .ranking-logo img {
+    @apply max-w-full max-h-full object-contain;
+  }
+}

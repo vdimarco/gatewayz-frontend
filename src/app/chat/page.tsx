@@ -416,9 +416,14 @@ function ChatPageContent() {
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const messageInputRef = useRef<HTMLInputElement>(null);
 
-    // Handle model from URL parameter
+    // Track if we should auto-send the message from URL
+    const [shouldAutoSend, setShouldAutoSend] = useState(false);
+
+    // Handle model and message from URL parameters
     useEffect(() => {
         const modelParam = searchParams.get('model');
+        const messageParam = searchParams.get('message');
+
         if (modelParam) {
             // Fetch the model details from API to get the label
             fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai'}/models`)
@@ -435,13 +440,27 @@ function ChatPageContent() {
                 })
                 .catch(err => console.error('Failed to fetch model:', err));
         }
+
+        // Set the message from URL parameter and flag for auto-send
+        if (messageParam) {
+            setMessage(decodeURIComponent(messageParam));
+            setShouldAutoSend(true);
+        }
     }, [searchParams]);
 
      const activeSession = useMemo(() => {
         return sessions.find(s => s.id === activeSessionId) || null;
     }, [sessions, activeSessionId]);
-    
+
     const messages = activeSession?.messages || [];
+
+    // Auto-send message from URL parameter when session is ready
+    useEffect(() => {
+        if (shouldAutoSend && activeSessionId && message.trim() && selectedModel && !loading) {
+            setShouldAutoSend(false); // Reset flag to prevent re-sending
+            handleSendMessage();
+        }
+    }, [shouldAutoSend, activeSessionId, message, selectedModel, loading]);
 
     useEffect(() => {
         // Load sessions from API (currently using mock data)

@@ -20,7 +20,9 @@
       "Bash(curl -X POST https://gatewayz-backend.vercel.app/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer test\" -d '{\"\"\"\"model\"\"\"\":\"\"\"\"test\"\"\"\",\"\"\"\"messages\"\"\"\":[{\"\"\"\"role\"\"\"\":\"\"\"\"user\"\"\"\",\"\"\"\"content\"\"\"\":\"\"\"\"hi\"\"\"\"}]}')",
       "Bash(curl -X POST \"https://api.gatewayz.ai/v1/chat/completions?privy_user_id=did:privy:cmg8g1uyr004fjp0ds7ic2pe2\" -H \"Content-Type: application/json\" -H \"Authorization: Bearer gw_live_DTECs2-i3PQm-hopFv85Uu2oGZYGNhcT027OnkvkOgQ\" -d '{\"\"\"\"model\"\"\"\":\"\"\"\"deepseek/deepseek-chat\"\"\"\",\"\"\"\"messages\"\"\"\":[{\"\"\"\"role\"\"\"\":\"\"\"\"user\"\"\"\",\"\"\"\"content\"\"\"\":\"\"\"\"hi\"\"\"\"}]}')",
       "Bash(curl -X POST \"https://gatewayz-backend.vercel.app/v1/chat/completions?privy_user_id=did:privy:cmg8g1uyr004fjp0ds7ic2pe2\" -H \"Content-Type: application/json\" -H \"Authorization: Bearer gw_live_DTECs2-i3PQm-hopFv85Uu2oGZYGNhcT027OnkvkOgQ\" -d '{\"\"\"\"model\"\"\"\":\"\"\"\"deepseek/deepseek-chat\"\"\"\",\"\"\"\"messages\"\"\"\":[{\"\"\"\"role\"\"\"\":\"\"\"\"user\"\"\"\",\"\"\"\"content\"\"\"\":\"\"\"\"hi\"\"\"\"}]}')",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Read(//c/Users/vaughn.v/Documents/GitHub/**)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
