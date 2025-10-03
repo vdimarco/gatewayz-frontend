@@ -12,14 +12,14 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Plus, 
-  Search, 
-  Pencil, 
-  MessageSquare, 
-  Settings, 
-  Paperclip, 
-  Globe, 
+import {
+  Plus,
+  Search,
+  Pencil,
+  MessageSquare,
+  Settings,
+  Paperclip,
+  Globe,
   Send,
   Menu,
   Bot,
@@ -40,6 +40,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
 import { getApiKey } from '@/lib/api';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 type Message = {
     role: 'user' | 'assistant';
@@ -325,7 +330,38 @@ const ChatMessage = ({ message, modelName }: { message: Message, modelName: stri
             <div className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
                 <div className={`rounded-lg p-3 ${isUser ? 'bg-primary text-primary-foreground' : 'bg-white border'}`}>
                      {!isUser && <p className="text-xs font-semibold mb-1">{modelName}</p>}
-                    <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+                    <div className={`text-sm prose prose-sm max-w-none ${isUser ? 'text-white prose-invert' : ''}`}>
+                        {isUser ? (
+                            <div className="whitespace-pre-wrap text-white">{message.content}</div>
+                        ) : (
+                            <ReactMarkdown
+                                remarkPlugins={[remarkGfm, remarkMath]}
+                                rehypePlugins={[rehypeKatex]}
+                                components={{
+                                    code: ({ node, inline, className, children, ...props }: any) => {
+                                        const match = /language-(\w+)/.exec(className || '');
+                                        return !inline ? (
+                                            <pre className="bg-muted p-3 rounded-md overflow-x-auto">
+                                                <code className={className} {...props}>
+                                                    {children}
+                                                </code>
+                                            </pre>
+                                        ) : (
+                                            <code className="bg-muted px-1.5 py-0.5 rounded text-sm" {...props}>
+                                                {children}
+                                            </code>
+                                        );
+                                    },
+                                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                    ul: ({ children }) => <ul className="list-disc list-inside mb-2">{children}</ul>,
+                                    ol: ({ children }) => <ol className="list-decimal list-inside mb-2">{children}</ol>,
+                                    li: ({ children }) => <li className="mb-1">{children}</li>,
+                                }}
+                            >
+                                {message.content}
+                            </ReactMarkdown>
+                        )}
+                    </div>
                     {!isUser && (
                         <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-100">
                             <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -597,18 +633,18 @@ export default function ChatPage() {
        
         
         {/* Header with title and model selector */}
-        <header className="relative z-10 w-[80%] flex items-center justify-between p-6 pl-24 pr-0">
-          <div className="flex items-center gap-2">
-            <div className="lg:hidden">
+        <header className="relative z-10 w-[80%] flex items-center justify-between gap-4 p-6 pl-24 pr-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="lg:hidden flex-shrink-0">
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon"><Menu/></Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[300px] p-0">
-                  <ChatSidebar 
-                    sessions={sessions} 
-                    activeSessionId={activeSessionId} 
-                    setActiveSessionId={setActiveSessionId} 
+                  <ChatSidebar
+                    sessions={sessions}
+                    activeSessionId={activeSessionId}
+                    setActiveSessionId={setActiveSessionId}
                     createNewChat={createNewChat}
                     onDeleteSession={handleDeleteSession}
                     onRenameSession={handleRenameSession}
@@ -616,14 +652,14 @@ export default function ChatPage() {
                 </SheetContent>
               </Sheet>
             </div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold">{activeSession?.title || 'Untitled Chat'}</h1>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <h1 className="text-2xl font-semibold truncate">{activeSession?.title || 'Untitled Chat'}</h1>
+              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
                 <Pencil className="h-4 w-4" />
               </Button>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-card">
+          <div className="flex items-center gap-2 bg-card flex-shrink-0">
             <ModelSelect selectedModel={selectedModel} onSelectModel={setSelectedModel} />
           </div>
         </header>
