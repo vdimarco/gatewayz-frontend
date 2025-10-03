@@ -39,7 +39,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
-import { getApiKey } from '@/lib/api';
+import { getApiKey, getUserData } from '@/lib/api';
 import { streamChat } from '@/lib/streaming-chat';
 import { StreamingMessage } from '@/components/chat/streaming-message';
 import ReactMarkdown from 'react-markdown';
@@ -592,7 +592,9 @@ function ChatPageContent() {
 
         try {
             const apiKey = getApiKey();
-            if (!apiKey) {
+            const userData = getUserData();
+
+            if (!apiKey || !userData?.privy_user_id) {
                 toast({
                     title: "Authentication required",
                     description: "Please log in to use the chat feature.",
@@ -602,9 +604,10 @@ function ChatPageContent() {
                 return;
             }
 
-            // Call backend API directly
+            // Call backend API directly with privy_user_id query parameter
             const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
-            const response = await fetch(`${apiBaseUrl}/v1/chat/completions`, {
+            const url = `${apiBaseUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(userData.privy_user_id)}`;
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
