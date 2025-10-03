@@ -37,6 +37,7 @@ type Organization = {
     topModel: string;
     performanceChange: number;
     models: RankingModel[];
+    logoUrl?: string;
 }
 
 const OrganizationCard = ({ org }: { org: Organization }) => {
@@ -48,8 +49,12 @@ const OrganizationCard = ({ org }: { org: Organization }) => {
         <Card className="flex flex-col bg-card border rounded-lg">
             <CardContent className="p-6 pb-2 flex-grow">
                 <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-100">
-                        <Bot className="w-6 h-6 text-gray-600" />
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-100 overflow-hidden">
+                        {org.logoUrl ? (
+                            <img src={org.logoUrl} alt={org.name} className="w-12 h-12 object-cover" />
+                        ) : (
+                            <Bot className="w-6 h-6 text-gray-600" />
+                        )}
                     </div>
                     <div>
                         <h3 className="text-lg font-bold">{org.name}</h3>
@@ -93,6 +98,7 @@ export default function DevelopersPage() {
     const [timeFrame, setTimeFrame] = useState<'month' | 'week' | 'today'>('month');
     const [rankingModels, setRankingModels] = useState<RankingModel[]>([]);
     const [loading, setLoading] = useState(true);
+    const [organizationLogos, setOrganizationLogos] = useState<Map<string, string>>(new Map());
 
     const timeFrameLabels: Record<typeof timeFrame, string> = {
         month: 'Past Month',
@@ -137,6 +143,44 @@ export default function DevelopersPage() {
 
         fetchRankingModels();
     }, []);
+
+    // Fetch organization logos
+    useEffect(() => {
+        const fetchLogos = async () => {
+            // Get unique authors from ranking models
+            const uniqueAuthors = Array.from(new Set(rankingModels.map(m => m.author)));
+            const logoMap = new Map<string, string>();
+
+            await Promise.all(
+                uniqueAuthors.map(async (author) => {
+                    try {
+                        // Use the first model from this author to get the logo
+                        const authorModel = rankingModels.find(m => m.author === author);
+                        if (!authorModel) return;
+
+                        // Format model name for API: "author/model-name"
+                        const modelId = encodeURIComponent(`${author}/${authorModel.model_name.replace(/ /g, '-')}`);
+                        const response = await fetch(`https://www.modelz.io/api/huggingface?modelId=${modelId}`);
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.author_avatar_url) {
+                                logoMap.set(author, data.author_avatar_url);
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Failed to fetch logo for ${author}:`, error);
+                    }
+                })
+            );
+
+            setOrganizationLogos(logoMap);
+        };
+
+        if (rankingModels.length > 0) {
+            fetchLogos();
+        }
+    }, [rankingModels]);
 
     const organizations: Organization[] = useMemo(() => {
         console.log('Processing organizations, rankingModels count:', rankingModels.length);
@@ -204,6 +248,7 @@ export default function DevelopersPage() {
                 topModel: topModel.model_name,
                 performanceChange: avgTrend,
                 models: models,
+                logoUrl: organizationLogos.get(author),
             };
         }).sort((a, b) => {
             // Sort by total tokens (descending)
@@ -211,7 +256,7 @@ export default function DevelopersPage() {
             const bTokens = parseFloat(b.totalTokens.replace(/[^0-9.]/g, ''));
             return bTokens - aTokens;
         });
-    }, [rankingModels, timeFrame, activeTab]);
+    }, [rankingModels, timeFrame, activeTab, organizationLogos]);
 
     const filteredOrgs = useMemo(() => {
         const filtered = organizations.filter(org =>
