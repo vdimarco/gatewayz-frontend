@@ -1,12 +1,44 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronDown, TrendingUp, TrendingDown } from 'lucide-react';
+import { ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
 import TokenStackedBarChart from '@/components/TokenStackedBarChart';
+import { API_BASE_URL } from '@/lib/config';
+
+interface ModelData {
+  id: number;
+  rank: number;
+  model_name: string;
+  author: string;
+  tokens: string;
+  trend_percentage: string;
+  trend_direction: "up" | "down";
+  trend_icon: string;
+  trend_color: string;
+  model_url: string;
+  author_url: string;
+  time_period: string;
+  scraped_at: string; // ISO datetime string
+}
+
+interface AppData {
+  id: number;
+  rank: number;
+  app_name: string;
+  description: string;
+  tokens: string;
+  is_new: boolean;
+  app_url: string;
+  domain: string;
+  image_url: string;
+  time_period: string;
+  scraped_at: string; // ISO datetime string
+}
+
 
 // Mock data for the rankings - 60 diverse models for testing
 const topModels = [
@@ -94,56 +126,60 @@ const topApps = Array.from({ length: 20 }, (_, index) => ({
 }));
 
 export default function RankingsPage() {
-  const [selectedTimeRange, setSelectedTimeRange] = useState('Top This Year');
   const [selectedSort, setSelectedSort] = useState('All');
-  const [selectedTopCount, setSelectedTopCount] = useState('Top 10');
+  const [selectedTopModelsCount, setSelectedTopModelsCount] = useState<number>(5);
 
-  // Helper function to parse token values
-  const parseTokens = (tokenStr: string): number => {
-    const num = parseFloat(tokenStr.replace(/[BMK]/g, ''));
-    if (tokenStr.includes('B')) return num * 1e9;
-    if (tokenStr.includes('M')) return num * 1e6;
-    if (tokenStr.includes('K')) return num * 1e3;
-    return num;
-  };
+  const [selectedTimeRangeForModels, setSelectedTimeRangeForModels] = useState("Top this month");
+  const [selectedTimeRangeForApps, setSelectedTimeRangeForApps] = useState("This Month");
 
-  // Helper function to parse value strings
-  const parseValue = (valueStr: string): number => {
-    const num = parseFloat(valueStr.replace(/[$BMK]/g, ''));
-    if (valueStr.includes('B')) return num * 1e9;
-    if (valueStr.includes('M')) return num * 1e6;
-    if (valueStr.includes('K')) return num * 1e3;
-    return num;
-  };
+  const [models, setModels] = useState<ModelData[]>([]);
+  const [apps, setApps] = useState<AppData[]>([]);
 
-  // Filter and sort the models based on selected options
-  const filteredAndSortedModels = useMemo(() => {
-    let filtered = [...topModels];
-
-    // Apply top count filter
-    const count = parseInt(selectedTopCount.replace('Top ', ''));
-    filtered = filtered.slice(0, count);
-
-    // Apply sorting
-    if (selectedSort === 'Tokens') {
-      filtered.sort((a, b) => {
-        const aTokens = parseTokens(a.tokens);
-        const bTokens = parseTokens(b.tokens);
-        return bTokens - aTokens;
+  useEffect(() => {
+    const getModels = async () => {
+      console.log({API_BASE_URL});
+      const response = await fetch(`${API_BASE_URL}/ranking/models`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
-    } else if (selectedSort === 'Value') {
-      filtered.sort((a, b) => {
-        const aValue = parseValue(a.value);
-        const bValue = parseValue(b.value);
-        return bValue - aValue;
-      });
-    } else {
-      // Default sort by rank
-      filtered.sort((a, b) => a.rank - b.rank);
+  
+      if (response.ok) {
+        const result = await response.json();
+        setModels(result.data);
+      }
     }
+    const getApps = async () => {
+      console.log({API_BASE_URL});
+      const response = await fetch(`${API_BASE_URL}/ranking/apps`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        setApps(result.data);
+      }
+    }
+    getModels();
+    getApps();
+  },[]);
 
-    return filtered;
-  }, [selectedTimeRange, selectedSort, selectedTopCount]);
+  const filteredModels = useMemo(() => {
+    return models
+    .filter((model) => model.time_period === selectedTimeRangeForModels)
+    .sort((a, b) => a.rank - b.rank) // ascending order
+    .slice(0, selectedTopModelsCount);
+  }, [selectedTopModelsCount, selectedTimeRangeForModels, models])
+
+  const filteredApps = useMemo(() => {
+    return apps
+    .filter((app) => app.time_period === selectedTimeRangeForApps)
+    .sort((a, b) => a.rank - b.rank) // ascending orders
+  }, [selectedTimeRangeForApps, apps])
 
   return (
     <div className="min-h-screen bg-white">
@@ -169,30 +205,32 @@ export default function RankingsPage() {
         {/* Top 10 Models Section */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold">{selectedTopCount} Models</h2>
+            <h2 className="text-3xl font-bold">{selectedTopModelsCount} Models</h2>
             <div className="flex gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-[120px] justify-between">
-                    {selectedTopCount} <ChevronDown className="w-4 h-4" />
+                    Top {" "}{selectedTopModelsCount} <ChevronDown className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onSelect={() => setSelectedTopCount('Top 10')}>Top 10</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setSelectedTopCount('Top 20')}>Top 20</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setSelectedTopCount('Top 50')}>Top 50</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setSelectedTopModelsCount(5)}>Top 5</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setSelectedTopModelsCount(10)}>Top 10</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setSelectedTopModelsCount(20)}>Top 20</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-[140px] justify-between">
-                    {selectedTimeRange} <ChevronDown className="w-4 h-4" />
+                    {selectedTimeRangeForModels} <ChevronDown className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onSelect={() => setSelectedTimeRange('Top This Year')}>Top This Year</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setSelectedTimeRange('Top This Month')}>Top This Month</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setSelectedTimeRange('Top This Week')}>Top This Week</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setSelectedTimeRangeForModels('Top today')}>Top today</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setSelectedTimeRangeForModels('Top this week')}>Top this week</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setSelectedTimeRangeForModels('Top this month')}>Top this month</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setSelectedTimeRangeForModels('Trending')}>Trending</DropdownMenuItem>
+
               </DropdownMenuContent>
             </DropdownMenu>
             <DropdownMenu>
@@ -219,61 +257,64 @@ export default function RankingsPage() {
               <div className="col-span-3 font-semibold text-base text-gray-600">Category</div>
               <div className="col-span-3 font-semibold text-base text-gray-600">Top Provider</div>
               <div className="col-span-3 font-semibold text-base text-gray-600 text-right">Tokens Generated</div>
-              <div className="col-span-2 font-semibold text-base text-gray-600 text-right">Value</div>
-              <div className="col-span-2 font-semibold text-base text-gray-600 text-right">Change</div>
+              {/* <div className="col-span-2 font-semibold text-base text-gray-600 text-right">Value</div> */}
+              <div className="col-span-2 font-semibold text-base text-gray-600 text-right">Change</div> 
             </div>
           </Card>
 
           <div className="space-y-3 mt-3">
-            {filteredAndSortedModels.map((model, index) => (
+            {filteredModels.map((model, index) => (
               <Card key={model.rank} className="p-0 overflow-hidden">
                 <div className="grid grid-cols-24 gap-2 px-6 py-2">
                     {/* Rank - 2 columns */}
                     <div className="col-span-2 flex flex-col items-start justify-center gap-1">
-                      <span className="font-medium text-sm">#{index + 1}</span>
-                      <div className={`flex items-center ${model.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {model.change > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        <span className="text-sm">{model.change > 0 ? `+${model.change}` : model.change}</span>
-                      </div>
+                      <span className="font-medium text-sm">#{model.rank}</span>
+                      {model.trend_percentage && <div className={`flex items-center gap-1 ${Number(model.trend_percentage) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {model.trend_direction == "up" ? (
+                          <ArrowUp className="w-4 h-4" />
+                        ) : (
+                          <ArrowDown className="w-4 h-4" />
+                        )}
+                      <span className="text-sm">{model.trend_percentage}</span>
+
+                      </div>}
                     </div>
                   
                   {/* AI Model - 6 columns */}
                   <div className="col-span-6">
                     <div className="flex items-center gap-3">
                       <img src='/deepseek_1.png' className='w-16 h-16 rounded-lg'/>
-                      <span className="font-medium text-base">{model.model}</span>
+                      <span className="font-medium text-base">{model.model_name}</span>
                     </div>
                   </div>
                   
                   {/* Model Org - 4 columns */}
                   <div className="col-span-3 flex items-center">
-                    <span className="text-base">{model.org}</span>
+                    <span className="text-base">{model.author}</span>
                   </div>
                   
                   {/* Category - 4 columns */}
                   <div className="col-span-3 flex items-center">
-                    <span className="text-base">{model.category}</span>
+                    <span className="text-base">---</span>
                   </div>
                   
                   {/* Top Provider - 4 columns */}
                   <div className="col-span-3 flex items-center">
-                    <span className="text-base">{model.provider}</span>
+                    <span className="text-base">---</span>
                   </div>
                   
                   {/* Tokens Generated - 2 columns */}
                   <div className="col-span-3 text-right flex items-center justify-end">
-                    <span className="text-base font-medium">{model.tokens}</span>
+                    <span className="text-base font-medium">{model.tokens.slice(0, -7)}</span>
                   </div>
                   
-                  {/* Value - 2 columns */}
-                  <div className="col-span-2 text-right flex items-center justify-end">
-                    <span className="text-base font-medium">{model.value}</span>
+                  {/* <div className="col-span-2 text-right flex items-center justify-end">
+                    <span className="text-base font-medium">{}</span>
                   </div>
-                  
-                  {/* Change - 2 columns */}
+                  */}
                   <div className="col-span-2 text-right flex items-center justify-end">
-                    <span className="text-base font-medium text-green-600">{model.changePercent}</span>
-                  </div>
+                    <span className="text-base font-medium text-green-600">{model.trend_percentage}</span>
+                  </div> 
                 </div>
               </Card>
             ))}
@@ -288,13 +329,13 @@ export default function RankingsPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-[140px] justify-between">
-                    {selectedTimeRange} <ChevronDown className="w-4 h-4" />
+                    {selectedTimeRangeForApps} <ChevronDown className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onSelect={() => setSelectedTimeRange('Top This Year')}>Top This Year</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setSelectedTimeRange('Top This Month')}>Top This Month</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setSelectedTimeRange('Top This Week')}>Top This Week</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setSelectedTimeRangeForApps('Today')}>Today</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setSelectedTimeRangeForApps('This Week')}>This Week</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setSelectedTimeRangeForApps('This Month')}>This Month</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
@@ -313,24 +354,24 @@ export default function RankingsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-5">
-            {topApps.map((app) => (
+            {filteredApps.map((app) => (
               <Card key={app.id} className="p-4">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center">
-                    <img src="/devicon_google.svg" alt={app.name} className="w-10 h-10 rounded-full" />
+                    <img src={app.image_url} alt={app.app_name} className="w-10 h-10 rounded-full" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">{app.name}</h3>
+                    <h3 className="font-semibold">{app.app_name}</h3>
                     <p className="text-sm ">{app.description}</p>
                   </div>
                 </div>
                 <div className="space-y-2 flex ">
                   <div className='flex-1'>
-                    <p className="text-2xl font-bold">{app.tokens}</p>
+                    <p className="text-2xl font-bold">{app.tokens.slice(0, -6)}</p>
                     <p className="text-xs ">Tokens Generated</p>
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-green-600">{app.growth}</p>
+                    <p className="text-lg font-bold text-green-600">---</p>
                     <p className="text-xs ">Weekly Growth</p>
                   </div>
                 </div>
