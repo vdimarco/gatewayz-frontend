@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -399,7 +399,7 @@ const ChatSkeleton = () => (
   </div>
 );
 
-export default function ChatPage() {
+function ChatPageContent() {
     const searchParams = useSearchParams();
     const [message, setMessage] = useState('');
     const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -819,5 +819,13 @@ export default function ChatPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="flex h-[calc(100svh-130px)] items-center justify-center">Loading...</div>}>
+      <ChatPageContent />
+    </Suspense>
   );
 }
