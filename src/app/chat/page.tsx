@@ -608,6 +608,11 @@ function ChatPageContent() {
             // Note: Using Vercel deployment directly until chat endpoint is deployed to api.gatewayz.ai
             const chatApiUrl = process.env.NEXT_PUBLIC_CHAT_API_URL || 'https://gatewayz-backend.vercel.app';
             const url = `${chatApiUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(userData.privy_user_id)}`;
+
+            console.log('Sending chat request to:', url);
+            console.log('API Key:', apiKey.substring(0, 10) + '...');
+            console.log('Model:', selectedModel.value);
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -619,6 +624,9 @@ function ChatPageContent() {
                     messages: [{ role: 'user', content: userMessage }],
                 }),
             });
+
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
 
             if (!response.ok) {
                 throw new Error('Failed to get response');
