@@ -128,15 +128,22 @@ export default function DevelopersPage() {
     }, []);
 
     const organizations: Organization[] = useMemo(() => {
+        console.log('Processing organizations, rankingModels count:', rankingModels.length);
+        console.log('Active tab:', activeTab, 'Time frame:', timeFrame);
+
         // Filter models by time period and tab
         const timePeriod = timeFrameMapping[timeFrame];
+        console.log('Looking for time period:', timePeriod);
+
         const filteredModels = rankingModels.filter(model => {
-            const matchesTimePeriod = model.time_period.toLowerCase() === timePeriod.toLowerCase();
-            const matchesTab = activeTab === 'trending'
-                ? model.time_period.toLowerCase() === 'trending'
-                : matchesTimePeriod;
-            return activeTab === 'trending' ? model.time_period.toLowerCase() === 'trending' : matchesTimePeriod;
+            if (activeTab === 'trending') {
+                return model.time_period.toLowerCase() === 'trending';
+            } else {
+                return model.time_period.toLowerCase() === timePeriod.toLowerCase();
+            }
         });
+
+        console.log('Filtered models count:', filteredModels.length);
 
         // Group models by author
         const orgMap = new Map<string, RankingModel[]>();
@@ -196,9 +203,11 @@ export default function DevelopersPage() {
     }, [rankingModels, timeFrame, activeTab]);
 
     const filteredOrgs = useMemo(() => {
-        return organizations.filter(org => 
+        const filtered = organizations.filter(org =>
             org.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
+        // Limit to 12 organizations for clean grid layout (3 columns x 4 rows or 2 rows x 6 cols)
+        return filtered.slice(0, 12);
     }, [organizations, searchTerm, activeTab]);
 
 
