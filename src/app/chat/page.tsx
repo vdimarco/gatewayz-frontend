@@ -365,7 +365,11 @@ export default function ChatPage() {
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [selectedModel, setSelectedModel] = useState<ModelOption | null>(null);
+    const [selectedModel, setSelectedModel] = useState<ModelOption | null>({
+        value: 'switchpoint/router',
+        label: 'Switchpoint Router',
+        category: 'Free'
+    });
     const { toast } = useToast();
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const messageInputRef = useRef<HTMLInputElement>(null);

@@ -1,5 +1,7 @@
 'use server';
 
+import { headers } from 'next/headers';
+
 export type ChatInput = {
   modelName: string;
   prompt: string;
@@ -17,8 +19,11 @@ export async function chat(input: ChatInput): Promise<string> {
       apiKey: input.apiKey,
     };
 
-    // Use local API route
-    const apiUrl = 'http://localhost:3000/api/chat';
+    // Get the host from headers to ensure we use the correct port
+    const headersList = await headers();
+    const host = headersList.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const apiUrl = `${protocol}://${host}/api/chat`;
 
     console.log('Server action - Sending chat request:', { url: apiUrl, model: payload.model, hasApiKey: !!payload.apiKey });
 
