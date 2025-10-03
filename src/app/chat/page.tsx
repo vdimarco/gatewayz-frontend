@@ -32,13 +32,14 @@ import {
   Trash2,
   Edit
 } from 'lucide-react';
-import { ModelSelect, type ModelOption, allModels } from '@/components/chat/model-select';
+import { ModelSelect, type ModelOption } from '@/components/chat/model-select';
 import './chat.css';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { chat } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
+import { getApiKey } from '@/lib/api';
 
 type Message = {
     role: 'user' | 'assistant';
@@ -364,9 +365,7 @@ export default function ChatPage() {
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [selectedModel, setSelectedModel] = useState<ModelOption | null>(
-        allModels.find(m => m.value === 'gpt-4o mini') || null
-    );
+    const [selectedModel, setSelectedModel] = useState<ModelOption | null>(null);
     const { toast } = useToast();
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const messageInputRef = useRef<HTMLInputElement>(null);
@@ -522,9 +521,21 @@ export default function ChatPage() {
         setLoading(true);
 
         try {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                toast({
+                    title: "Authentication required",
+                    description: "Please log in to use the chat feature.",
+                    variant: 'destructive'
+                });
+                setLoading(false);
+                return;
+            }
+
             const response = await chat({
                 modelName: selectedModel.value,
                 prompt: message,
+                apiKey,
             });
              const finalSessions = sessions.map(session => {
                 if (session.id === activeSessionId) {
