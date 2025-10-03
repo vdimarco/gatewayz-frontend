@@ -164,8 +164,8 @@ export default function DevelopersPage() {
 
                         if (response.ok) {
                             const data = await response.json();
-                            if (data.author_avatar_url) {
-                                logoMap.set(author, data.author_avatar_url);
+                            if (data.model?.authorData?.avatarUrl) {
+                                logoMap.set(author, data.model.authorData.avatarUrl);
                             }
                         }
                     } catch (error) {
