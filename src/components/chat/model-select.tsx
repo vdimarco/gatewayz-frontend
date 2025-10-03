@@ -104,7 +104,7 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
                         key={model.value}
                         value={model.value}
                         onSelect={(currentValue) => {
-                            const selected = models.find(m => m.value === currentValue);
+                            const selected = models.find(m => m.value.toLowerCase() === currentValue.toLowerCase());
                             onSelectModel(selected || null);
                             setOpen(false);
                         }}
