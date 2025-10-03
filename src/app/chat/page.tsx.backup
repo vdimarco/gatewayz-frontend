@@ -36,12 +36,11 @@ import {
 import { ModelSelect, type ModelOption } from '@/components/chat/model-select';
 import './chat.css';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { chat } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
 import { getApiKey } from '@/lib/api';
-import { streamChat } from '@/lib/streaming-chat';
-import { StreamingMessage } from '@/components/chat/streaming-message';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -51,7 +50,6 @@ import 'katex/dist/katex.min.css';
 type Message = {
     role: 'user' | 'assistant';
     content: string;
-    reasoning?: string;
 };
 
 type ChatSession = {
@@ -405,8 +403,6 @@ export default function ChatPage() {
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [streamingContent, setStreamingContent] = useState('');
-    const [streamingReasoning, setStreamingReasoning] = useState('');
     const [selectedModel, setSelectedModel] = useState<ModelOption | null>({
         value: 'switchpoint/router',
         label: 'Switchpoint Router',
@@ -566,17 +562,16 @@ export default function ChatPage() {
             });
             return;
         }
-
+        
         const isFirstMessage = messages.length === 0;
-        const userMessage = message;
 
-        const updatedMessages: Message[] = [...messages, { role: 'user' as const, content: userMessage }];
-
+        const updatedMessages: Message[] = [...messages, { role: 'user' as const, content: message }];
+        
         const updatedSessions = sessions.map(session => {
             if (session.id === activeSessionId) {
-                return {
+                return { 
                     ...session,
-                    title: isFirstMessage ? userMessage : session.title,
+                    title: isFirstMessage ? message : session.title,
                     messages: updatedMessages,
                     updatedAt: new Date()
                 };
@@ -584,11 +579,9 @@ export default function ChatPage() {
             return session;
         });
         setSessions(updatedSessions);
-
+        
         setMessage('');
         setLoading(true);
-        setStreamingContent('');
-        setStreamingReasoning('');
 
         try {
             const apiKey = getApiKey();
@@ -602,56 +595,38 @@ export default function ChatPage() {
                 return;
             }
 
-            // Simple fetch for now
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: selectedModel.value,
-                    message: userMessage,
-                    apiKey,
-                }),
+            const response = await chat({
+                modelName: selectedModel.value,
+                prompt: message,
+                apiKey,
             });
-
-            if (!response.ok) {
-                throw new Error('Failed to get response');
-            }
-
-            const data = await response.json();
-            const content = data.response || 'No response';
-
-            const finalSessions = sessions.map(session => {
+             const finalSessions = sessions.map(session => {
                 if (session.id === activeSessionId) {
-                    return {
+                    return { 
                         ...session,
-                        title: isFirstMessage ? userMessage : session.title,
-                        messages: [...updatedMessages, {
-                            role: 'assistant' as const,
-                            content,
-                        }],
+                        title: isFirstMessage ? message : session.title,
+                        messages: [...updatedMessages, { role: 'assistant' as const, content: response }],
                         updatedAt: new Date()
                     };
                 }
                 return session;
             });
-            setSessions(finalSessions);
-            setLoading(false);
+             setSessions(finalSessions);
         } catch (error) {
             toast({
                 title: "Error",
                 description: `An error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
                 variant: 'destructive'
             });
-            // Revert message update on error
-            const revertedSessions = sessions.map(session => {
+             // Revert message update on error
+             const revertedSessions = sessions.map(session => {
                 if (session.id === activeSessionId) {
                     return { ...session, messages };
                 }
                 return session;
             });
-            setSessions(revertedSessions);
-            setStreamingContent('');
-            setStreamingReasoning('');
+             setSessions(revertedSessions);
+        } finally {
             setLoading(false);
         }
     };
@@ -718,36 +693,9 @@ export default function ChatPage() {
           {messages.length > 0 && (
             <div ref={chatContainerRef} className="flex-1   ml-20 flex flex-col gap-6 overflow-y-auto p-6 bg-card">
               {messages.map((msg, index) => (
-                <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
-                  <div className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                    {msg.role === 'user' ? (
-                      <div className="rounded-lg p-3 bg-primary text-primary-foreground">
-                        <div className="text-sm whitespace-pre-wrap text-white">{msg.content}</div>
-                      </div>
-                    ) : (
-                      <StreamingMessage
-                        content={msg.content}
-                        reasoning={msg.reasoning}
-                        modelName={selectedModel?.label}
-                        isStreaming={false}
-                      />
-                    )}
-                  </div>
-                </div>
+                <ChatMessage key={index} message={msg} modelName={selectedModel?.label} />
               ))}
-              {loading && streamingContent && (
-                <div className="flex items-start gap-3">
-                  <div className="flex flex-col gap-1 items-start">
-                    <StreamingMessage
-                      content={streamingContent}
-                      reasoning={streamingReasoning}
-                      modelName={selectedModel?.label}
-                      isStreaming={true}
-                    />
-                  </div>
-                </div>
-              )}
-              {loading && !streamingContent && <ChatSkeleton />}
+              {loading && <ChatSkeleton />}
             </div>
           )}
 
