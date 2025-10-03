@@ -159,8 +159,8 @@ export default function DevelopersPage() {
                         if (!authorModel) return;
 
                         // Format model name for API: "author/model-name"
-                        const modelId = encodeURIComponent(`${author}/${authorModel.model_name.replace(/ /g, '-')}`);
-                        const response = await fetch(`https://www.modelz.io/api/huggingface?modelId=${modelId}`);
+                        const modelId = `${author}/${authorModel.model_name.replace(/ /g, '-')}`;
+                        const response = await fetch(`/api/model-logo?modelId=${encodeURIComponent(modelId)}`);
 
                         if (response.ok) {
                             const data = await response.json();
