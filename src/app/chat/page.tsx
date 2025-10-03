@@ -605,9 +605,8 @@ function ChatPageContent() {
             }
 
             // Call backend API directly with privy_user_id query parameter
-            // Note: Using Vercel deployment directly until chat endpoint is deployed to api.gatewayz.ai
-            const chatApiUrl = process.env.NEXT_PUBLIC_CHAT_API_URL || 'https://gatewayz-backend.vercel.app';
-            const url = `${chatApiUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(userData.privy_user_id)}`;
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://gatewayz-backend.vercel.app';
+            const url = `${apiBaseUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(userData.privy_user_id)}`;
 
             console.log('Sending chat request to:', url);
             console.log('API Key:', apiKey.substring(0, 10) + '...');
