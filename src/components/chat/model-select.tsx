@@ -49,12 +49,6 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
           category: model.pricing?.prompt ? 'Paid' : 'Free'
         }));
         setModels(modelOptions);
-
-        // Set default model if none selected
-        if (!selectedModel && modelOptions.length > 0) {
-          const deepseek = modelOptions.find(m => m.value.includes('deepseek')) || modelOptions[0];
-          onSelectModel(deepseek);
-        }
       } catch (error) {
         console.error('Failed to fetch models:', error);
       } finally {
