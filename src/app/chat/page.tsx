@@ -785,7 +785,7 @@ function ChatPageContent() {
        
         
         {/* Header with title and model selector */}
-        <header className="relative z-10 w-[80%] flex items-center justify-between gap-4 p-6 pl-24 pr-0">
+        <header className="relative z-10 w-full lg:w-[80%] flex items-center justify-between gap-2 lg:gap-4 p-4 lg:p-6 lg:pl-24 lg:pr-0">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="lg:hidden flex-shrink-0">
               <Sheet>
@@ -805,8 +805,8 @@ function ChatPageContent() {
               </Sheet>
             </div>
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <h1 className="text-2xl font-semibold truncate">{activeSession?.title || 'Untitled Chat'}</h1>
-              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
+              <h1 className="text-lg lg:text-2xl font-semibold truncate">{activeSession?.title || 'Untitled Chat'}</h1>
+              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0 hidden sm:flex">
                 <Pencil className="h-4 w-4" />
               </Button>
             </div>
@@ -817,10 +817,10 @@ function ChatPageContent() {
         </header>
 
         {/* Main content area */}
-        <div className="relative z-10 w-[80%] flex-1 flex flex-col overflow-hidden">
+        <div className="relative z-10 w-full lg:w-[80%] flex-1 flex flex-col overflow-hidden">
           {/* Chat messages area */}
           {messages.length > 0 && (
-            <div ref={chatContainerRef} className="flex-1   ml-20 flex flex-col gap-6 overflow-y-auto p-6 bg-card">
+            <div ref={chatContainerRef} className="flex-1 ml-0 lg:ml-20 flex flex-col gap-4 lg:gap-6 overflow-y-auto p-4 lg:p-6 bg-card">
               {messages.map((msg, index) => (
                 <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                   <div className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -830,7 +830,7 @@ function ChatPageContent() {
                           <img
                             src={msg.image}
                             alt="Uploaded image"
-                            className="max-w-xs rounded-lg mb-2"
+                            className="max-w-[200px] lg:max-w-xs rounded-lg mb-2"
                           />
                         )}
                         <div className="text-sm whitespace-pre-wrap text-white">{msg.content}</div>
@@ -864,8 +864,8 @@ function ChatPageContent() {
 
           {/* Welcome screen when no messages */}
           {messages.length === 0 && !loading && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-              <h1 className="text-4xl font-bold mb-8">What's On Your Mind?</h1>
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 lg:p-6">
+              <h1 className="text-2xl lg:text-4xl font-bold mb-6 lg:mb-8">What's On Your Mind?</h1>
               
               {/* Suggested prompts */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full max-w-2xl">
@@ -894,7 +894,7 @@ function ChatPageContent() {
           )}
 
           {/* Message input area - fixed at bottom */}
-          <div className="w-full p-6">
+          <div className="w-full p-4 lg:p-6">
             <div className="w-full max-w-4xl mx-auto">
               <div className="relative">
                 {/* Image preview */}
@@ -903,7 +903,7 @@ function ChatPageContent() {
                     <img
                       src={selectedImage}
                       alt="Selected image"
-                      className="max-w-xs max-h-32 rounded-lg border"
+                      className="max-w-[200px] lg:max-w-xs max-h-24 lg:max-h-32 rounded-lg border"
                     />
                     <Button
                       variant="destructive"

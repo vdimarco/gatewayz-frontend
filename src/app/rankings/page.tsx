@@ -266,8 +266,8 @@ export default function RankingsPage() {
       <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold tracking-tight">LLM Rankings</h1>
-          <p className="mt-2 text-lg ">
+          <h1 className="text-2xl lg:text-4xl font-bold tracking-tight">LLM Rankings</h1>
+          <p className="mt-2 text-sm lg:text-lg">
             Discover The Current Rankings For The Best Models On The Market
           </p>
         </header>
@@ -284,9 +284,9 @@ export default function RankingsPage() {
 
         {/* Top 10 Models Section */}
         <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold">{selectedTopCount} Models</h2>
-            <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <h2 className="text-2xl lg:text-3xl font-bold">{selectedTopCount} Models</h2>
+            <div className="flex flex-wrap gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-[120px] justify-between">
@@ -326,8 +326,8 @@ export default function RankingsPage() {
             </div>
           </div>
 
-          {/* Header Row */}
-          <Card className='flex flex-col'>
+          {/* Header Row - Hidden on mobile */}
+          <Card className='hidden lg:flex flex-col'>
             <div className="ranking-row bg-gray-50 rounded-lg">
               <div className="col-span-2 font-semibold text-xs text-gray-600">Rank</div>
               <div className="col-span-6 font-semibold text-xs text-gray-600">AI Model</div>
@@ -358,7 +358,7 @@ export default function RankingsPage() {
               filteredAndSortedModels.map((model, index) => (
                 <Card key={model.id} className="p-0 overflow-hidden">
                   <div className="ranking-row">
-                      {/* Rank - 2 columns */}
+                      {/* Rank - 2 columns on mobile (col-span-2), 2 on desktop */}
                       <div className="col-span-2 flex flex-col items-start justify-center gap-0">
                         <span className="font-medium text-xs">#{model.rank}</span>
                         <div className={`flex items-center gap-0.5 ${model.trend_direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
@@ -367,8 +367,8 @@ export default function RankingsPage() {
                         </div>
                       </div>
 
-                    {/* AI Model - 6 columns */}
-                    <div className="col-span-6">
+                    {/* AI Model - 7 columns on mobile (col-span-7), 6 on desktop */}
+                    <div className="col-span-7 lg:col-span-6">
                       <div className="flex items-center gap-2">
                         {modelLogos.get(model.model_name) ? (
                           <div className='ranking-logo'>
@@ -382,37 +382,37 @@ export default function RankingsPage() {
                             <span className="text-sm font-medium">{model.author.charAt(0).toUpperCase()}</span>
                           </div>
                         )}
-                        <span className="font-medium text-xs leading-tight">{model.model_name}</span>
+                        <span className="font-medium text-xs leading-tight truncate">{model.model_name}</span>
                       </div>
                     </div>
 
-                    {/* Model Org - 3 columns */}
-                    <div className="col-span-3 flex items-center">
+                    {/* Model Org - hidden on mobile, 3 columns on desktop */}
+                    <div className="hidden lg:flex lg:col-span-3 items-center">
                       <span className="text-xs capitalize">{model.author}</span>
                     </div>
 
-                    {/* Category - 3 columns */}
-                    <div className="col-span-3 flex items-center">
+                    {/* Category - hidden on mobile, 3 columns on desktop */}
+                    <div className="hidden lg:flex lg:col-span-3 items-center">
                       <span className="text-xs">Language</span>
                     </div>
 
-                    {/* Top Provider - 3 columns */}
-                    <div className="col-span-3 flex items-center">
+                    {/* Top Provider - hidden on mobile, 3 columns on desktop */}
+                    <div className="hidden lg:flex lg:col-span-3 items-center">
                       <span className="text-xs">OpenRouter</span>
                     </div>
 
-                    {/* Tokens Generated - 3 columns */}
+                    {/* Tokens Generated - 3 columns on mobile and desktop */}
                     <div className="col-span-3 text-right flex items-center justify-end">
                       <span className="text-xs font-medium">{model.tokens}</span>
                     </div>
 
-                    {/* Value - 2 columns */}
-                    <div className="col-span-2 text-right flex items-center justify-end">
+                    {/* Value - hidden on mobile, 2 columns on desktop */}
+                    <div className="hidden lg:flex lg:col-span-2 text-right items-center justify-end">
                       <span className="text-xs font-medium">-</span>
                     </div>
 
-                    {/* Change - 2 columns */}
-                    <div className="col-span-2 text-right flex items-center justify-end">
+                    {/* Change - hidden on mobile, 2 columns on desktop */}
+                    <div className="hidden lg:flex lg:col-span-2 text-right items-center justify-end">
                       <span className={`text-xs font-medium ${model.trend_direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
                         {model.trend_percentage}
                       </span>
