@@ -779,7 +779,7 @@ function ChatPageContent() {
       <img
         src="/logo_transparent.svg"
         alt="Stats"
-        className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[75vh] h-[75vh] pointer-events-none opacity-50"
+        className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[75vh] h-[75vh] pointer-events-none opacity-50 hidden lg:block"
       />
 
        
@@ -864,11 +864,11 @@ function ChatPageContent() {
 
           {/* Welcome screen when no messages */}
           {messages.length === 0 && !loading && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 lg:p-6 max-w-4xl mx-auto w-full">
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 lg:p-6 w-full">
               <h1 className="text-2xl lg:text-4xl font-bold mb-6 lg:mb-8">What's On Your Mind?</h1>
 
               {/* Suggested prompts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full px-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full max-w-4xl">
                 <ExamplePrompt 
                   title="What model is better for coding?" 
                   subtitle="Compare different AI models for programming tasks"
