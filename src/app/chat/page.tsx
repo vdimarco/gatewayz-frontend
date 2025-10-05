@@ -775,11 +775,11 @@ function ChatPageContent() {
         </div>
       
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative">
-      <img 
-        src="/logo_transparent.svg" 
-        alt="Stats" 
-        className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[75vh] h-[75vh]" 
+      <main className="flex-1 flex flex-col relative overflow-hidden">
+      <img
+        src="/logo_transparent.svg"
+        alt="Stats"
+        className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[75vh] h-[75vh] pointer-events-none opacity-50"
       />
 
        
