@@ -717,7 +717,12 @@ function ChatPageContent() {
             console.log('Response ok:', response.ok);
 
             if (!response.ok) {
-                throw new Error('Failed to get response');
+                if (response.status === 429) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || 'Rate limit exceeded. Please try again later.');
+                }
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error?.message || errorData.detail || `Request failed with status ${response.status}`);
             }
 
             const data = await response.json();
