@@ -785,7 +785,7 @@ function ChatPageContent() {
        
         
         {/* Header with title and model selector */}
-        <header className="relative z-10 w-full lg:w-[80%] flex items-center justify-between gap-2 lg:gap-4 p-4 lg:p-6 lg:pl-24 lg:pr-0">
+        <header className="relative z-10 w-full flex items-center justify-between gap-2 lg:gap-4 p-4 lg:p-6 max-w-7xl mx-auto">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="lg:hidden flex-shrink-0">
               <Sheet>
@@ -817,10 +817,10 @@ function ChatPageContent() {
         </header>
 
         {/* Main content area */}
-        <div className="relative z-10 w-full lg:w-[80%] flex-1 flex flex-col overflow-hidden">
+        <div className="relative z-10 w-full flex-1 flex flex-col overflow-hidden">
           {/* Chat messages area */}
           {messages.length > 0 && (
-            <div ref={chatContainerRef} className="flex-1 ml-0 lg:ml-20 flex flex-col gap-4 lg:gap-6 overflow-y-auto p-4 lg:p-6 bg-card">
+            <div ref={chatContainerRef} className="flex-1 flex flex-col gap-4 lg:gap-6 overflow-y-auto p-4 lg:p-6 bg-card max-w-4xl mx-auto w-full">
               {messages.map((msg, index) => (
                 <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                   <div className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -864,11 +864,11 @@ function ChatPageContent() {
 
           {/* Welcome screen when no messages */}
           {messages.length === 0 && !loading && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 lg:p-6">
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 lg:p-6 max-w-4xl mx-auto w-full">
               <h1 className="text-2xl lg:text-4xl font-bold mb-6 lg:mb-8">What's On Your Mind?</h1>
-              
+
               {/* Suggested prompts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full max-w-2xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full px-4">
                 <ExamplePrompt 
                   title="What model is better for coding?" 
                   subtitle="Compare different AI models for programming tasks"
@@ -894,8 +894,8 @@ function ChatPageContent() {
           )}
 
           {/* Message input area - fixed at bottom */}
-          <div className="w-full p-4 lg:p-6">
-            <div className="w-full max-w-4xl mx-auto">
+          <div className="w-full p-4 lg:p-6 max-w-4xl mx-auto">
+            <div className="w-full">
               <div className="relative">
                 {/* Image preview */}
                 {selectedImage && (
