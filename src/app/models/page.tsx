@@ -20,7 +20,7 @@ interface Model {
 
 async function getModels(): Promise<Model[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/models`, {
+    const response = await fetch(`${API_BASE_URL}/models?gateway=all`, {
       next: { revalidate: 3600 } // Cache for 1 hour
     });
     const data = await response.json();

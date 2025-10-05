@@ -241,10 +241,10 @@ export default function ModelProfilePage() {
                 </div>
             </header>
 
-            <nav className="border-b overflow-x-auto">
-                <div className="flex gap-4 lg:gap-6 min-w-max">
+            <nav className="border-b overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+                <div className="flex gap-4 lg:gap-6">
                     {['Overview', 'Providers', 'Apps', 'Activity', 'Uptime', 'API'].map(item => (
-                        <Button key={item} variant="ghost" className="rounded-none border-b-2 border-transparent hover:border-primary data-[active]:border-primary data-[active]:text-primary whitespace-nowrap">
+                        <Button key={item} variant="ghost" className="rounded-none border-b-2 border-transparent hover:border-primary data-[active]:border-primary data-[active]:text-primary whitespace-nowrap flex-shrink-0">
                             {item}
                         </Button>
                     ))}
