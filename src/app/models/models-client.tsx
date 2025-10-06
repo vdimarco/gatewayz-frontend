@@ -272,9 +272,10 @@ const FilterSlider = ({ label, value, onValueChange, min, max, step, unit }: { l
 
 const FilterDropdown = ({ label, items, icon, selectedItems, onSelectionChange }: { label: string, items: string[], icon: React.ReactNode, selectedItems: string[], onSelectionChange: (value: string, checked: boolean) => void }) => {
   const [isOpen, setIsOpen] = useState(true);
+  const [showAll, setShowAll] = useState(false);
 
-  const displayedItems = items.slice(0, 3);
-  const moreItems = items.slice(3);
+  const displayedItems = showAll ? items : items.slice(0, 3);
+  const hasMore = items.length > 3;
 
   return (
     <SidebarGroup>
@@ -292,7 +293,14 @@ const FilterDropdown = ({ label, items, icon, selectedItems, onSelectionChange }
               <Label htmlFor={item.toLowerCase()} className="font-normal">{item}</Label>
             </div>
           ))}
-          {moreItems.length > 0 && <Label className="font-normal text-muted-foreground">More...</Label>}
+          {hasMore && (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left"
+            >
+              {showAll ? 'Show less...' : `More... (${items.length - 3} more)`}
+            </button>
+          )}
         </div>
       )}
     </SidebarGroup>
