@@ -7,24 +7,71 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, MoreHorizontal } from "lucide-react";
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { usePrivy } from '@privy-io/react-auth';
+import { getUserData } from '@/lib/api';
 
 export default function AccountPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user: privyUser, logout } = usePrivy();
   const [showPassword, setShowPassword] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-    });
-    return () => unsubscribe();
+    setMounted(true);
   }, []);
 
-  const getInitials = (name: string | null) => {
+  const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
+
+  const getUserEmail = () => {
+    const emailAccount = privyUser?.linkedAccounts?.find((account: any) => account.type === 'email');
+    const googleAccount = privyUser?.linkedAccounts?.find((account: any) => account.type === 'google_oauth');
+    return emailAccount?.address || googleAccount?.email || 'No email';
+  };
+
+  const getUserName = () => {
+    const googleAccount = privyUser?.linkedAccounts?.find((account: any) => account.type === 'google_oauth');
+    const userData = getUserData();
+    return googleAccount?.name || userData?.display_name || 'User';
+  };
+
+  const getConnectedAccounts = () => {
+    if (!privyUser?.linkedAccounts) return [];
+    return privyUser.linkedAccounts.filter((account: any) =>
+      account.type === 'google_oauth' || account.type === 'github_oauth'
+    );
+  };
+
+  if (!mounted) {
+    return (
+      <div className="space-y-8 lg:min-w-[600px] xl:min-w-[1000px]">
+        <div className="flex justify-center">
+          <h1 className="text-3xl font-bold">Account</h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!privyUser) {
+    return (
+      <div className="space-y-8 lg:min-w-[600px] xl:min-w-[1000px]">
+        <div className="flex justify-center">
+          <h1 className="text-3xl font-bold">Account</h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Please sign in to view your account details.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const userEmail = getUserEmail();
+  const userName = getUserName();
+  const connectedAccounts = getConnectedAccounts();
 
   return (
     <div className="space-y-8 lg:min-w-[600px] xl:min-w-[1000px]">
@@ -44,13 +91,13 @@ export default function AccountPage() {
           <div className="w-1/3 flex items-center justify-center gap-3">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-card border border-gray-300">
-                {getInitials(user?.displayName ?? null)}
+                {getInitials(userName)}
               </AvatarFallback>
             </Avatar>
-            <span className="text-base">{user?.displayName || "User"}</span>
+            <span className="text-base">{userName}</span>
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base">
+            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
               Update Profile
             </Button>
           </div>
@@ -60,13 +107,13 @@ export default function AccountPage() {
         <div className="flex items-center py-4 border-b border-gray-200">
           <div className="w-1/3 text-base font-medium">Email Addresses</div>
           <div className="w-1/3 flex flex-col items-center justify-center gap-1">
-            <span className="text-base">{user?.email}</span>
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base">
+            <span className="text-base">{userEmail}</span>
+            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
               Add Email Address
             </Button>
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </div>
@@ -76,18 +123,25 @@ export default function AccountPage() {
         <div className="flex items-center py-4 border-b border-gray-200">
           <div className="w-1/3 text-base font-medium">Connected Accounts</div>
           <div className="w-1/3 flex flex-col items-center justify-center gap-1">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded text-white text-xs flex items-center justify-center font-bold">
-                <img src="/ri_google-fill.svg" alt="Google" className="w-6 h-6" />
-              </div>
-              <span className="text-base">{user?.email}</span>
-            </div>
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base">
+            {connectedAccounts.length > 0 ? (
+              connectedAccounts.map((account: any, index: number) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded text-white text-xs flex items-center justify-center font-bold">
+                    {account.type === 'google_oauth' && <img src="/ri_google-fill.svg" alt="Google" className="w-6 h-6" />}
+                    {account.type === 'github_oauth' && <img src="/github-logo.svg" alt="GitHub" className="w-6 h-6" />}
+                  </div>
+                  <span className="text-base">{account.email || account.name}</span>
+                </div>
+              ))
+            ) : (
+              <span className="text-base text-muted-foreground">No accounts connected</span>
+            )}
+            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
               Connect Account
             </Button>
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </div>
@@ -98,17 +152,18 @@ export default function AccountPage() {
           <div className="w-1/3 text-base font-medium">Password</div>
           <div className="w-1/3 flex justify-center gap-2">
             <span className="text-base">**********</span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-4 w-4 p-0"
               onClick={() => setShowPassword(!showPassword)}
+              disabled
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base">
+            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
               Reset Password
             </Button>
           </div>
@@ -123,10 +178,10 @@ export default function AccountPage() {
         <div className="flex items-center py-4 border-y border-gray-200">
           <div className="w-1/3 text-base font-medium">Full Name</div>
           <div className="w-1/3 flex justify-center">
-            <span className="text-base">{user?.displayName || "Not set"}</span>
+            <span className="text-base">{userName}</span>
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base">
+            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
               Edit Name
             </Button>
           </div>
@@ -136,16 +191,12 @@ export default function AccountPage() {
         <div className="flex items-center py-4 border-b border-gray-200">
           <div className="w-1/3 text-base font-medium">Billing Address</div>
           <div className="w-1/3 flex justify-center">
-            <div className="text-base text-center">
-              <div>Country</div>
-              <div>Address Line 1</div>
-              <div>Address Line 2</div>
-              <div>Town or City</div>
-              <div>Postal Code</div>
+            <div className="text-base text-center text-muted-foreground">
+              <div>Not set</div>
             </div>
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base">
+            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
               Edit Address
             </Button>
           </div>
@@ -155,19 +206,13 @@ export default function AccountPage() {
         <div className="flex items-center py-4 border-b border-gray-200">
           <div className="w-1/3 text-base font-medium">Payment Method</div>
           <div className="w-1/3 flex flex-col items-center justify-center gap-1">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-5 rounded text-white text-xs flex items-center justify-center font-bold">
-                <img src="/formkit_visa.svg" alt="Visa" className="w-6 h-6" />
-              </div>
-              <span className="text-base">**** 0000</span>
-              <span className="text-xs bg-gray-100 px-1 py-1 rounded border border-gray-300">Primary</span>
-            </div>
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base">
+            <span className="text-base text-muted-foreground">No payment method</span>
+            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
               Add Payment Method
             </Button>
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </div>
