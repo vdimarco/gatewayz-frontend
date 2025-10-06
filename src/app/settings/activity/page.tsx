@@ -40,7 +40,7 @@ interface ActivityStats {
   }[];
 }
 
-const ActivityChart = ({ dataKey, title, value, currency = false }: { dataKey: "spend" | "tokens" | "requests", title: string, value: string, currency?: boolean }) => (
+const ActivityChart = ({ dataKey, title, value, currency = false, data }: { dataKey: "spend" | "tokens" | "requests", title: string, value: string, currency?: boolean, data: any[] }) => (
   <Card>
     <CardHeader className="flex flex-row items-center justify-between pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -50,7 +50,7 @@ const ActivityChart = ({ dataKey, title, value, currency = false }: { dataKey: "
       <div className="text-2xl font-bold">{currency && '$'}{value}</div>
       <div className="h-[120px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -30, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 5, right: 10, left: -30, bottom: 0 }}>
             <defs>
               <linearGradient id={`color${dataKey}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
@@ -156,9 +156,9 @@ export default function ActivityPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <ActivityChart dataKey="spend" title="Spend" value={totalSpend} currency />
-        <ActivityChart dataKey="tokens" title="Tokens" value={totalTokens} />
-        <ActivityChart dataKey="requests" title="Requests" value={totalRequests} />
+        <ActivityChart dataKey="spend" title="Spend" value={totalSpend} currency data={chartData} />
+        <ActivityChart dataKey="tokens" title="Tokens" value={totalTokens} data={chartData} />
+        <ActivityChart dataKey="requests" title="Requests" value={totalRequests} data={chartData} />
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
