@@ -78,8 +78,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedModalities, setSelectedModalities] = useState<string[]>([]);
-  const [contextLength, setContextLength] = useState(64);
-  const [promptPricing, setPromptPricing] = useState(0.5);
+  const [contextLength, setContextLength] = useState(4);
+  const [promptPricing, setPromptPricing] = useState(10);
   const [selectedParameters, setSelectedParameters] = useState<string[]>([]);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('tokens-desc');
@@ -99,9 +99,10 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
   const resetFilters = () => {
     setSearchTerm("");
+    setDebouncedSearchTerm("");
     setSelectedModalities([]);
-    setContextLength(64);
-    setPromptPricing(0.5);
+    setContextLength(4);
+    setPromptPricing(10);
     setSelectedParameters([]);
     setSelectedProviders([]);
     setSortBy('tokens-desc');
