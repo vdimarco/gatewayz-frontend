@@ -210,13 +210,40 @@ export default function ApiKeysPage() {
   };
 
   useEffect(() => {
-    // Wait a bit for authentication to complete before fetching
-    const timer = setTimeout(() => {
-      fetchApiKeys();
-    }, 500);
+    if (!mounted) return;
 
-    return () => clearTimeout(timer);
-  }, []);
+    let hasStartedFetch = false;
+
+    // Check for API key periodically until authentication completes
+    const checkAndFetch = () => {
+      if (hasStartedFetch) return;
+
+      const apiKey = getApiKey();
+      if (apiKey) {
+        hasStartedFetch = true;
+        clearInterval(interval);
+        clearTimeout(timeout);
+        fetchApiKeys();
+      }
+    };
+
+    // Try immediately
+    checkAndFetch();
+
+    // If no key yet, keep checking every 200ms for up to 5 seconds
+    const interval = setInterval(checkAndFetch, 200);
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      if (!hasStartedFetch) {
+        setLoading(false);
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [mounted]);
 
   const handleCreateKey = async () => {
     if (!keyName.trim()) {
