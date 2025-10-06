@@ -12,7 +12,7 @@
  * 4. Add loading states, error handling, and pagination as needed
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,7 +91,8 @@ const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
   );
 };
 
-export default function CreditsPage() {
+// Component that uses useSearchParams - must be wrapped in Suspense
+function CreditsPageContent() {
   const searchParams = useSearchParams();
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -338,5 +339,23 @@ export default function CreditsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main export with Suspense boundary
+export default function CreditsPage() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-8">
+        <div className="flex justify-center">
+          <h1 className="text-3xl font-bold">Credits</h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <CreditsPageContent />
+    </Suspense>
   );
 }
