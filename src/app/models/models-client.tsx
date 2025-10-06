@@ -228,14 +228,6 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
             {/* Active Filters */}
             <div className="flex flex-wrap gap-2">
-              {debouncedSearchTerm && (
-                <Badge variant="secondary" className="gap-1">
-                  Search: {debouncedSearchTerm}
-                  <button onClick={() => { setSearchTerm(""); setDebouncedSearchTerm(""); }} className="ml-1 hover:bg-muted rounded-sm">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              )}
               {selectedModalities.map(modality => (
                 <Badge key={modality} variant="secondary" className="gap-1">
                   {modality}
@@ -244,22 +236,6 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                   </button>
                 </Badge>
               ))}
-              {contextLength > 64 && (
-                <Badge variant="secondary" className="gap-1">
-                  Context ≥ {contextLength}K
-                  <button onClick={() => setContextLength(64)} className="ml-1 hover:bg-muted rounded-sm">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              )}
-              {promptPricing < 0.5 && (
-                <Badge variant="secondary" className="gap-1">
-                  Price ≤ ${promptPricing}/M
-                  <button onClick={() => setPromptPricing(0.5)} className="ml-1 hover:bg-muted rounded-sm">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              )}
               {selectedParameters.map(param => (
                 <Badge key={param} variant="secondary" className="gap-1">
                   {param}
