@@ -4,7 +4,12 @@ import Stripe from 'stripe';
 export async function POST(req: NextRequest) {
   try {
     // Check if Stripe is configured
+    console.log('Checking Stripe configuration...');
+    console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
+    console.log('STRIPE_SECRET_KEY starts with sk_:', process.env.STRIPE_SECRET_KEY?.startsWith('sk_'));
+
     if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('STRIPE_SECRET_KEY is not set in environment variables');
       return NextResponse.json(
         { error: 'Stripe is not configured' },
         { status: 503 }
