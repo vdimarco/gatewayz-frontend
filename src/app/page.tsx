@@ -8,6 +8,7 @@ import { ArrowRight, ChevronRight, GitMerge, ShieldCheck, TrendingUp, User, Zap 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { usePrivy } from '@privy-io/react-auth';
 
 interface FeaturedModel {
   name: string;
@@ -179,6 +180,7 @@ export default function Home() {
   const [activeModelIndex, setActiveModelIndex] = useState<number | null>(0);
   const [message, setMessage] = useState('');
   const router = useRouter();
+  const { user, login } = usePrivy();
   const [apiKey, setApiKey] = useState('0000000000000000000000000000000000000000');
   const carouselRef = useRef<HTMLDivElement>(null);
   const [carouselOffset, setCarouselOffset] = useState(0);
@@ -252,6 +254,16 @@ export default function Home() {
 
   const handleCopyApiKey = () => {
     navigator.clipboard.writeText(apiKey);
+  };
+
+  const handleGenerateApiKey = () => {
+    if (user) {
+      // If already logged in, redirect to API keys page
+      router.push('/settings/keys');
+    } else {
+      // If not logged in, trigger login
+      login();
+    }
   };
   
   return (
@@ -417,9 +429,15 @@ export default function Home() {
                >
                  <img src="/material-symbols_key.svg" alt="Copy" width="24" height="24" />
                </button>
-             </div>   
+             </div>
              <span className="flex-1">
-             <Button className="w-full bg-black text-white h-12" variant="outline">Generate API Key</Button>    
+             <Button
+               className="w-full bg-black text-white h-12"
+               variant="outline"
+               onClick={handleGenerateApiKey}
+             >
+               Generate API Key
+             </Button>
              </span>
            </div>
         </section>
