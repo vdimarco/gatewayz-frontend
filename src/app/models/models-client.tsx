@@ -98,27 +98,13 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   };
 
   const filteredModels = useMemo(() => {
-    let sortedModels = [...initialModels];
-
-    sortedModels.sort((a, b) => {
-        switch (sortBy) {
-            case 'tokens-desc':
-                return b.context_length - a.context_length;
-            case 'tokens-asc':
-                return a.context_length - b.context_length;
-            case 'price-desc':
-                return (parseFloat(b.pricing.prompt) + parseFloat(b.pricing.completion)) - (parseFloat(a.pricing.prompt) + parseFloat(a.pricing.completion));
-            case 'price-asc':
-                return (parseFloat(a.pricing.prompt) + parseFloat(a.pricing.completion)) - (parseFloat(b.pricing.prompt) + parseFloat(b.pricing.completion));
-            default:
-                return 0;
-        }
-    });
-
-    return sortedModels.filter((model) => {
+    // First filter, then sort
+    const filtered = initialModels.filter((model) => {
       const searchTermMatch =
         model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (model.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+        (model.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        model.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        model.provider_slug.toLowerCase().includes(searchTerm.toLowerCase());
 
       const modalityMatch = selectedModalities.length === 0 || selectedModalities.every(m =>
         model.architecture?.input_modalities?.some(im => im.toLowerCase() === m.toLowerCase())
@@ -133,6 +119,25 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
       return searchTermMatch && modalityMatch && contextMatch && priceMatch && parameterMatch && providerMatch;
     });
+
+    // Then sort the filtered results
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+        switch (sortBy) {
+            case 'tokens-desc':
+                return b.context_length - a.context_length;
+            case 'tokens-asc':
+                return a.context_length - b.context_length;
+            case 'price-desc':
+                return (parseFloat(b.pricing?.prompt || '0') + parseFloat(b.pricing?.completion || '0')) - (parseFloat(a.pricing?.prompt || '0') + parseFloat(a.pricing?.completion || '0'));
+            case 'price-asc':
+                return (parseFloat(a.pricing?.prompt || '0') + parseFloat(a.pricing?.completion || '0')) - (parseFloat(b.pricing?.prompt || '0') + parseFloat(b.pricing?.completion || '0'));
+            default:
+                return 0;
+        }
+    });
+
+    return sorted;
   }, [initialModels, searchTerm, selectedModalities, contextLength, promptPricing, selectedParameters, selectedProviders, sortBy]);
 
   const allParameters = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.supported_parameters || []))), [initialModels]);
