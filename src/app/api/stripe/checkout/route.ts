@@ -23,14 +23,23 @@ export async function POST(req: NextRequest) {
     // Call backend to create checkout session
     // Backend will create payment record and properly format metadata
     const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.gatewayz.ai';
+
+    // Get the frontend URL - prioritize NEXT_PUBLIC_BASE_URL, fallback to VERCEL_URL
+    const frontendUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                        'https://beta.gatewayz.ai';
+
     const requestBody = {
       amount: amount * 100, // Convert dollars to cents
       currency: 'usd',
       description: `${amount} credits for Gatewayz AI platform`,
       customer_email: userEmail,
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.gatewayz.ai'}/settings/credits?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.gatewayz.ai'}/settings/credits`,
+      success_url: `${frontendUrl}/settings/credits?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}/settings/credits`,
     };
+
+    console.log('[Checkout API] Frontend URL:', frontendUrl);
+    console.log('[Checkout API] Success URL:', requestBody.success_url);
 
     console.log('[Checkout API] Calling backend checkout:', backendUrl);
     console.log('[Checkout API] Request body:', JSON.stringify(requestBody));

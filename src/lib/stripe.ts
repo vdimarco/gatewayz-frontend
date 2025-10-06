@@ -45,11 +45,15 @@ export const redirectToCheckout = async (amount: number, userEmail?: string, use
       throw new Error(errorData.error || 'Failed to create checkout session');
     }
 
-    const { url } = await response.json();
+    const data = await response.json();
+    console.log('Checkout response data:', data);
 
     // Redirect to Stripe Checkout
-    if (url) {
-      window.location.href = url;
+    if (data.url) {
+      console.log('Redirecting to:', data.url);
+      window.location.href = data.url;
+    } else {
+      throw new Error('No checkout URL received from server');
     }
   } catch (error) {
     console.error('Error redirecting to checkout:', error);
