@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     // Call backend to create checkout session
     // Backend will create payment record and properly format metadata
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://beta.gatewayz.ai';
+    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.gatewayz.ai';
     const requestBody = {
       amount: amount * 100, // Convert dollars to cents
       currency: 'usd',
