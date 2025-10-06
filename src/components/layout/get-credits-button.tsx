@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { redirectToCheckout } from '@/lib/stripe';
-import { getUserData } from '@/lib/auth';
+import { getUserData } from '@/lib/api';
 
 export function GetCreditsButton() {
   const [isLoading, setIsLoading] = useState(false);
