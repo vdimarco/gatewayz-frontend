@@ -84,7 +84,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchParams.get('search') || "");
   const [selectedInputFormats, setSelectedInputFormats] = useState<string[]>(searchParams.get('inputFormats')?.split(',').filter(Boolean) || []);
   const [selectedOutputFormats, setSelectedOutputFormats] = useState<string[]>(searchParams.get('outputFormats')?.split(',').filter(Boolean) || []);
-  const [contextLength, setContextLength] = useState(parseInt(searchParams.get('contextLength') || '4'));
+  const [contextLength, setContextLength] = useState(parseInt(searchParams.get('contextLength') || '1024'));
   const [promptPricing, setPromptPricing] = useState(parseFloat(searchParams.get('promptPricing') || '10'));
   const [selectedParameters, setSelectedParameters] = useState<string[]>(searchParams.get('parameters')?.split(',').filter(Boolean) || []);
   const [selectedProviders, setSelectedProviders] = useState<string[]>(searchParams.get('providers')?.split(',').filter(Boolean) || []);
@@ -107,7 +107,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     if (searchTerm) params.set('search', searchTerm);
     if (selectedInputFormats.length > 0) params.set('inputFormats', selectedInputFormats.join(','));
     if (selectedOutputFormats.length > 0) params.set('outputFormats', selectedOutputFormats.join(','));
-    if (contextLength !== 4) params.set('contextLength', contextLength.toString());
+    if (contextLength !== 1024) params.set('contextLength', contextLength.toString());
     if (promptPricing !== 10) params.set('promptPricing', promptPricing.toString());
     if (selectedParameters.length > 0) params.set('parameters', selectedParameters.join(','));
     if (selectedProviders.length > 0) params.set('providers', selectedProviders.join(','));
@@ -143,7 +143,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     setDebouncedSearchTerm("");
     setSelectedInputFormats([]);
     setSelectedOutputFormats([]);
-    setContextLength(4);
+    setContextLength(1024);
     setPromptPricing(10);
     setSelectedParameters([]);
     setSelectedProviders([]);
@@ -153,7 +153,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
   // Check if any filters are active
   const hasActiveFilters = searchTerm || selectedInputFormats.length > 0 || selectedOutputFormats.length > 0 ||
-    contextLength !== 4 || promptPricing !== 10 || selectedParameters.length > 0 ||
+    contextLength !== 1024 || promptPricing !== 10 || selectedParameters.length > 0 ||
     selectedProviders.length > 0 || selectedModelSeries.length > 0 || sortBy !== 'tokens-desc';
 
   // Calculate search matches separately from other filters
@@ -340,10 +340,10 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                   </button>
                 </Badge>
               ))}
-              {contextLength !== 4 && (
+              {contextLength !== 1024 && (
                 <Badge variant="secondary" className="gap-1">
                   Context: ≥{contextLength}K tokens
-                  <button onClick={() => setContextLength(4)} className="ml-1 hover:bg-muted rounded-sm">
+                  <button onClick={() => setContextLength(1024)} className="ml-1 hover:bg-muted rounded-sm">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
