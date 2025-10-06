@@ -31,16 +31,16 @@ import { stringToColor } from '@/lib/utils';
 interface Model {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   context_length: number;
   pricing: {
     prompt: string;
     completion: string;
-  };
+  } | null;
   architecture: {
-    input_modalities: string[];
-  };
-  supported_parameters: string[];
+    input_modalities: string[] | null;
+  } | null;
+  supported_parameters: string[] | null;
   provider_slug: string;
 }
 
