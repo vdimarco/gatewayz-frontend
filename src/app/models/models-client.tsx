@@ -428,6 +428,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                 ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6'
                 : 'flex flex-col gap-4 lg:gap-6 max-w-5xl'
             }
+            key={`models-${filteredModels.length}-${debouncedSearchTerm}`}
           >
             {filteredModels.map((model) => (
               <ModelCard key={model.id} model={model} />
