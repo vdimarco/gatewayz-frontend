@@ -179,8 +179,17 @@ function CreditsPageContent() {
   const handleBuyCredits = async () => {
     setIsLoading(true);
     try {
+      // Get user data to pass to checkout
+      const userData = getUserData();
+
+      if (!userData || !userData.api_key) {
+        alert('Please wait for authentication to complete, then try again.');
+        setIsLoading(false);
+        return;
+      }
+
       // Default to $10 worth of credits - can be customized
-      await redirectToCheckout(10);
+      await redirectToCheckout(10, userData.email, userData.user_id);
     } catch (error) {
       console.error('Checkout error:', error);
       alert('Failed to start checkout. Please try again.');
@@ -239,9 +248,9 @@ function CreditsPageContent() {
             <Button
               className="bg-black text-white h-12 px-20"
               onClick={handleBuyCredits}
-              disabled={isLoading}
+              disabled={isLoading || loadingCredits}
             >
-              {isLoading ? 'Loading...' : 'Buy Credits'}
+              {isLoading ? 'Loading...' : loadingCredits ? 'Authenticating...' : 'Buy Credits'}
             </Button>
           </div>
         </div>  
