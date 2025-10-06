@@ -13,6 +13,7 @@ interface Model {
   } | null;
   architecture: {
     input_modalities: string[] | null;
+    output_modalities: string[] | null;
   } | null;
   supported_parameters: string[] | null;
   provider_slug: string;
@@ -34,5 +35,9 @@ async function getModels(): Promise<Model[]> {
 export default async function ModelsPage() {
   const initialModels = await getModels();
 
-  return <ModelsClient initialModels={initialModels} />;
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+      <ModelsClient initialModels={initialModels} />
+    </Suspense>
+  );
 }

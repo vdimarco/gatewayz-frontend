@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -39,6 +40,7 @@ interface Model {
   } | null;
   architecture: {
     input_modalities: string[] | null;
+    output_modalities: string[] | null;
   } | null;
   supported_parameters: string[] | null;
   provider_slug: string;
@@ -74,15 +76,19 @@ const ModelCard = ({ model }: { model: Model }) => {
 };
 
 export default function ModelsClient({ initialModels }: { initialModels: Model[] }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [layout, setLayout] = useState("list");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [selectedModalities, setSelectedModalities] = useState<string[]>([]);
-  const [contextLength, setContextLength] = useState(4);
-  const [promptPricing, setPromptPricing] = useState(10);
-  const [selectedParameters, setSelectedParameters] = useState<string[]>([]);
-  const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState('tokens-desc');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || "");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchParams.get('search') || "");
+  const [selectedInputFormats, setSelectedInputFormats] = useState<string[]>(searchParams.get('inputFormats')?.split(',').filter(Boolean) || []);
+  const [selectedOutputFormats, setSelectedOutputFormats] = useState<string[]>(searchParams.get('outputFormats')?.split(',').filter(Boolean) || []);
+  const [contextLength, setContextLength] = useState(parseInt(searchParams.get('contextLength') || '4'));
+  const [promptPricing, setPromptPricing] = useState(parseFloat(searchParams.get('promptPricing') || '10'));
+  const [selectedParameters, setSelectedParameters] = useState<string[]>(searchParams.get('parameters')?.split(',').filter(Boolean) || []);
+  const [selectedProviders, setSelectedProviders] = useState<string[]>(searchParams.get('providers')?.split(',').filter(Boolean) || []);
+  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'tokens-desc');
 
   // Debounce search input
   useEffect(() => {
@@ -93,6 +99,23 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Update URL parameters when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (searchTerm) params.set('search', searchTerm);
+    if (selectedInputFormats.length > 0) params.set('inputFormats', selectedInputFormats.join(','));
+    if (selectedOutputFormats.length > 0) params.set('outputFormats', selectedOutputFormats.join(','));
+    if (contextLength !== 4) params.set('contextLength', contextLength.toString());
+    if (promptPricing !== 10) params.set('promptPricing', promptPricing.toString());
+    if (selectedParameters.length > 0) params.set('parameters', selectedParameters.join(','));
+    if (selectedProviders.length > 0) params.set('providers', selectedProviders.join(','));
+    if (sortBy !== 'tokens-desc') params.set('sortBy', sortBy);
+
+    const queryString = params.toString();
+    router.replace(queryString ? `?${queryString}` : '/models', { scroll: false });
+  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, sortBy, router]);
+
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (value: string, checked: boolean) => {
     setter(prev => checked ? [...prev, value] : prev.filter(v => v !== value));
   };
@@ -100,7 +123,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const resetFilters = () => {
     setSearchTerm("");
     setDebouncedSearchTerm("");
-    setSelectedModalities([]);
+    setSelectedInputFormats([]);
+    setSelectedOutputFormats([]);
     setContextLength(4);
     setPromptPricing(10);
     setSelectedParameters([]);
@@ -124,8 +148,11 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const filteredModels = useMemo(() => {
     // First filter, then sort
     const filtered = searchFilteredModels.filter((model) => {
-      const modalityMatch = selectedModalities.length === 0 || selectedModalities.every(m =>
+      const inputFormatMatch = selectedInputFormats.length === 0 || selectedInputFormats.every(m =>
         model.architecture?.input_modalities?.some(im => im.toLowerCase() === m.toLowerCase())
+      );
+      const outputFormatMatch = selectedOutputFormats.length === 0 || selectedOutputFormats.every(m =>
+        model.architecture?.output_modalities?.some(om => om.toLowerCase() === m.toLowerCase())
       );
       // Include models with context_length of 0 (pending metadata sync)
       const contextMatch = model.context_length === 0 || model.context_length >= contextLength * 1000;
@@ -135,7 +162,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
       const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => (model.supported_parameters || []).includes(p));
       const providerMatch = selectedProviders.length === 0 || selectedProviders.includes(model.provider_slug);
 
-      return modalityMatch && contextMatch && priceMatch && parameterMatch && providerMatch;
+      return inputFormatMatch && outputFormatMatch && contextMatch && priceMatch && parameterMatch && providerMatch;
     });
 
     // Then sort the filtered results
@@ -156,8 +183,10 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     });
 
     return sorted;
-  }, [searchFilteredModels, selectedModalities, contextLength, promptPricing, selectedParameters, selectedProviders, sortBy]);
+  }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, sortBy]);
 
+  const allInputFormats = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.architecture?.input_modalities || []))).filter(Boolean), [initialModels]);
+  const allOutputFormats = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.architecture?.output_modalities || []))).filter(Boolean), [initialModels]);
   const allParameters = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.supported_parameters || []))), [initialModels]);
   const allProviders = useMemo(() => Array.from(new Set(initialModels.map(m => m.provider_slug).filter(Boolean))), [initialModels]);
 
@@ -172,20 +201,48 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
         >
           <SidebarContent className="p-4">
             <SidebarGroup>
-              <SidebarGroupLabel>Input Modalities</SidebarGroupLabel>
+              <SidebarGroupLabel>Input Formats</SidebarGroupLabel>
               <div className="flex flex-col gap-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="text-modal" checked={selectedModalities.includes('Text')} onCheckedChange={(c) => handleCheckboxChange(setSelectedModalities)('Text', !!c)} />
-                  <Label htmlFor="text-modal" className="flex items-center gap-2 font-normal"><BookText className="w-4 h-4"/>Text</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="image-modal" checked={selectedModalities.includes('Image')} onCheckedChange={(c) => handleCheckboxChange(setSelectedModalities)('Image', !!c)} />
-                  <Label htmlFor="image-modal" className="flex items-center gap-2 font-normal"><ImageIcon className="w-4 h-4"/>Image</Label>
-                </div>
-                  <div className="flex items-center space-x-2">
-                  <Checkbox id="file-modal" checked={selectedModalities.includes('File')} onCheckedChange={(c) => handleCheckboxChange(setSelectedModalities)('File', !!c)} />
-                  <Label htmlFor="file-modal" className="flex items-center gap-2 font-normal"><FileText className="w-4 h-4"/>File</Label>
-                </div>
+                {allInputFormats.map((format) => {
+                  const icon = format.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
+                               format.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
+                               format.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> : null;
+                  return (
+                    <div key={format} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`input-${format.toLowerCase()}`}
+                        checked={selectedInputFormats.includes(format)}
+                        onCheckedChange={(c) => handleCheckboxChange(setSelectedInputFormats)(format, !!c)}
+                      />
+                      <Label htmlFor={`input-${format.toLowerCase()}`} className="flex items-center gap-2 font-normal capitalize">
+                        {icon}{format}
+                      </Label>
+                    </div>
+                  );
+                })}
+              </div>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Output Formats</SidebarGroupLabel>
+              <div className="flex flex-col gap-2">
+                {allOutputFormats.map((format) => {
+                  const icon = format.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
+                               format.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
+                               format.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> : null;
+                  return (
+                    <div key={format} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`output-${format.toLowerCase()}`}
+                        checked={selectedOutputFormats.includes(format)}
+                        onCheckedChange={(c) => handleCheckboxChange(setSelectedOutputFormats)(format, !!c)}
+                      />
+                      <Label htmlFor={`output-${format.toLowerCase()}`} className="flex items-center gap-2 font-normal capitalize">
+                        {icon}{format}
+                      </Label>
+                    </div>
+                  );
+                })}
               </div>
             </SidebarGroup>
 
@@ -229,10 +286,18 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
             {/* Active Filters */}
             <div className="flex flex-wrap gap-2">
-              {selectedModalities.map(modality => (
-                <Badge key={modality} variant="secondary" className="gap-1">
-                  {modality}
-                  <button onClick={() => setSelectedModalities(prev => prev.filter(m => m !== modality))} className="ml-1 hover:bg-muted rounded-sm">
+              {selectedInputFormats.map(format => (
+                <Badge key={`input-${format}`} variant="secondary" className="gap-1">
+                  Input: {format}
+                  <button onClick={() => setSelectedInputFormats(prev => prev.filter(f => f !== format))} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {selectedOutputFormats.map(format => (
+                <Badge key={`output-${format}`} variant="secondary" className="gap-1">
+                  Output: {format}
+                  <button onClick={() => setSelectedOutputFormats(prev => prev.filter(f => f !== format))} className="ml-1 hover:bg-muted rounded-sm">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
