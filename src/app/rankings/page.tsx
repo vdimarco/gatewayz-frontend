@@ -591,7 +591,7 @@ export default function RankingsPage() {
                   </div>
                   <div className="space-y-2 flex ">
                     <div className='flex-1'>
-                      <p className="text-2xl font-bold">{app.tokens}</p>
+                      <p className="text-2xl font-bold">{app.tokens.replace(/([0-9.]+)([A-Z])/g, '$1 $2')}</p>
                       <p className="text-xs text-gray-600">Tokens Generated</p>
                     </div>
                     <div>
