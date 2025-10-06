@@ -23,23 +23,26 @@ interface RankingModel {
   time_period: string;
   scraped_at: string;
   logoUrl?: string;
+  category?: string;
+  provider?: string;
+  value?: string;
 }
 
 // Mock data for the rankings - 60 diverse models for testing
 const topModels = [
   // Top tier models
-  { rank: 1, change: 4, model: "GPT-4o", org: "OpenAI", category: "Multimodal", provider: "OpenAI", tokens: "2.1B", value: "$1.2B", changePercent: "+15.3%" },
-  { rank: 2, change: 1, model: "Claude-3.5-Sonnet", org: "Anthropic", category: "Language", provider: "Anthropic", tokens: "1.8B", value: "$980M", changePercent: "+22.7%" },
-  { rank: 3, change: 2, model: "Gemini-2.0-Pro", org: "Google", category: "Multimodal", provider: "Google", tokens: "1.6B", value: "$850M", changePercent: "+18.9%" },
-  { rank: 4, change: 3, model: "GPT-4-Turbo", org: "OpenAI", category: "Language", provider: "OpenAI", tokens: "1.4B", value: "$720M", changePercent: "+12.4%" },
-  { rank: 5, change: 1, model: "Claude-3-Opus", org: "Anthropic", category: "Language", provider: "Anthropic", tokens: "1.2B", value: "$650M", changePercent: "+8.7%" },
+  { rank: 1, change: 4, model: "GPT-4o", org: "OpenAI", category: "Multimodal", provider: "OpenRouter", tokens: "2.1B", value: "$1.2B", changePercent: "+15.3%" },
+  { rank: 2, change: 1, model: "Claude-3.5-Sonnet", org: "Anthropic", category: "Language", provider: "OpenRouter", tokens: "1.8B", value: "$980M", changePercent: "+22.7%" },
+  { rank: 3, change: 2, model: "Gemini-2.0-Pro", org: "Google", category: "Multimodal", provider: "OpenRouter", tokens: "1.6B", value: "$850M", changePercent: "+18.9%" },
+  { rank: 4, change: 3, model: "GPT-4-Turbo", org: "OpenAI", category: "Language", provider: "OpenRouter", tokens: "1.4B", value: "$720M", changePercent: "+12.4%" },
+  { rank: 5, change: 1, model: "Claude-3-Opus", org: "Anthropic", category: "Language", provider: "OpenRouter", tokens: "1.2B", value: "$650M", changePercent: "+8.7%" },
   
   // High performing models
-  { rank: 6, change: 2, model: "Gemini-1.5-Pro", org: "Google", category: "Multimodal", provider: "Google", tokens: "980M", value: "$520M", changePercent: "+25.1%" },
-  { rank: 7, change: 4, model: "Llama-3.1-405B", org: "Meta", category: "Language", provider: "Meta", tokens: "850M", value: "$480M", changePercent: "+31.2%" },
-  { rank: 8, change: 1, model: "Mistral-Large", org: "Mistral AI", category: "Language", provider: "Mistral AI", tokens: "720M", value: "$420M", changePercent: "+19.8%" },
-  { rank: 9, change: 3, model: "Qwen-2.5-72B", org: "Alibaba", category: "Language", provider: "Alibaba", tokens: "680M", value: "$380M", changePercent: "+27.5%" },
-  { rank: 10, change: 2, model: "DeepSeek-V3", org: "DeepSeek", category: "Programming", provider: "DeepSeek", tokens: "650M", value: "$350M", changePercent: "+33.4%" },
+  { rank: 6, change: 2, model: "Gemini-1.5-Pro", org: "Google", category: "Multimodal", provider: "OpenRouter", tokens: "980M", value: "$520M", changePercent: "+25.1%" },
+  { rank: 7, change: 4, model: "Llama-3.1-405B", org: "Meta", category: "Language", provider: "OpenRouter", tokens: "850M", value: "$480M", changePercent: "+31.2%" },
+  { rank: 8, change: 1, model: "Mistral-Large", org: "Mistral AI", category: "Language", provider: "OpenRouter", tokens: "720M", value: "$420M", changePercent: "+19.8%" },
+  { rank: 9, change: 3, model: "Qwen-2.5-72B", org: "Alibaba", category: "Language", provider: "OpenRouter", tokens: "680M", value: "$380M", changePercent: "+27.5%" },
+  { rank: 10, change: 2, model: "DeepSeek-V3", org: "DeepSeek", category: "Programming", provider: "OpenRouter", tokens: "650M", value: "$350M", changePercent: "+33.4%" },
   
   // Mid-tier models
   { rank: 11, change: 4, model: "GPT-4o-Mini", org: "OpenAI", category: "Language", provider: "OpenAI", tokens: "580M", value: "$320M", changePercent: "+16.9%" },
@@ -129,7 +132,32 @@ export default function RankingsPage() {
         const response = await fetch(url);
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          // API endpoint not ready, use mock data
+          console.warn('Rankings API not available, using mock data');
+
+          // Convert mock data to RankingModel format
+          const mockRankingModels: RankingModel[] = topModels.map((model, index) => ({
+            id: index + 1,
+            rank: model.rank,
+            model_name: model.model,
+            author: model.org,
+            tokens: model.tokens,
+            trend_percentage: model.changePercent,
+            trend_direction: 'up' as const,
+            trend_icon: '↑',
+            trend_color: 'green',
+            model_url: '#',
+            author_url: '#',
+            time_period: 'Top this month',
+            scraped_at: new Date().toISOString(),
+            category: model.category,
+            provider: model.provider,
+            value: model.value,
+          }));
+
+          setRankingModels(mockRankingModels);
+          setLoading(false);
+          return;
         }
 
         const data = await response.json();
@@ -139,6 +167,28 @@ export default function RankingsPage() {
         }
       } catch (error) {
         console.error('Failed to fetch ranking models:', error);
+
+        // Use mock data as fallback
+        const mockRankingModels: RankingModel[] = topModels.map((model, index) => ({
+          id: index + 1,
+          rank: model.rank,
+          model_name: model.model,
+          author: model.org,
+          tokens: model.tokens,
+          trend_percentage: model.changePercent,
+          trend_direction: 'up' as const,
+          trend_icon: '↑',
+          trend_color: 'green',
+          model_url: '#',
+          author_url: '#',
+          time_period: 'Top this month',
+          scraped_at: new Date().toISOString(),
+          category: model.category,
+          provider: model.provider,
+          value: model.value,
+        }));
+
+        setRankingModels(mockRankingModels);
       } finally {
         setLoading(false);
       }
@@ -393,12 +443,12 @@ export default function RankingsPage() {
 
                     {/* Category - hidden on mobile, 3 columns on desktop */}
                     <div className="hidden lg:flex lg:col-span-3 items-center">
-                      <span className="text-xs">Language</span>
+                      <span className="text-xs">{model.category || 'Language'}</span>
                     </div>
 
                     {/* Top Provider - hidden on mobile, 3 columns on desktop */}
                     <div className="hidden lg:flex lg:col-span-3 items-center">
-                      <span className="text-xs">OpenRouter</span>
+                      <span className="text-xs">{model.provider || 'OpenRouter'}</span>
                     </div>
 
                     {/* Tokens Generated - 3 columns on mobile and desktop */}
@@ -408,7 +458,7 @@ export default function RankingsPage() {
 
                     {/* Value - hidden on mobile, 2 columns on desktop */}
                     <div className="hidden lg:flex lg:col-span-2 text-right items-center justify-end">
-                      <span className="text-xs font-medium">-</span>
+                      <span className="text-xs font-medium">{model.value || '-'}</span>
                     </div>
 
                     {/* Change - hidden on mobile, 2 columns on desktop */}
