@@ -26,6 +26,86 @@ import { redirectToCheckout } from '@/lib/stripe';
 import { getUserData, makeAuthenticatedRequest } from '@/lib/api';
 import { API_BASE_URL } from '@/lib/config';
 
+// Confetti/Emoji explosion component
+const EmojiExplosion = ({ onComplete }: { onComplete: () => void }) => {
+  const emojis = ['🎉', '💰', '✨', '🚀', '💎', '⭐', '🔥', '💸', '🎊', '🌟'];
+  const [particles, setParticles] = useState<Array<{
+    id: number;
+    emoji: string;
+    x: number;
+    y: number;
+    rotation: number;
+    velocity: { x: number; y: number };
+    rotationSpeed: number;
+  }>>([]);
+
+  useEffect(() => {
+    // Create 50 emoji particles
+    const newParticles = Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      emoji: emojis[Math.floor(Math.random() * emojis.length)],
+      x: 50, // Start from center
+      y: 50,
+      rotation: Math.random() * 360,
+      velocity: {
+        x: (Math.random() - 0.5) * 20,
+        y: (Math.random() - 0.5) * 20 - 10, // Bias upward
+      },
+      rotationSpeed: (Math.random() - 0.5) * 10,
+    }));
+
+    setParticles(newParticles);
+
+    // Clean up after animation
+    const timer = setTimeout(() => {
+      onComplete();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {particles.map((particle) => (
+        <div
+          key={particle.id}
+          className="absolute text-4xl animate-emoji-explosion"
+          style={{
+            left: `${particle.x}%`,
+            top: `${particle.y}%`,
+            transform: `translate(-50%, -50%) rotate(${particle.rotation}deg)`,
+            animation: `emojiFloat 3s ease-out forwards`,
+            '--tx': `${particle.velocity.x}vw`,
+            '--ty': `${particle.velocity.y}vh`,
+            '--rotation': `${particle.rotationSpeed * 360}deg`,
+          } as React.CSSProperties}
+        >
+          {particle.emoji}
+        </div>
+      ))}
+      <style jsx>{`
+        @keyframes emojiFloat {
+          0% {
+            opacity: 1;
+            transform: translate(-50%, -50%) rotate(0deg) scale(0);
+          }
+          10% {
+            opacity: 1;
+            transform: translate(-50%, -50%) rotate(0deg) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(
+              calc(-50% + var(--tx)),
+              calc(-50% + var(--ty))
+            ) rotate(var(--rotation)) scale(0.5);
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 // Transaction data type
 interface Transaction {
   id: number;
@@ -112,13 +192,16 @@ function CreditsPageContent() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showEmojiExplosion, setShowEmojiExplosion] = useState(false);
 
   // Check for success message from Stripe redirect
   useEffect(() => {
     const sessionId = searchParams?.get('session_id');
     if (sessionId) {
       setShowSuccessMessage(true);
-      // Auto-hide after 10 seconds
+      setShowEmojiExplosion(true); // Trigger emoji explosion!
+
+      // Auto-hide success message after 10 seconds
       setTimeout(() => setShowSuccessMessage(false), 10000);
 
       // Clean up URL
@@ -209,6 +292,11 @@ function CreditsPageContent() {
 
   return (
     <div className="space-y-8">
+      {/* Emoji explosion animation */}
+      {showEmojiExplosion && (
+        <EmojiExplosion onComplete={() => setShowEmojiExplosion(false)} />
+      )}
+
       <div className="flex justify-center ">
         <h1 className="text-3xl font-bold">Credits</h1>
         {/* <Button variant="ghost" size="icon" className="text-muted-foreground">
@@ -219,10 +307,10 @@ function CreditsPageContent() {
       {/* Success message after Stripe payment */}
       {showSuccessMessage && (
         <div className="mx-auto max-w-2xl">
-          <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+          <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg animate-in slide-in-from-top duration-500">
             <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
             <div className="flex-1">
-              <p className="font-medium text-green-900 dark:text-green-100">Payment successful!</p>
+              <p className="font-medium text-green-900 dark:text-green-100">🎉 Payment successful!</p>
               <p className="text-sm text-green-700 dark:text-green-300">Your credits have been added to your account.</p>
             </div>
             <button
