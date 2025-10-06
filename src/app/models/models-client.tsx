@@ -101,10 +101,10 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     // First filter, then sort
     const filtered = initialModels.filter((model) => {
       const searchTermMatch =
-        model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (model.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (model.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        model.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        model.provider_slug.toLowerCase().includes(searchTerm.toLowerCase());
+        (model.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (model.provider_slug || '').toLowerCase().includes(searchTerm.toLowerCase());
 
       const modalityMatch = selectedModalities.length === 0 || selectedModalities.every(m =>
         model.architecture?.input_modalities?.some(im => im.toLowerCase() === m.toLowerCase())
