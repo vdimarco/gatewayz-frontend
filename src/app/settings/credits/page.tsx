@@ -40,18 +40,18 @@ const EmojiExplosion = ({ onComplete }: { onComplete: () => void }) => {
   }>>([]);
 
   useEffect(() => {
-    // Create 50 emoji particles
-    const newParticles = Array.from({ length: 50 }, (_, i) => ({
+    // Create 100 emoji particles for more coverage
+    const newParticles = Array.from({ length: 100 }, (_, i) => ({
       id: i,
       emoji: emojis[Math.floor(Math.random() * emojis.length)],
       x: 50, // Start from center
       y: 50,
       rotation: Math.random() * 360,
       velocity: {
-        x: (Math.random() - 0.5) * 20,
-        y: (Math.random() - 0.5) * 20 - 10, // Bias upward
+        x: (Math.random() - 0.5) * 100, // Much larger spread
+        y: (Math.random() - 0.5) * 100, // Much larger spread
       },
-      rotationSpeed: (Math.random() - 0.5) * 10,
+      rotationSpeed: (Math.random() - 0.5) * 15,
     }));
 
     setParticles(newParticles);
@@ -59,7 +59,7 @@ const EmojiExplosion = ({ onComplete }: { onComplete: () => void }) => {
     // Clean up after animation
     const timer = setTimeout(() => {
       onComplete();
-    }, 3000);
+    }, 4000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -69,12 +69,12 @@ const EmojiExplosion = ({ onComplete }: { onComplete: () => void }) => {
       {particles.map((particle) => (
         <div
           key={particle.id}
-          className="absolute text-4xl animate-emoji-explosion"
+          className="absolute text-8xl animate-emoji-explosion"
           style={{
             left: `${particle.x}%`,
             top: `${particle.y}%`,
             transform: `translate(-50%, -50%) rotate(${particle.rotation}deg)`,
-            animation: `emojiFloat 3s ease-out forwards`,
+            animation: `emojiFloat 4s ease-out forwards`,
             '--tx': `${particle.velocity.x}vw`,
             '--ty': `${particle.velocity.y}vh`,
             '--rotation': `${particle.rotationSpeed * 360}deg`,
@@ -89,16 +89,16 @@ const EmojiExplosion = ({ onComplete }: { onComplete: () => void }) => {
             opacity: 1;
             transform: translate(-50%, -50%) rotate(0deg) scale(0);
           }
-          10% {
+          5% {
             opacity: 1;
-            transform: translate(-50%, -50%) rotate(0deg) scale(1);
+            transform: translate(-50%, -50%) rotate(0deg) scale(2);
           }
           100% {
             opacity: 0;
             transform: translate(
               calc(-50% + var(--tx)),
               calc(-50% + var(--ty))
-            ) rotate(var(--rotation)) scale(0.5);
+            ) rotate(var(--rotation)) scale(1.5);
           }
         }
       `}</style>
