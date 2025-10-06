@@ -172,12 +172,6 @@ export default function ApiKeysPage() {
   }, []);
 
   const fetchApiKeys = async () => {
-    const userApiKey = getApiKey();
-    if (!userApiKey) {
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       const response = await makeAuthenticatedRequest(
@@ -312,7 +306,7 @@ export default function ApiKeysPage() {
     }
   };
 
-  // Prevent hydration mismatch by only checking auth on client
+  // Prevent hydration mismatch by only checking mounted state on client
   if (!mounted) {
     return (
       <div className="space-y-8">
@@ -321,21 +315,6 @@ export default function ApiKeysPage() {
         </div>
         <div className="text-center py-8">
           <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const userApiKey = getApiKey();
-
-  if (!userApiKey) {
-    return (
-      <div className="space-y-8">
-        <div className="flex justify-center">
-          <h1 className="text-3xl font-bold">API Keys</h1>
-        </div>
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Please sign in to manage your API keys.</p>
         </div>
       </div>
     );
