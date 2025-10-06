@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { redirectToCheckout } from '@/lib/stripe';
+import { getUserData } from '@/lib/api';
 
 export function GetCreditsButton() {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,8 +11,11 @@ export function GetCreditsButton() {
     e.preventDefault();
     setIsLoading(true);
     try {
+      // Get user data for checkout
+      const userData = getUserData();
+
       // Default to $10 worth of credits
-      await redirectToCheckout(10);
+      await redirectToCheckout(10, userData?.email, userData?.user_id);
     } catch (error) {
       console.error('Checkout error:', error);
       alert('Failed to start checkout. Please try again.');

@@ -172,8 +172,9 @@ export default function ApiKeysPage() {
   }, []);
 
   const fetchApiKeys = async () => {
-    const userApiKey = getApiKey();
-    if (!userApiKey) {
+    // Check if user is authenticated first
+    const apiKey = getApiKey();
+    if (!apiKey) {
       setLoading(false);
       return;
     }
@@ -209,8 +210,42 @@ export default function ApiKeysPage() {
   };
 
   useEffect(() => {
-    fetchApiKeys();
-  }, []);
+    if (!mounted) return;
+
+    let hasStartedFetch = false;
+    let interval: NodeJS.Timeout | null = null;
+    let timeout: NodeJS.Timeout | null = null;
+
+    // Check for API key periodically until authentication completes
+    const checkAndFetch = () => {
+      if (hasStartedFetch) return;
+
+      const apiKey = getApiKey();
+      if (apiKey) {
+        hasStartedFetch = true;
+        if (interval) clearInterval(interval);
+        if (timeout) clearTimeout(timeout);
+        fetchApiKeys();
+      }
+    };
+
+    // Try immediately
+    checkAndFetch();
+
+    // If no key yet, keep checking every 200ms for up to 5 seconds
+    interval = setInterval(checkAndFetch, 200);
+    timeout = setTimeout(() => {
+      if (interval) clearInterval(interval);
+      if (!hasStartedFetch) {
+        setLoading(false);
+      }
+    }, 5000);
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [mounted]);
 
   const handleCreateKey = async () => {
     if (!keyName.trim()) {
@@ -312,7 +347,7 @@ export default function ApiKeysPage() {
     }
   };
 
-  // Prevent hydration mismatch by only checking auth on client
+  // Prevent hydration mismatch by only checking mounted state on client
   if (!mounted) {
     return (
       <div className="space-y-8">
@@ -321,21 +356,6 @@ export default function ApiKeysPage() {
         </div>
         <div className="text-center py-8">
           <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const userApiKey = getApiKey();
-
-  if (!userApiKey) {
-    return (
-      <div className="space-y-8">
-        <div className="flex justify-center">
-          <h1 className="text-3xl font-bold">API Keys</h1>
-        </div>
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Please sign in to manage your API keys.</p>
         </div>
       </div>
     );

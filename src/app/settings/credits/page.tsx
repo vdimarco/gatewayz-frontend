@@ -12,14 +12,15 @@
  * 4. Add loading states, error handling, and pagination as needed
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Info, RefreshCw, ArrowUpRight, ChevronLeft, ChevronRight, CreditCard, MoreHorizontal } from "lucide-react";
+import { Info, RefreshCw, ArrowUpRight, ChevronLeft, ChevronRight, CreditCard, MoreHorizontal, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { redirectToCheckout } from '@/lib/stripe';
 import { getUserData, makeAuthenticatedRequest } from '@/lib/api';
@@ -33,6 +34,7 @@ interface Transaction {
   created_at: string;
   description?: string;
   status?: string;
+  balance?: number; // Running balance after this transaction
 }
 
 // Reusable TransactionRow component
@@ -52,29 +54,36 @@ const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
   };
 
   const getTransactionType = (type: string) => {
-    if (type.toLowerCase().includes('purchase') || type.toLowerCase().includes('deposit')) {
-      return 'Purchase';
-    } else if (type.toLowerCase().includes('usage') || type.toLowerCase().includes('spend')) {
-      return 'Usage';
-    } else if (type.toLowerCase().includes('refund')) {
-      return 'Refund';
-    }
-    return type;
+    const typeMap: { [key: string]: string } = {
+      'trial': 'Trial Credits',
+      'purchase': 'Purchase',
+      'admin_credit': 'Admin Credit',
+      'admin_debit': 'Admin Debit',
+      'api_usage': 'API Usage',
+      'refund': 'Refund',
+      'bonus': 'Bonus',
+      'transfer': 'Transfer'
+    };
+
+    return typeMap[type.toLowerCase()] || type.charAt(0).toUpperCase() + type.slice(1);
   };
 
   return (
     <div className="px-4 py-3 hover:bg-gray-50">
-      <div className="grid grid-cols-4 gap-4 items-center text-sm">
+      <div className="grid grid-cols-5 gap-4 items-center text-sm">
         <div className="font-medium">
           {getTransactionType(transaction.transaction_type)}
           {transaction.description && (
             <span className="text-muted-foreground ml-2">- {transaction.description}</span>
           )}
         </div>
-        <div className="font-medium">
+        <div className={`font-medium ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
           {transaction.amount >= 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
         </div>
         <div className="font-medium">{formatDate(transaction.created_at)}</div>
+        <div className="font-medium text-right">
+          {transaction.balance !== undefined ? `$${transaction.balance.toFixed(2)}` : '-'}
+        </div>
         <div className="flex justify-end">
           <Button
             variant="ghost"
@@ -90,7 +99,9 @@ const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
   );
 };
 
-export default function CreditsPage() {
+// Component that uses useSearchParams - must be wrapped in Suspense
+function CreditsPageContent() {
+  const searchParams = useSearchParams();
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -100,6 +111,20 @@ export default function CreditsPage() {
   const [loadingCredits, setLoadingCredits] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  // Check for success message from Stripe redirect
+  useEffect(() => {
+    const sessionId = searchParams?.get('session_id');
+    if (sessionId) {
+      setShowSuccessMessage(true);
+      // Auto-hide after 10 seconds
+      setTimeout(() => setShowSuccessMessage(false), 10000);
+
+      // Clean up URL
+      window.history.replaceState({}, '', '/settings/credits');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -131,15 +156,23 @@ export default function CreditsPage() {
         setLoadingCredits(false);
       }
 
-      // Fetch transactions
+      // Fetch transactions (all credit transactions - trial, purchases, usage, admin, etc.)
       try {
-        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/transactions`);
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/credit-transactions?limit=50`);
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data.transactions)) {
-            setTransactions(data.transactions.slice(0, 10));
-          } else if (Array.isArray(data)) {
-            setTransactions(data.slice(0, 10));
+            // Transactions already include balance_after from the database
+            const mappedTransactions = data.transactions.map((txn: any) => ({
+              id: txn.id,
+              amount: txn.amount,
+              transaction_type: txn.transaction_type,
+              created_at: txn.created_at,
+              description: txn.description,
+              balance: txn.balance_after // Use the balance from the database
+            }));
+
+            setTransactions(mappedTransactions);
           }
         }
       } catch (error) {
@@ -155,8 +188,17 @@ export default function CreditsPage() {
   const handleBuyCredits = async () => {
     setIsLoading(true);
     try {
+      // Get user data to pass to checkout
+      const userData = getUserData();
+
+      if (!userData || !userData.api_key) {
+        alert('Please wait for authentication to complete, then try again.');
+        setIsLoading(false);
+        return;
+      }
+
       // Default to $10 worth of credits - can be customized
-      await redirectToCheckout(10);
+      await redirectToCheckout(10, userData.email, userData.user_id);
     } catch (error) {
       console.error('Checkout error:', error);
       alert('Failed to start checkout. Please try again.');
@@ -173,7 +215,26 @@ export default function CreditsPage() {
           <RefreshCw className="h-5 w-5" />
         </Button> */}
       </div>
-      
+
+      {/* Success message after Stripe payment */}
+      {showSuccessMessage && (
+        <div className="mx-auto max-w-2xl">
+          <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium text-green-900 dark:text-green-100">Payment successful!</p>
+              <p className="text-sm text-green-700 dark:text-green-300">Your credits have been added to your account.</p>
+            </div>
+            <button
+              onClick={() => setShowSuccessMessage(false)}
+              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold mr-16">Available Balance</h2>
@@ -196,9 +257,9 @@ export default function CreditsPage() {
             <Button
               className="bg-black text-white h-12 px-20"
               onClick={handleBuyCredits}
-              disabled={isLoading}
+              disabled={isLoading || loadingCredits}
             >
-              {isLoading ? 'Loading...' : 'Buy Credits'}
+              {isLoading ? 'Loading...' : loadingCredits ? 'Authenticating...' : 'Buy Credits'}
             </Button>
           </div>
         </div>  
@@ -278,10 +339,11 @@ export default function CreditsPage() {
       <div className="space-y-4">
         <div className="border border-gray-200 overflow-hidden border-x-0">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <div className="grid grid-cols-4 gap-4 text-sm font-medium">
+            <div className="grid grid-cols-5 gap-4 text-sm font-medium">
               <div>Recent Transactions</div>
               <div>Amount</div>
               <div>Date</div>
+              <div className="text-right">Balance After</div>
               <div></div>
             </div>
           </div>
@@ -303,5 +365,23 @@ export default function CreditsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main export with Suspense boundary
+export default function CreditsPage() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-8">
+        <div className="flex justify-center">
+          <h1 className="text-3xl font-bold">Credits</h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <CreditsPageContent />
+    </Suspense>
   );
 }

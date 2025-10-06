@@ -345,23 +345,12 @@ export default function Home() {
           <div className="mb-8 md:mb-12">
             <h2 className="text-xl sm:text-2xl font-bold text-center">Connected TO 1000+ AI Models</h2>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-8 items-center justify-items-center">
-            <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="80%" height="80%" />
-            <img src="/Google_Logo-black.svg" alt="Google" width="70%" height="70%" />
-            <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" width="80%" height="80%" />
-            <img src="/Meta_Logo-black.svg" alt="Meta" width="80%" height="80%" />
-            <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="80%" height="80%" />
-            <img src="/Google_Logo-black.svg" alt="Google" width="80%" height="80%" />
-            <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" width="70%" height="70%" />
-            <img src="/Meta_Logo-black.svg" alt="Meta" width="80%" height="80%" />
-            <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="80%" height="80%" />
-            <img src="/Google_Logo-black.svg" alt="Google" width="80%" height="80%" />
-            <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" width="80%" height="80%" />
-            <img src="/Meta_Logo-black.svg" alt="Meta" width="70%" height="70%" />
-            <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="80%" height="80%" />
-            <img src="/Google_Logo-black.svg" alt="Google" width="80%" height="80%" />
-            <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" width="80%" height="80%" />
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 md:gap-12 items-center justify-items-center max-w-4xl mx-auto">
+            <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-full max-w-[140px]" />
+            <img src="/Google_Logo-black.svg" alt="Google" className="w-full max-w-[140px]" />
+            <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" className="w-full max-w-[140px]" />
+            <img src="/Meta_Logo-black.svg" alt="Meta" className="w-full max-w-[140px]" />
+          </div>
         </section>
 
         {/* How It Works Section */}
