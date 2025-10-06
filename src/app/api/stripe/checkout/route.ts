@@ -1,26 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
 
 export async function POST(req: NextRequest) {
   try {
-    // Check if Stripe is configured
-    console.log('Checking Stripe configuration...');
-    console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
-    console.log('STRIPE_SECRET_KEY starts with sk_:', process.env.STRIPE_SECRET_KEY?.startsWith('sk_'));
-
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('STRIPE_SECRET_KEY is not set in environment variables');
-      return NextResponse.json(
-        { error: 'Stripe is not configured' },
-        { status: 503 }
-      );
-    }
-
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2025-01-27.acacia',
-    });
-
-    const { amount, userEmail, userId } = await req.json();
+    const { amount, userEmail, userId, apiKey } = await req.json();
 
     // Validate amount
     if (!amount || amount < 1) {
@@ -30,34 +12,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Gatewayz Credits',
-              description: `${amount} credits for Gatewayz AI platform`,
-            },
-            unit_amount: amount * 100, // Convert dollars to cents
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      customer_email: userEmail, // Pre-fill email if provided
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/settings/credits?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/settings/credits`,
-      metadata: {
-        credits: amount.toString(),
-        userId: userId?.toString() || '',
-        userEmail: userEmail || '',
+    // Validate API key
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'API key is required' },
+        { status: 401 }
+      );
+    }
+
+    // Call backend to create checkout session
+    // Backend will create payment record and properly format metadata
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://beta.gatewayz.ai';
+    const response = await fetch(`${backendUrl}/api/stripe/checkout-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
       },
+      body: JSON.stringify({
+        amount: amount * 100, // Convert dollars to cents
+        currency: 'usd',
+        description: `${amount} credits for Gatewayz AI platform`,
+        customer_email: userEmail,
+        success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/settings/credits?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/settings/credits`,
+      }),
     });
 
-    return NextResponse.json({ sessionId: session.id, url: session.url });
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Backend checkout error:', error);
+      return NextResponse.json(
+        { error: error.detail || 'Failed to create checkout session' },
+        { status: response.status }
+      );
+    }
+
+    const session = await response.json();
+    return NextResponse.json({ sessionId: session.session_id, url: session.url });
+
   } catch (error) {
     console.error('Stripe checkout error:', error);
     return NextResponse.json(

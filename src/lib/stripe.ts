@@ -1,4 +1,5 @@
 import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { getApiKey } from './api';
 
 let stripePromise: Promise<Stripe | null>;
 
@@ -11,6 +12,13 @@ export const getStripe = () => {
 
 export const redirectToCheckout = async (amount: number, userEmail?: string, userId?: number) => {
   try {
+    // Get API key from localStorage
+    const apiKey = getApiKey();
+
+    if (!apiKey) {
+      throw new Error('You must be logged in to purchase credits');
+    }
+
     // Create checkout session
     const response = await fetch('/api/stripe/checkout', {
       method: 'POST',
@@ -21,6 +29,7 @@ export const redirectToCheckout = async (amount: number, userEmail?: string, use
         amount,
         userEmail,
         userId,
+        apiKey, // Pass API key to the route handler
       }),
     });
 

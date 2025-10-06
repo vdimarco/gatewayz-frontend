@@ -148,15 +148,22 @@ function CreditsPageContent() {
         setLoadingCredits(false);
       }
 
-      // Fetch transactions
+      // Fetch transactions (payment history)
       try {
-        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/transactions`);
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/stripe/payments?limit=10`);
         if (response.ok) {
           const data = await response.json();
-          if (Array.isArray(data.transactions)) {
-            setTransactions(data.transactions.slice(0, 10));
-          } else if (Array.isArray(data)) {
-            setTransactions(data.slice(0, 10));
+          if (Array.isArray(data.payments)) {
+            // Map payment data to transaction format
+            const mappedTransactions = data.payments.map((payment: any) => ({
+              id: payment.id,
+              amount: payment.amount,
+              transaction_type: payment.status === 'completed' ? 'Purchase' : payment.status,
+              created_at: payment.created_at,
+              description: `Payment ${payment.status}`,
+              status: payment.status
+            }));
+            setTransactions(mappedTransactions);
           }
         }
       } catch (error) {
