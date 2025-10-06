@@ -159,12 +159,17 @@ export default function ApiKeysPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
 
   // Form state
   const [keyName, setKeyName] = useState("");
   const [creditLimit, setCreditLimit] = useState("");
   const [includeBYOK, setIncludeBYOK] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const fetchApiKeys = async () => {
     const userApiKey = getApiKey();
@@ -306,6 +311,20 @@ export default function ApiKeysPage() {
       });
     }
   };
+
+  // Prevent hydration mismatch by only checking auth on client
+  if (!mounted) {
+    return (
+      <div className="space-y-8">
+        <div className="flex justify-center">
+          <h1 className="text-3xl font-bold">API Keys</h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const userApiKey = getApiKey();
 
