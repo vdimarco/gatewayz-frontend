@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       currency: 'usd',
       description: `${amount} credits for Gatewayz AI platform`,
       customer_email: userEmail,
-      success_url: `${frontendUrl}/settings/credits?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${frontendUrl}/settings/credits?session_id={{CHECKOUT_SESSION_ID}}`,
       cancel_url: `${frontendUrl}/settings/credits`,
     };
 
