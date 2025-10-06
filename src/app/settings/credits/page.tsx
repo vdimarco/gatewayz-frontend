@@ -12,7 +12,7 @@
  * 4. Add loading states, error handling, and pagination as needed
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -21,48 +21,19 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Info, RefreshCw, ArrowUpRight, ChevronLeft, ChevronRight, CreditCard, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
+import { redirectToCheckout } from '@/lib/stripe';
+import { getUserData, makeAuthenticatedRequest } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/config';
 
 // Transaction data type
 interface Transaction {
   id: number;
-  credits: number;
-  value: number;
-  date: string;
-  type: 'purchase' | 'refund' | 'usage';
+  amount: number;
+  transaction_type: string;
+  created_at: string;
   description?: string;
+  status?: string;
 }
-
-// Mock data for transactions
-const mockTransactions: Transaction[] = [
-  {
-    id: 1,
-    credits: 900,
-    value: 900,
-    date: "17/09/2025",
-    type: "purchase"
-  },
-  {
-    id: 2,
-    credits: 10,
-    value: 10,
-    date: "17/09/2025",
-    type: "purchase"
-  },
-  {
-    id: 3,
-    credits: 70,
-    value: 70,
-    date: "17/09/2025",
-    type: "purchase"
-  },
-  {
-    id: 4,
-    credits: 20,
-    value: 20,
-    date: "17/09/2025",
-    type: "purchase"
-  }
-];
 
 // Reusable TransactionRow component
 const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
@@ -71,16 +42,43 @@ const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
     console.log('More options clicked for transaction:', transaction.id);
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
+  const getTransactionType = (type: string) => {
+    if (type.toLowerCase().includes('purchase') || type.toLowerCase().includes('deposit')) {
+      return 'Purchase';
+    } else if (type.toLowerCase().includes('usage') || type.toLowerCase().includes('spend')) {
+      return 'Usage';
+    } else if (type.toLowerCase().includes('refund')) {
+      return 'Refund';
+    }
+    return type;
+  };
+
   return (
     <div className="px-4 py-3 hover:bg-gray-50">
       <div className="grid grid-cols-4 gap-4 items-center text-sm">
-        <div className="font-medium">{transaction.credits} Credits</div>
-        <div className="font-medium">${transaction.value}</div>
-        <div className="font-medium">{transaction.date}</div>
+        <div className="font-medium">
+          {getTransactionType(transaction.transaction_type)}
+          {transaction.description && (
+            <span className="text-muted-foreground ml-2">- {transaction.description}</span>
+          )}
+        </div>
+        <div className="font-medium">
+          {transaction.amount >= 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
+        </div>
+        <div className="font-medium">{formatDate(transaction.created_at)}</div>
         <div className="flex justify-end">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="h-8 w-8 p-0"
             onClick={handleMoreClick}
           >
@@ -97,6 +95,75 @@ export default function CreditsPage() {
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvc, setCvc] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [loadingCredits, setLoadingCredits] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      // First try to get credits from local storage immediately
+      const userData = getUserData();
+      if (userData && userData.credits !== undefined) {
+        setCredits(userData.credits);
+        setLoadingCredits(false);
+      }
+
+      // Wait a bit for authentication to complete if no user data yet
+      if (!userData) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      try {
+        // Fetch fresh data from API
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/profile`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.credits !== undefined) {
+            setCredits(data.credits);
+          }
+        }
+      } catch (error) {
+        // Silently handle error - we already have local storage data
+        console.log('Could not fetch fresh credits data');
+      } finally {
+        setLoadingCredits(false);
+      }
+
+      // Fetch transactions
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/transactions`);
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data.transactions)) {
+            setTransactions(data.transactions.slice(0, 10));
+          } else if (Array.isArray(data)) {
+            setTransactions(data.slice(0, 10));
+          }
+        }
+      } catch (error) {
+        console.log('Could not fetch transactions');
+      } finally {
+        setLoadingTransactions(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleBuyCredits = async () => {
+    setIsLoading(true);
+    try {
+      // Default to $10 worth of credits - can be customized
+      await redirectToCheckout(10);
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Failed to start checkout. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -112,15 +179,27 @@ export default function CreditsPage() {
           <h2 className="text-2xl font-semibold mr-16">Available Balance</h2>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 mr-16">
-              <Card 
+              <Card
                 className="w-96 h-14 text-xl md:text-2xl font-semibold bg-gray-50 border-gray-200 px-12"
               >
                 <CardContent className="py-[13px] flex items-center justify-center">
-                  <span className="text-xl md:text-2xl font-bold">$1000</span><span className="text-xl md:text-2xl font-bold text-muted-foreground">~$1000.07</span>
+                  {loadingCredits ? (
+                    <span className="text-xl md:text-2xl font-bold text-muted-foreground">Loading...</span>
+                  ) : credits !== null ? (
+                    <span className="text-xl md:text-2xl font-bold">${credits.toFixed(2)}</span>
+                  ) : (
+                    <span className="text-xl md:text-2xl font-bold text-muted-foreground">$0.00</span>
+                  )}
                 </CardContent>
               </Card>
             </div>
-            <Button className="bg-black text-white h-12 px-20">Buy Credits</Button>
+            <Button
+              className="bg-black text-white h-12 px-20"
+              onClick={handleBuyCredits}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : 'Buy Credits'}
+            </Button>
           </div>
         </div>  
       </div>
@@ -201,16 +280,26 @@ export default function CreditsPage() {
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
             <div className="grid grid-cols-4 gap-4 text-sm font-medium">
               <div>Recent Transactions</div>
-              <div>Value</div>
+              <div>Amount</div>
               <div>Date</div>
               <div></div>
             </div>
           </div>
-           <div className="divide-y divide-gray-200">
-             {mockTransactions.map((transaction) => (
-               <TransactionRow key={transaction.id} transaction={transaction} />
-             ))}
-           </div>
+          <div className="divide-y divide-gray-200">
+            {loadingTransactions ? (
+              <div className="px-4 py-8 text-center text-muted-foreground">
+                Loading transactions...
+              </div>
+            ) : transactions.length === 0 ? (
+              <div className="px-4 py-8 text-center text-muted-foreground">
+                No transactions yet
+              </div>
+            ) : (
+              transactions.map((transaction) => (
+                <TransactionRow key={transaction.id} transaction={transaction} />
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -174,7 +174,7 @@ export default function ModelProfilePage() {
                 }
 
                 // Fetch from API if no valid cache
-                const response = await fetch(`${API_BASE_URL}/models`);
+                const response = await fetch(`${API_BASE_URL}/models?gateway=all`);
                 const data = await response.json();
                 models = data.data || [];
 
@@ -223,7 +223,7 @@ export default function ModelProfilePage() {
             <header className="mb-8">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold">{model.name}</h1>
+                        <h1 className="text-2xl lg:text-3xl font-bold">{model.name}</h1>
                         <div className="flex items-center gap-2 mt-2">
                             <Badge variant="outline" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
                             <Badge variant="outline">{Math.round(model.context_length / 1000)}K context</Badge>
@@ -233,7 +233,7 @@ export default function ModelProfilePage() {
                         <Link href={`/chat?model=${encodeURIComponent(model.id)}`}>
                             <Button>Chat</Button>
                         </Link>
-                        <Button variant="outline">Compare</Button>
+                        <Button variant="outline" className="hidden sm:flex">Compare</Button>
                     </div>
                 </div>
                  <div className="mt-4 text-muted-foreground">
@@ -241,10 +241,10 @@ export default function ModelProfilePage() {
                 </div>
             </header>
 
-            <nav className="border-b">
-                <div className="flex gap-6">
+            <nav className="border-b overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+                <div className="flex gap-4 lg:gap-6">
                     {['Overview', 'Providers', 'Apps', 'Activity', 'Uptime', 'API'].map(item => (
-                        <Button key={item} variant="ghost" className="rounded-none border-b-2 border-transparent hover:border-primary data-[active]:border-primary data-[active]:text-primary">
+                        <Button key={item} variant="ghost" className="rounded-none border-b-2 border-transparent hover:border-primary data-[active]:border-primary data-[active]:text-primary whitespace-nowrap flex-shrink-0">
                             {item}
                         </Button>
                     ))}

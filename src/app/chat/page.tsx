@@ -31,7 +31,9 @@ import {
   User,
   MoreHorizontal,
   Trash2,
-  Edit
+  Edit,
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
 import { ModelSelect, type ModelOption } from '@/components/chat/model-select';
 import './chat.css';
@@ -52,6 +54,7 @@ type Message = {
     role: 'user' | 'assistant';
     content: string;
     reasoning?: string;
+    image?: string; // Base64 image data
 };
 
 type ChatSession = {
@@ -412,16 +415,23 @@ function ChatPageContent() {
         label: 'Switchpoint Router',
         category: 'Free'
     });
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const { toast } = useToast();
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const messageInputRef = useRef<HTMLInputElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Handle model from URL parameter
+    // Track if we should auto-send the message from URL
+    const [shouldAutoSend, setShouldAutoSend] = useState(false);
+
+    // Handle model and message from URL parameters
     useEffect(() => {
         const modelParam = searchParams.get('model');
+        const messageParam = searchParams.get('message');
+
         if (modelParam) {
             // Fetch the model details from API to get the label
-            fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai'}/models`)
+            fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai'}/models?gateway=all`)
                 .then(res => res.json())
                 .then(data => {
                     const foundModel = data.data?.find((m: any) => m.id === modelParam);
@@ -435,13 +445,27 @@ function ChatPageContent() {
                 })
                 .catch(err => console.error('Failed to fetch model:', err));
         }
+
+        // Set the message from URL parameter and flag for auto-send
+        if (messageParam) {
+            setMessage(decodeURIComponent(messageParam));
+            setShouldAutoSend(true);
+        }
     }, [searchParams]);
 
      const activeSession = useMemo(() => {
         return sessions.find(s => s.id === activeSessionId) || null;
     }, [sessions, activeSessionId]);
-    
+
     const messages = activeSession?.messages || [];
+
+    // Auto-send message from URL parameter when session is ready
+    useEffect(() => {
+        if (shouldAutoSend && activeSessionId && message.trim() && selectedModel && !loading) {
+            setShouldAutoSend(false); // Reset flag to prevent re-sending
+            handleSendMessage();
+        }
+    }, [shouldAutoSend, activeSessionId, message, selectedModel, loading]);
 
     useEffect(() => {
         // Load sessions from API (currently using mock data)
@@ -550,12 +574,59 @@ function ChatPageContent() {
     }
 
     const handleRenameSession = (sessionId: string, newTitle: string) => {
-        setSessions(prev => prev.map(session => 
-            session.id === sessionId 
+        setSessions(prev => prev.map(session =>
+            session.id === sessionId
                 ? { ...session, title: newTitle, updatedAt: new Date() }
                 : session
         ));
     }
+
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast({
+                title: "Invalid file type",
+                description: "Please select an image file.",
+                variant: 'destructive'
+            });
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast({
+                title: "File too large",
+                description: "Please select an image smaller than 5MB.",
+                variant: 'destructive'
+            });
+            return;
+        }
+
+        // Convert to base64
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const base64 = event.target?.result as string;
+            setSelectedImage(base64);
+        };
+        reader.onerror = () => {
+            toast({
+                title: "Error reading file",
+                description: "Failed to read the image file.",
+                variant: 'destructive'
+            });
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleRemoveImage = () => {
+        setSelectedImage(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
 
     const handleSendMessage = async () => {
         if (!message.trim() || !selectedModel || !activeSessionId) {
@@ -569,8 +640,13 @@ function ChatPageContent() {
 
         const isFirstMessage = messages.length === 0;
         const userMessage = message;
+        const userImage = selectedImage;
 
-        const updatedMessages: Message[] = [...messages, { role: 'user' as const, content: userMessage }];
+        const updatedMessages: Message[] = [...messages, {
+            role: 'user' as const,
+            content: userMessage,
+            image: userImage || undefined
+        }];
 
         const updatedSessions = sessions.map(session => {
             if (session.id === activeSessionId) {
@@ -586,6 +662,10 @@ function ChatPageContent() {
         setSessions(updatedSessions);
 
         setMessage('');
+        setSelectedImage(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
         setLoading(true);
         setStreamingContent('');
         setStreamingReasoning('');
@@ -612,6 +692,15 @@ function ChatPageContent() {
             console.log('API Key:', apiKey.substring(0, 10) + '...');
             console.log('Model:', selectedModel.value);
 
+            // Prepare message content with image if present
+            let messageContent: any = userMessage;
+            if (userImage) {
+                messageContent = [
+                    { type: 'text', text: userMessage },
+                    { type: 'image_url', image_url: { url: userImage } }
+                ];
+            }
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -620,7 +709,7 @@ function ChatPageContent() {
                 },
                 body: JSON.stringify({
                     model: selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value,
-                    messages: [{ role: 'user', content: userMessage }],
+                    messages: [{ role: 'user', content: messageContent }],
                 }),
             });
 
@@ -628,7 +717,12 @@ function ChatPageContent() {
             console.log('Response ok:', response.ok);
 
             if (!response.ok) {
-                throw new Error('Failed to get response');
+                if (response.status === 429) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || 'Rate limit exceeded. Please try again later.');
+                }
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error?.message || errorData.detail || `Request failed with status ${response.status}`);
             }
 
             const data = await response.json();
@@ -686,17 +780,17 @@ function ChatPageContent() {
         </div>
       
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative">
-      <img 
-        src="/logo_transparent.svg" 
-        alt="Stats" 
-        className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[75vh] h-[75vh]" 
+      <main className="flex-1 flex flex-col relative overflow-hidden">
+      <img
+        src="/logo_transparent.svg"
+        alt="Stats"
+        className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[75vh] h-[75vh] pointer-events-none opacity-50 hidden lg:block"
       />
 
        
         
         {/* Header with title and model selector */}
-        <header className="relative z-10 w-[80%] flex items-center justify-between gap-4 p-6 pl-24 pr-0">
+        <header className="relative z-10 w-full flex items-center justify-between gap-2 lg:gap-4 p-4 lg:p-6 max-w-7xl mx-auto">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="lg:hidden flex-shrink-0">
               <Sheet>
@@ -716,8 +810,8 @@ function ChatPageContent() {
               </Sheet>
             </div>
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <h1 className="text-2xl font-semibold truncate">{activeSession?.title || 'Untitled Chat'}</h1>
-              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
+              <h1 className="text-lg lg:text-2xl font-semibold truncate">{activeSession?.title || 'Untitled Chat'}</h1>
+              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0 hidden sm:flex">
                 <Pencil className="h-4 w-4" />
               </Button>
             </div>
@@ -728,15 +822,22 @@ function ChatPageContent() {
         </header>
 
         {/* Main content area */}
-        <div className="relative z-10 w-[80%] flex-1 flex flex-col overflow-hidden">
+        <div className="relative z-10 w-full flex-1 flex flex-col overflow-hidden">
           {/* Chat messages area */}
           {messages.length > 0 && (
-            <div ref={chatContainerRef} className="flex-1   ml-20 flex flex-col gap-6 overflow-y-auto p-6 bg-card">
+            <div ref={chatContainerRef} className="flex-1 flex flex-col gap-4 lg:gap-6 overflow-y-auto p-4 lg:p-6 bg-card max-w-4xl mx-auto w-full">
               {messages.map((msg, index) => (
                 <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                   <div className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                     {msg.role === 'user' ? (
                       <div className="rounded-lg p-3 bg-primary text-primary-foreground">
+                        {msg.image && (
+                          <img
+                            src={msg.image}
+                            alt="Uploaded image"
+                            className="max-w-[200px] lg:max-w-xs rounded-lg mb-2"
+                          />
+                        )}
                         <div className="text-sm whitespace-pre-wrap text-white">{msg.content}</div>
                       </div>
                     ) : (
@@ -768,11 +869,11 @@ function ChatPageContent() {
 
           {/* Welcome screen when no messages */}
           {messages.length === 0 && !loading && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-              <h1 className="text-4xl font-bold mb-8">What's On Your Mind?</h1>
-              
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 lg:p-6 w-full">
+              <h1 className="text-2xl lg:text-4xl font-bold mb-6 lg:mb-8">What's On Your Mind?</h1>
+
               {/* Suggested prompts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full max-w-2xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full max-w-4xl">
                 <ExamplePrompt 
                   title="What model is better for coding?" 
                   subtitle="Compare different AI models for programming tasks"
@@ -798,14 +899,44 @@ function ChatPageContent() {
           )}
 
           {/* Message input area - fixed at bottom */}
-          <div className="w-full p-6">
-            <div className="w-full max-w-4xl mx-auto">
+          <div className="w-full p-4 lg:p-6 max-w-4xl mx-auto">
+            <div className="w-full">
               <div className="relative">
+                {/* Image preview */}
+                {selectedImage && (
+                  <div className="mb-2 relative inline-block">
+                    <img
+                      src={selectedImage}
+                      alt="Selected image"
+                      className="max-w-[200px] lg:max-w-xs max-h-24 lg:max-h-32 rounded-lg border"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                      onClick={handleRemoveImage}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
                 <div className="flex items-center gap-1 px-2 py-2 bg-white rounded-xl border">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
-                    <img src="/ic_outline-plus.svg" alt="Plus" width={24} height={24} />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-lg"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImageIcon className="h-5 w-5" />
                   </Button>
-                  <Input 
+                  <Input
                     ref={messageInputRef}
                     placeholder="Start A Message"
                     value={message}
@@ -818,10 +949,10 @@ function ChatPageContent() {
                     }}
                     className="border-0 bg-transparent focus-visible:ring-0 text-base flex-1"
                   />
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    onClick={handleSendMessage} 
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleSendMessage}
                     disabled={loading || !message.trim()}
                     className="h-8 w-8"
                   >

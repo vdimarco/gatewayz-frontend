@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,7 +24,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Slider } from "@/components/ui/slider";
-import { BookText, Bot, ChevronDown, ChevronUp, FileText, ImageIcon, LayoutGrid, LayoutList, Search, Sliders as SlidersIcon } from 'lucide-react';
+import { BookText, Bot, ChevronDown, ChevronUp, FileText, ImageIcon, LayoutGrid, LayoutList, Music, Search, Sliders as SlidersIcon, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { stringToColor } from '@/lib/utils';
@@ -31,24 +32,25 @@ import { stringToColor } from '@/lib/utils';
 interface Model {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   context_length: number;
   pricing: {
     prompt: string;
     completion: string;
-  };
+  } | null;
   architecture: {
-    input_modalities: string[];
-  };
-  supported_parameters: string[];
+    input_modalities: string[] | null;
+    output_modalities: string[] | null;
+  } | null;
+  supported_parameters: string[] | null;
   provider_slug: string;
 }
 
 const ModelCard = ({ model }: { model: Model }) => {
-  const isFree = parseFloat(model.pricing.prompt) === 0 && parseFloat(model.pricing.completion) === 0;
-  const inputCost = (parseFloat(model.pricing.prompt) * 1000000).toFixed(2);
-  const outputCost = (parseFloat(model.pricing.completion) * 1000000).toFixed(2);
-  const contextK = Math.round(model.context_length / 1000);
+  const isFree = parseFloat(model.pricing?.prompt || '0') === 0 && parseFloat(model.pricing?.completion || '0') === 0;
+  const inputCost = (parseFloat(model.pricing?.prompt || '0') * 1000000).toFixed(2);
+  const outputCost = (parseFloat(model.pricing?.completion || '0') * 1000000).toFixed(2);
+  const contextK = model.context_length > 0 ? Math.round(model.context_length / 1000) : 0;
 
   return (
     <Link href={`/models/${encodeURIComponent(model.id)}`} className="h-full">
@@ -60,11 +62,11 @@ const ModelCard = ({ model }: { model: Model }) => {
             </h3>
             <Badge variant="outline" className="text-xs" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
           </div>
-          <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0 font-medium">{contextK}K</div>
+          <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0 font-medium">{contextK > 0 ? `${contextK}K` : 'Pending'}</div>
         </div>
-        <p className="text-muted-foreground text-sm flex-grow line-clamp-2 mb-4">{model.description}</p>
+        <p className="text-muted-foreground text-sm flex-grow line-clamp-2 mb-4">{model.description || 'No description available'}</p>
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-3 border-t">
-          <span className="whitespace-nowrap">{contextK}K context</span>
+          <span className="whitespace-nowrap">{contextK > 0 ? `${contextK}K context` : 'Pending sync'}</span>
           <span className="whitespace-nowrap">${inputCost}/M in</span>
           <span className="whitespace-nowrap">${outputCost}/M out</span>
         </div>
@@ -74,68 +76,148 @@ const ModelCard = ({ model }: { model: Model }) => {
 };
 
 export default function ModelsClient({ initialModels }: { initialModels: Model[] }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [layout, setLayout] = useState("list");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedModalities, setSelectedModalities] = useState<string[]>([]);
-  const [contextLength, setContextLength] = useState(64);
-  const [promptPricing, setPromptPricing] = useState(0.5);
-  const [selectedParameters, setSelectedParameters] = useState<string[]>([]);
-  const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState('tokens-desc');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || "");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchParams.get('search') || "");
+  const [selectedInputFormats, setSelectedInputFormats] = useState<string[]>(searchParams.get('inputFormats')?.split(',').filter(Boolean) || []);
+  const [selectedOutputFormats, setSelectedOutputFormats] = useState<string[]>(searchParams.get('outputFormats')?.split(',').filter(Boolean) || []);
+  const [contextLength, setContextLength] = useState(parseInt(searchParams.get('contextLength') || '1024'));
+  const [promptPricing, setPromptPricing] = useState(parseFloat(searchParams.get('promptPricing') || '10'));
+  const [selectedParameters, setSelectedParameters] = useState<string[]>(searchParams.get('parameters')?.split(',').filter(Boolean) || []);
+  const [selectedProviders, setSelectedProviders] = useState<string[]>(searchParams.get('providers')?.split(',').filter(Boolean) || []);
+  const [selectedModelSeries, setSelectedModelSeries] = useState<string[]>(searchParams.get('modelSeries')?.split(',').filter(Boolean) || []);
+  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'tokens-desc');
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Update URL parameters when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (searchTerm) params.set('search', searchTerm);
+    if (selectedInputFormats.length > 0) params.set('inputFormats', selectedInputFormats.join(','));
+    if (selectedOutputFormats.length > 0) params.set('outputFormats', selectedOutputFormats.join(','));
+    if (contextLength !== 1024) params.set('contextLength', contextLength.toString());
+    if (promptPricing !== 10) params.set('promptPricing', promptPricing.toString());
+    if (selectedParameters.length > 0) params.set('parameters', selectedParameters.join(','));
+    if (selectedProviders.length > 0) params.set('providers', selectedProviders.join(','));
+    if (selectedModelSeries.length > 0) params.set('modelSeries', selectedModelSeries.join(','));
+    if (sortBy !== 'tokens-desc') params.set('sortBy', sortBy);
+
+    const queryString = params.toString();
+    router.replace(queryString ? `?${queryString}` : '/models', { scroll: false });
+  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, selectedModelSeries, sortBy, router]);
 
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (value: string, checked: boolean) => {
     setter(prev => checked ? [...prev, value] : prev.filter(v => v !== value));
   };
 
+  // Extract model series from model name (e.g., "GPT-4", "Claude", "Gemini")
+  const getModelSeries = (model: Model): string => {
+    const name = model.name.toLowerCase();
+    if (name.includes('gpt-4')) return 'GPT-4';
+    if (name.includes('gpt-3')) return 'GPT-3';
+    if (name.includes('claude')) return 'Claude';
+    if (name.includes('gemini')) return 'Gemini';
+    if (name.includes('llama')) return 'Llama';
+    if (name.includes('mistral')) return 'Mistral';
+    if (name.includes('deepseek')) return 'DeepSeek';
+    if (name.includes('qwen')) return 'Qwen';
+    if (name.includes('glm')) return 'GLM';
+    if (name.includes('phi')) return 'Phi';
+    return 'Other';
+  };
+
   const resetFilters = () => {
     setSearchTerm("");
-    setSelectedModalities([]);
-    setContextLength(64);
-    setPromptPricing(0.5);
+    setDebouncedSearchTerm("");
+    setSelectedInputFormats([]);
+    setSelectedOutputFormats([]);
+    setContextLength(1024);
+    setPromptPricing(10);
     setSelectedParameters([]);
     setSelectedProviders([]);
+    setSelectedModelSeries([]);
     setSortBy('tokens-desc');
   };
 
-  const filteredModels = useMemo(() => {
-    let sortedModels = [...initialModels];
+  // Check if any filters are active
+  const hasActiveFilters = searchTerm || selectedInputFormats.length > 0 || selectedOutputFormats.length > 0 ||
+    contextLength !== 1024 || promptPricing !== 10 || selectedParameters.length > 0 ||
+    selectedProviders.length > 0 || selectedModelSeries.length > 0 || sortBy !== 'tokens-desc';
 
-    sortedModels.sort((a, b) => {
+  // Calculate search matches separately from other filters
+  const searchFilteredModels = useMemo(() => {
+    if (!debouncedSearchTerm) return initialModels;
+
+    const lowerSearch = debouncedSearchTerm.toLowerCase();
+    return initialModels.filter((model) => {
+      return (model.name || '').toLowerCase().includes(lowerSearch) ||
+        (model.description || '').toLowerCase().includes(lowerSearch) ||
+        (model.id || '').toLowerCase().includes(lowerSearch) ||
+        (model.provider_slug || '').toLowerCase().includes(lowerSearch);
+    });
+  }, [initialModels, debouncedSearchTerm]);
+
+  const filteredModels = useMemo(() => {
+    // First filter, then sort
+    const filtered = searchFilteredModels.filter((model) => {
+      const inputFormatMatch = selectedInputFormats.length === 0 || selectedInputFormats.every(m =>
+        model.architecture?.input_modalities?.some(im => im.toLowerCase() === m.toLowerCase())
+      );
+      const outputFormatMatch = selectedOutputFormats.length === 0 || selectedOutputFormats.every(m =>
+        model.architecture?.output_modalities?.some(om => om.toLowerCase() === m.toLowerCase())
+      );
+      // Include models with context_length of 0 (pending metadata sync)
+      const contextMatch = model.context_length === 0 || model.context_length >= contextLength * 1000;
+      const isFree = parseFloat(model.pricing?.prompt || '0') === 0 && parseFloat(model.pricing?.completion || '0') === 0;
+      const avgPrice = (parseFloat(model.pricing?.prompt || '0') + parseFloat(model.pricing?.completion || '0')) / 2;
+      const priceMatch = avgPrice <= promptPricing / 1000000 || isFree;
+      const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => (model.supported_parameters || []).includes(p));
+      const providerMatch = selectedProviders.length === 0 || selectedProviders.includes(model.provider_slug);
+      const seriesMatch = selectedModelSeries.length === 0 || selectedModelSeries.includes(getModelSeries(model));
+
+      return inputFormatMatch && outputFormatMatch && contextMatch && priceMatch && parameterMatch && providerMatch && seriesMatch;
+    });
+
+    // Then sort the filtered results
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
         switch (sortBy) {
             case 'tokens-desc':
                 return b.context_length - a.context_length;
             case 'tokens-asc':
                 return a.context_length - b.context_length;
             case 'price-desc':
-                return (parseFloat(b.pricing.prompt) + parseFloat(b.pricing.completion)) - (parseFloat(a.pricing.prompt) + parseFloat(a.pricing.completion));
+                return (parseFloat(b.pricing?.prompt || '0') + parseFloat(b.pricing?.completion || '0')) - (parseFloat(a.pricing?.prompt || '0') + parseFloat(a.pricing?.completion || '0'));
             case 'price-asc':
-                return (parseFloat(a.pricing.prompt) + parseFloat(a.pricing.completion)) - (parseFloat(b.pricing.prompt) + parseFloat(b.pricing.completion));
+                return (parseFloat(a.pricing?.prompt || '0') + parseFloat(a.pricing?.completion || '0')) - (parseFloat(b.pricing?.prompt || '0') + parseFloat(b.pricing?.completion || '0'));
             default:
                 return 0;
         }
     });
 
-    return sortedModels.filter((model) => {
-      const searchTermMatch =
-        model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        model.description.toLowerCase().includes(searchTerm.toLowerCase());
+    return sorted;
+  }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, selectedModelSeries, sortBy, getModelSeries]);
 
-      const modalityMatch = selectedModalities.length === 0 || selectedModalities.every(m =>
-        model.architecture.input_modalities.some(im => im.toLowerCase() === m.toLowerCase())
-      );
-      const contextMatch = model.context_length >= contextLength * 1000;
-      const isFree = parseFloat(model.pricing.prompt) === 0 && parseFloat(model.pricing.completion) === 0;
-      const avgPrice = (parseFloat(model.pricing.prompt) + parseFloat(model.pricing.completion)) / 2;
-      const priceMatch = avgPrice <= promptPricing / 1000000 || isFree;
-      const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => model.supported_parameters.includes(p));
-      const providerMatch = selectedProviders.length === 0 || selectedProviders.includes(model.provider_slug);
-
-      return searchTermMatch && modalityMatch && contextMatch && priceMatch && parameterMatch && providerMatch;
-    });
-  }, [initialModels, searchTerm, selectedModalities, contextLength, promptPricing, selectedParameters, selectedProviders, sortBy]);
-
-  const allParameters = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.supported_parameters))), [initialModels]);
-  const allProviders = useMemo(() => Array.from(new Set(initialModels.map(m => m.provider_slug))), [initialModels]);
+  const allInputFormats = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.architecture?.input_modalities || []))).filter(Boolean), [initialModels]);
+  const allOutputFormats = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.architecture?.output_modalities || []))).filter(Boolean), [initialModels]);
+  const allParameters = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.supported_parameters || []))), [initialModels]);
+  const allProviders = useMemo(() => Array.from(new Set(initialModels.map(m => m.provider_slug).filter(Boolean))), [initialModels]);
+  const allModelSeries = useMemo(() => {
+    const series = Array.from(new Set(initialModels.map(m => getModelSeries(m))));
+    return series.sort();
+  }, [initialModels, getModelSeries]);
 
 
   return (
@@ -148,20 +230,50 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
         >
           <SidebarContent className="p-4">
             <SidebarGroup>
-              <SidebarGroupLabel>Input Modalities</SidebarGroupLabel>
+              <SidebarGroupLabel>Input Formats</SidebarGroupLabel>
               <div className="flex flex-col gap-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="text-modal" checked={selectedModalities.includes('Text')} onCheckedChange={(c) => handleCheckboxChange(setSelectedModalities)('Text', !!c)} />
-                  <Label htmlFor="text-modal" className="flex items-center gap-2 font-normal"><BookText className="w-4 h-4"/>Text</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="image-modal" checked={selectedModalities.includes('Image')} onCheckedChange={(c) => handleCheckboxChange(setSelectedModalities)('Image', !!c)} />
-                  <Label htmlFor="image-modal" className="flex items-center gap-2 font-normal"><ImageIcon className="w-4 h-4"/>Image</Label>
-                </div>
-                  <div className="flex items-center space-x-2">
-                  <Checkbox id="file-modal" checked={selectedModalities.includes('File')} onCheckedChange={(c) => handleCheckboxChange(setSelectedModalities)('File', !!c)} />
-                  <Label htmlFor="file-modal" className="flex items-center gap-2 font-normal"><FileText className="w-4 h-4"/>File</Label>
-                </div>
+                {allInputFormats.map((format) => {
+                  const icon = format.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
+                               format.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
+                               format.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> :
+                               format.toLowerCase() === 'audio' ? <Music className="w-4 h-4"/> : null;
+                  return (
+                    <div key={format} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`input-${format.toLowerCase()}`}
+                        checked={selectedInputFormats.includes(format)}
+                        onCheckedChange={(c) => handleCheckboxChange(setSelectedInputFormats)(format, !!c)}
+                      />
+                      <Label htmlFor={`input-${format.toLowerCase()}`} className="flex items-center gap-2 font-normal capitalize">
+                        {icon}{format}
+                      </Label>
+                    </div>
+                  );
+                })}
+              </div>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Output Formats</SidebarGroupLabel>
+              <div className="flex flex-col gap-2">
+                {allOutputFormats.map((format) => {
+                  const icon = format.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
+                               format.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
+                               format.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> :
+                               format.toLowerCase() === 'audio' ? <Music className="w-4 h-4"/> : null;
+                  return (
+                    <div key={format} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`output-${format.toLowerCase()}`}
+                        checked={selectedOutputFormats.includes(format)}
+                        onCheckedChange={(c) => handleCheckboxChange(setSelectedOutputFormats)(format, !!c)}
+                      />
+                      <Label htmlFor={`output-${format.toLowerCase()}`} className="flex items-center gap-2 font-normal capitalize">
+                        {icon}{format}
+                      </Label>
+                    </div>
+                  );
+                })}
               </div>
             </SidebarGroup>
 
@@ -169,11 +281,18 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
             <FilterSlider label="Prompt Pricing" value={promptPricing} onValueChange={setPromptPricing} min={0} max={10} step={0.1} unit="$" />
 
             <FilterDropdown
-              label="Supported Parameters"
+              label="Available Parameters"
               items={allParameters}
               selectedItems={selectedParameters}
               onSelectionChange={handleCheckboxChange(setSelectedParameters)}
               icon={<SlidersIcon className="w-4 h-4"/>}
+            />
+            <FilterDropdown
+              label="Model Series"
+              items={allModelSeries}
+              selectedItems={selectedModelSeries}
+              onSelectionChange={handleCheckboxChange(setSelectedModelSeries)}
+              icon={<Bot className="w-4 h-4"/>}
             />
             <FilterDropdown
               label="Providers"
@@ -187,15 +306,83 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
         <SidebarInset className="flex-1 overflow-auto">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+          <div className="flex flex-col gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                   <SidebarTrigger className="lg:hidden" />
                   <h1 className="text-2xl font-bold">Models</h1>
               </div>
               <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                <span className="text-sm text-muted-foreground">{filteredModels.length} models</span>
-                <Button variant="ghost" size="sm" onClick={resetFilters}>Reset Filters</Button>
+                <span className="text-sm text-muted-foreground">
+                  {debouncedSearchTerm && filteredModels.length !== searchFilteredModels.length
+                    ? `${filteredModels.length} of ${searchFilteredModels.length} models`
+                    : `${filteredModels.length} models`}
+                </span>
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={resetFilters}>Clear All Filters</Button>
+                )}
               </div>
+            </div>
+
+            {/* Active Filters */}
+            <div className="flex flex-wrap gap-2">
+              {selectedInputFormats.map(format => (
+                <Badge key={`input-${format}`} variant="secondary" className="gap-1">
+                  Input: {format}
+                  <button onClick={() => setSelectedInputFormats(prev => prev.filter(f => f !== format))} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {selectedOutputFormats.map(format => (
+                <Badge key={`output-${format}`} variant="secondary" className="gap-1">
+                  Output: {format}
+                  <button onClick={() => setSelectedOutputFormats(prev => prev.filter(f => f !== format))} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {contextLength !== 1024 && (
+                <Badge variant="secondary" className="gap-1">
+                  Context: ≥{contextLength}K tokens
+                  <button onClick={() => setContextLength(1024)} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {promptPricing !== 10 && (
+                <Badge variant="secondary" className="gap-1">
+                  Price: ≤${promptPricing}/M tokens
+                  <button onClick={() => setPromptPricing(10)} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {selectedParameters.map(param => (
+                <Badge key={param} variant="secondary" className="gap-1">
+                  {param}
+                  <button onClick={() => setSelectedParameters(prev => prev.filter(p => p !== param))} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {selectedModelSeries.map(series => (
+                <Badge key={series} variant="secondary" className="gap-1">
+                  {series}
+                  <button onClick={() => setSelectedModelSeries(prev => prev.filter(s => s !== series))} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {selectedProviders.map(provider => (
+                <Badge key={provider} variant="secondary" className="gap-1">
+                  {provider}
+                  <button onClick={() => setSelectedProviders(prev => prev.filter(p => p !== provider))} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -243,6 +430,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                 ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6'
                 : 'flex flex-col gap-4 lg:gap-6 max-w-5xl'
             }
+            key={`models-${filteredModels.length}-${debouncedSearchTerm}`}
           >
             {filteredModels.map((model) => (
               <ModelCard key={model.id} model={model} />
@@ -259,7 +447,7 @@ const FilterSlider = ({ label, value, onValueChange, min, max, step, unit }: { l
     return (
         <SidebarGroup>
             <SidebarGroupLabel>{label}</SidebarGroupLabel>
-            <Slider defaultValue={[value]} min={min} max={max} step={step} onValueChange={(v) => onValueChange(v[0])} />
+            <Slider value={[value]} min={min} max={max} step={step} onValueChange={(v) => onValueChange(v[0])} />
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
                 <span>{min}{unit}</span>
                 <span>{value}{unit}</span>
@@ -271,9 +459,10 @@ const FilterSlider = ({ label, value, onValueChange, min, max, step, unit }: { l
 
 const FilterDropdown = ({ label, items, icon, selectedItems, onSelectionChange }: { label: string, items: string[], icon: React.ReactNode, selectedItems: string[], onSelectionChange: (value: string, checked: boolean) => void }) => {
   const [isOpen, setIsOpen] = useState(true);
+  const [showAll, setShowAll] = useState(false);
 
-  const displayedItems = items.slice(0, 3);
-  const moreItems = items.slice(3);
+  const displayedItems = showAll ? items : items.slice(0, 3);
+  const hasMore = items.length > 3;
 
   return (
     <SidebarGroup>
@@ -291,7 +480,14 @@ const FilterDropdown = ({ label, items, icon, selectedItems, onSelectionChange }
               <Label htmlFor={item.toLowerCase()} className="font-normal">{item}</Label>
             </div>
           ))}
-          {moreItems.length > 0 && <Label className="font-normal text-muted-foreground">More...</Label>}
+          {hasMore && (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left"
+            >
+              {showAll ? 'Show less...' : `More... (${items.length - 3} more)`}
+            </button>
+          )}
         </div>
       )}
     </SidebarGroup>

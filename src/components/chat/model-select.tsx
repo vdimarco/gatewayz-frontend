@@ -24,6 +24,7 @@ export type ModelOption = {
     value: string;
     label: string;
     category: string;
+    sourceGateway?: string;
 };
 
 interface ModelSelectProps {
@@ -33,7 +34,7 @@ interface ModelSelectProps {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
 
-const CACHE_KEY = 'gatewayz_models_cache';
+const CACHE_KEY = 'gatewayz_models_cache_v2_all';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) {
@@ -61,14 +62,23 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
       // Fetch from API
       setLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/models`);
+        const response = await fetch(`${API_BASE_URL}/models?gateway=all`);
         const data = await response.json();
         console.log('Models fetched from API:', data.data?.length || 0);
-        const modelOptions: ModelOption[] = (data.data || []).map((model: any) => ({
-          value: model.id,
-          label: model.name,
-          category: model.pricing?.prompt ? 'Paid' : 'Free'
-        }));
+        const modelOptions: ModelOption[] = (data.data || []).map((model: any) => {
+          const sourceGateway = model.source_gateway || 'openrouter';
+          const promptPrice = Number(model.pricing?.prompt ?? 0);
+          const completionPrice = Number(model.pricing?.completion ?? 0);
+          const isPaid = promptPrice > 0 || completionPrice > 0;
+          const category = sourceGateway === 'portkey' ? 'Portkey' : (isPaid ? 'Paid' : 'Free');
+
+          return {
+            value: model.id,
+            label: model.name,
+            category,
+            sourceGateway,
+          };
+        });
         setModels(modelOptions);
 
         // Cache the results

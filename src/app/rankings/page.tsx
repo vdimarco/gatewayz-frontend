@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ChevronDown, ArrowUp, ArrowDown, TrendingUp, TrendingDown } from 'lucide-react';
 import TokenStackedBarChart from '@/components/TokenStackedBarChart';
 import { API_BASE_URL } from '@/lib/config';
 
@@ -40,21 +40,41 @@ interface AppData {
 }
 
 
+interface RankingModel {
+  id: number;
+  rank: number;
+  model_name: string;
+  author: string;
+  tokens: string;
+  trend_percentage: string;
+  trend_direction: 'up' | 'down';
+  trend_icon: string;
+  trend_color: string;
+  model_url: string;
+  author_url: string;
+  time_period: string;
+  scraped_at: string;
+  logoUrl?: string;
+  category?: string;
+  provider?: string;
+  value?: string;
+}
+
 // Mock data for the rankings - 60 diverse models for testing
 const topModels = [
   // Top tier models
-  { rank: 1, change: 4, model: "GPT-4o", org: "OpenAI", category: "Multimodal", provider: "OpenAI", tokens: "2.1B", value: "$1.2B", changePercent: "+15.3%" },
-  { rank: 2, change: 1, model: "Claude-3.5-Sonnet", org: "Anthropic", category: "Language", provider: "Anthropic", tokens: "1.8B", value: "$980M", changePercent: "+22.7%" },
-  { rank: 3, change: 2, model: "Gemini-2.0-Pro", org: "Google", category: "Multimodal", provider: "Google", tokens: "1.6B", value: "$850M", changePercent: "+18.9%" },
-  { rank: 4, change: 3, model: "GPT-4-Turbo", org: "OpenAI", category: "Language", provider: "OpenAI", tokens: "1.4B", value: "$720M", changePercent: "+12.4%" },
-  { rank: 5, change: 1, model: "Claude-3-Opus", org: "Anthropic", category: "Language", provider: "Anthropic", tokens: "1.2B", value: "$650M", changePercent: "+8.7%" },
+  { rank: 1, change: 4, model: "GPT-4o", org: "OpenAI", category: "Multimodal", provider: "OpenRouter", tokens: "2.1B", value: "$1.2B", changePercent: "+15.3%" },
+  { rank: 2, change: 1, model: "Claude-3.5-Sonnet", org: "Anthropic", category: "Language", provider: "OpenRouter", tokens: "1.8B", value: "$980M", changePercent: "+22.7%" },
+  { rank: 3, change: 2, model: "Gemini-2.0-Pro", org: "Google", category: "Multimodal", provider: "OpenRouter", tokens: "1.6B", value: "$850M", changePercent: "+18.9%" },
+  { rank: 4, change: 3, model: "GPT-4-Turbo", org: "OpenAI", category: "Language", provider: "OpenRouter", tokens: "1.4B", value: "$720M", changePercent: "+12.4%" },
+  { rank: 5, change: 1, model: "Claude-3-Opus", org: "Anthropic", category: "Language", provider: "OpenRouter", tokens: "1.2B", value: "$650M", changePercent: "+8.7%" },
   
   // High performing models
-  { rank: 6, change: 2, model: "Gemini-1.5-Pro", org: "Google", category: "Multimodal", provider: "Google", tokens: "980M", value: "$520M", changePercent: "+25.1%" },
-  { rank: 7, change: 4, model: "Llama-3.1-405B", org: "Meta", category: "Language", provider: "Meta", tokens: "850M", value: "$480M", changePercent: "+31.2%" },
-  { rank: 8, change: 1, model: "Mistral-Large", org: "Mistral AI", category: "Language", provider: "Mistral AI", tokens: "720M", value: "$420M", changePercent: "+19.8%" },
-  { rank: 9, change: 3, model: "Qwen-2.5-72B", org: "Alibaba", category: "Language", provider: "Alibaba", tokens: "680M", value: "$380M", changePercent: "+27.5%" },
-  { rank: 10, change: 2, model: "DeepSeek-V3", org: "DeepSeek", category: "Programming", provider: "DeepSeek", tokens: "650M", value: "$350M", changePercent: "+33.4%" },
+  { rank: 6, change: 2, model: "Gemini-1.5-Pro", org: "Google", category: "Multimodal", provider: "OpenRouter", tokens: "980M", value: "$520M", changePercent: "+25.1%" },
+  { rank: 7, change: 4, model: "Llama-3.1-405B", org: "Meta", category: "Language", provider: "OpenRouter", tokens: "850M", value: "$480M", changePercent: "+31.2%" },
+  { rank: 8, change: 1, model: "Mistral-Large", org: "Mistral AI", category: "Language", provider: "OpenRouter", tokens: "720M", value: "$420M", changePercent: "+19.8%" },
+  { rank: 9, change: 3, model: "Qwen-2.5-72B", org: "Alibaba", category: "Language", provider: "OpenRouter", tokens: "680M", value: "$380M", changePercent: "+27.5%" },
+  { rank: 10, change: 2, model: "DeepSeek-V3", org: "DeepSeek", category: "Programming", provider: "OpenRouter", tokens: "650M", value: "$350M", changePercent: "+33.4%" },
   
   // Mid-tier models
   { rank: 11, change: 4, model: "GPT-4o-Mini", org: "OpenAI", category: "Language", provider: "OpenAI", tokens: "580M", value: "$320M", changePercent: "+16.9%" },
@@ -128,6 +148,148 @@ const topApps = Array.from({ length: 20 }, (_, index) => ({
 export default function RankingsPage() {
   const [selectedSort, setSelectedSort] = useState('All');
   const [selectedTopModelsCount, setSelectedTopModelsCount] = useState<number>(5);
+  const [selectedTimeRange, setSelectedTimeRange] = useState('Top This Month');
+  const [selectedTopCount, setSelectedTopCount] = useState('Top 10');
+  const [rankingModels, setRankingModels] = useState<RankingModel[]>([]);
+  const [modelLogos, setModelLogos] = useState<Map<string, string>>(new Map());
+  const [loading, setLoading] = useState(true);
+
+  // Fetch ranking models from API
+  useEffect(() => {
+    const fetchRankingModels = async () => {
+      try {
+        setLoading(true);
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
+        const url = `${apiBaseUrl}/ranking/models`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          // API endpoint not ready, use mock data
+          console.warn('Rankings API not available, using mock data');
+
+          // Convert mock data to RankingModel format
+          const mockRankingModels: RankingModel[] = topModels.map((model, index) => ({
+            id: index + 1,
+            rank: model.rank,
+            model_name: model.model,
+            author: model.org,
+            tokens: model.tokens,
+            trend_percentage: model.changePercent,
+            trend_direction: 'up' as const,
+            trend_icon: '↑',
+            trend_color: 'green',
+            model_url: '#',
+            author_url: '#',
+            time_period: 'Top this month',
+            scraped_at: new Date().toISOString(),
+            category: model.category,
+            provider: model.provider,
+            value: model.value,
+          }));
+
+          setRankingModels(mockRankingModels);
+          setLoading(false);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          setRankingModels(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch ranking models:', error);
+
+        // Use mock data as fallback
+        const mockRankingModels: RankingModel[] = topModels.map((model, index) => ({
+          id: index + 1,
+          rank: model.rank,
+          model_name: model.model,
+          author: model.org,
+          tokens: model.tokens,
+          trend_percentage: model.changePercent,
+          trend_direction: 'up' as const,
+          trend_icon: '↑',
+          trend_color: 'green',
+          model_url: '#',
+          author_url: '#',
+          time_period: 'Top this month',
+          scraped_at: new Date().toISOString(),
+          category: model.category,
+          provider: model.provider,
+          value: model.value,
+        }));
+
+        setRankingModels(mockRankingModels);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRankingModels();
+  }, []);
+
+  // Fetch model logos
+  useEffect(() => {
+    const fetchLogos = async () => {
+      if (rankingModels.length === 0) return;
+
+      const logoMap = new Map<string, string>();
+
+      // Map of static logos for major providers
+      const staticLogos: { [key: string]: string } = {
+        'google': '/google-logo.svg',
+        'openai': '/openai-logo.svg',
+        'anthropic': '/anthropic-logo.svg',
+      };
+
+      await Promise.all(
+        rankingModels.slice(0, 20).map(async (model) => {
+          try {
+            // Check if we have a static logo for this author
+            const authorLower = model.author.toLowerCase();
+            const staticLogo = staticLogos[authorLower];
+            if (staticLogo) {
+              logoMap.set(model.model_name, staticLogo);
+              return;
+            }
+
+            // Special handling for specific models
+            let modelId = '';
+
+            // X-AI / Grok models - use xai organization
+            if (authorLower.includes('x-ai') || authorLower.includes('xai')) {
+              modelId = `xai/grok-2-1212`;  // Use a known Grok model for logo
+            }
+            // DeepSeek models - use deepseek-ai organization
+            else if (authorLower.includes('deepseek')) {
+              modelId = `deepseek-ai/DeepSeek-V3`;  // Use a known DeepSeek model for logo
+            }
+            // Default: use author/model-name
+            else {
+              modelId = `${model.author}/${model.model_name.replace(/ /g, '-')}`;
+            }
+
+            const response = await fetch(`/api/model-logo?modelId=${encodeURIComponent(modelId)}`);
+
+            if (response.ok) {
+              const data = await response.json();
+              if (data.model?.authorData?.avatarUrl) {
+                logoMap.set(model.model_name, data.model.authorData.avatarUrl);
+              }
+            }
+          } catch (error) {
+            console.error(`Failed to fetch logo for ${model.model_name}:`, error);
+          }
+        })
+      );
+
+      setModelLogos(logoMap);
+    };
+
+    fetchLogos();
+  }, [rankingModels]);
 
   const [selectedTimeRangeForModels, setSelectedTimeRangeForModels] = useState("Top this month");
   const [selectedTimeRangeForApps, setSelectedTimeRangeForApps] = useState("This Month");
@@ -181,32 +343,76 @@ export default function RankingsPage() {
     .sort((a, b) => a.rank - b.rank) // ascending orders
   }, [selectedTimeRangeForApps, apps])
 
+  // Filter and sort the models based on selected options
+  const filteredAndSortedModels = useMemo(() => {
+    let filtered = [...rankingModels];
+
+    // Filter by time period
+    const timePeriodMap: { [key: string]: string } = {
+      'Top This Year': 'Top this year',
+      'Top This Month': 'Top this month',
+      'Top This Week': 'Top this week'
+    };
+
+    const targetPeriod = timePeriodMap[selectedTimeRange];
+    if (targetPeriod) {
+      filtered = filtered.filter(model => model.time_period === targetPeriod);
+    }
+
+    // Apply sorting
+    if (selectedSort === 'Tokens') {
+      filtered.sort((a, b) => {
+        const aTokens = parseTokens(a.tokens);
+        const bTokens = parseTokens(b.tokens);
+        return bTokens - aTokens;
+      });
+    } else {
+      // Default sort by rank
+      filtered.sort((a, b) => a.rank - b.rank);
+    }
+    
+    // Apply top count filter
+    const count = parseInt(selectedTopCount.replace('Top ', ''));
+    filtered = filtered.slice(0, count);
+
+    return filtered;
+  }, [rankingModels, selectedTimeRange, selectedSort, selectedTopCount]);
+
+    // Helper function to parse token values
+  const parseTokens = (tokenStr: string): number => {
+    const num = parseFloat(tokenStr.replace(/[BMK]/g, ''));
+    if (tokenStr.includes('B')) return num * 1e9;
+    if (tokenStr.includes('M')) return num * 1e6;
+    if (tokenStr.includes('K')) return num * 1e3;
+    return num;
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold tracking-tight">LLM Rankings</h1>
-          <p className="mt-2 text-lg ">
+          <h1 className="text-2xl lg:text-4xl font-bold tracking-tight">LLM Rankings</h1>
+          <p className="mt-2 text-sm lg:text-lg">
             Discover The Current Rankings For The Best Models On The Market
           </p>
         </header>
 
          {/* Chart Section */}
          <div className="mb-12">
-           <Card className="p-6">
-             <div className="mb-4">
-               <h3 className="text-lg font-semibold text-gray-800">Unit: Tokens Generated</h3>
+           <Card className="p-4">
+             <div className="mb-2">
+               <h3 className="text-base font-semibold text-gray-800">Top 10 Models - Tokens Generated</h3>
              </div>
-             <TokenStackedBarChart />
+             <TokenStackedBarChart rankingData={rankingModels} />
            </Card>
          </div>
 
         {/* Top 10 Models Section */}
         <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold">{selectedTopModelsCount} Models</h2>
-            <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <h2 className="text-2xl lg:text-3xl font-bold">{selectedTopCount} Models</h2>
+            <div className="flex flex-wrap gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-[120px] justify-between">
@@ -248,76 +454,101 @@ export default function RankingsPage() {
             </div>
           </div>
 
-          {/* Header Row */}
-          <Card className='flex flex-col'>
-            <div className="grid grid-cols-24 gap-2 px-6 py-3 bg-gray-50 rounded-lg">
-              <div className="col-span-2 font-semibold text-base text-gray-600">Rank</div>
-              <div className="col-span-6 font-semibold text-base text-gray-600">AI Model</div>
-              <div className="col-span-3 font-semibold text-base text-gray-600">Model Org</div>
-              <div className="col-span-3 font-semibold text-base text-gray-600">Category</div>
-              <div className="col-span-3 font-semibold text-base text-gray-600">Top Provider</div>
-              <div className="col-span-3 font-semibold text-base text-gray-600 text-right">Tokens Generated</div>
-              {/* <div className="col-span-2 font-semibold text-base text-gray-600 text-right">Value</div> */}
-              <div className="col-span-2 font-semibold text-base text-gray-600 text-right">Change</div> 
+          {/* Header Row - Hidden on mobile */}
+          <Card className='hidden lg:flex flex-col'>
+            <div className="ranking-row bg-gray-50 rounded-lg">
+              <div className="col-span-2 font-semibold text-xs text-gray-600">Rank</div>
+              <div className="col-span-6 font-semibold text-xs text-gray-600">AI Model</div>
+              <div className="col-span-3 font-semibold text-xs text-gray-600">Model Org</div>
+              <div className="col-span-3 font-semibold text-xs text-gray-600">Category</div>
+              <div className="col-span-3 font-semibold text-xs text-gray-600">Top Provider</div>
+              <div className="col-span-3 font-semibold text-xs text-gray-600 text-right">Tokens Generated</div>
+              <div className="col-span-2 font-semibold text-xs text-gray-600 text-right">Value</div>
+              <div className="col-span-2 font-semibold text-xs text-gray-600 text-right">Change</div>
             </div>
           </Card>
 
           <div className="space-y-3 mt-3">
-            {filteredModels.map((model, index) => (
-              <Card key={model.rank} className="p-0 overflow-hidden">
-                <div className="grid grid-cols-24 gap-2 px-6 py-2">
-                    {/* Rank - 2 columns */}
-                    <div className="col-span-2 flex flex-col items-start justify-center gap-1">
-                      <span className="font-medium text-sm">#{model.rank}</span>
-                      {model.trend_percentage && <div className={`flex items-center gap-1 ${Number(model.trend_percentage) > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {model.trend_direction == "up" ? (
-                          <ArrowUp className="w-4 h-4" />
-                        ) : (
-                          <ArrowDown className="w-4 h-4" />
-                        )}
-                      <span className="text-sm">{model.trend_percentage}</span>
-
-                      </div>}
-                    </div>
-                  
-                  {/* AI Model - 6 columns */}
-                  <div className="col-span-6">
-                    <div className="flex items-center gap-3">
-                      <img src='/deepseek_1.png' className='w-16 h-16 rounded-lg'/>
-                      <span className="font-medium text-base">{model.model_name}</span>
-                    </div>
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 10 }).map((_, i) => (
+                <Card key={i} className="p-0 overflow-hidden">
+                  <div className="grid grid-cols-24 gap-2 px-6 py-2">
+                    <div className="col-span-24 h-16 animate-pulse bg-gray-100 rounded"></div>
                   </div>
-                  
-                  {/* Model Org - 4 columns */}
-                  <div className="col-span-3 flex items-center">
-                    <span className="text-base">{model.author}</span>
-                  </div>
-                  
-                  {/* Category - 4 columns */}
-                  <div className="col-span-3 flex items-center">
-                    <span className="text-base">---</span>
-                  </div>
-                  
-                  {/* Top Provider - 4 columns */}
-                  <div className="col-span-3 flex items-center">
-                    <span className="text-base">---</span>
-                  </div>
-                  
-                  {/* Tokens Generated - 2 columns */}
-                  <div className="col-span-3 text-right flex items-center justify-end">
-                    <span className="text-base font-medium">{model.tokens.slice(0, -7)}</span>
-                  </div>
-                  
-                  {/* <div className="col-span-2 text-right flex items-center justify-end">
-                    <span className="text-base font-medium">{}</span>
-                  </div>
-                  */}
-                  <div className="col-span-2 text-right flex items-center justify-end">
-                    <span className="text-base font-medium text-green-600">{model.trend_percentage}</span>
-                  </div> 
-                </div>
+                </Card>
+              ))
+            ) : filteredAndSortedModels.length === 0 ? (
+              <Card className="p-6">
+                <p className="text-center text-gray-500">No models found for the selected time period.</p>
               </Card>
-            ))}
+            ) : (
+              filteredAndSortedModels.map((model, index) => (
+                <Card key={model.id} className="p-0 overflow-hidden">
+                  <div className="ranking-row">
+                      {/* Rank - 2 columns on mobile (col-span-2), 2 on desktop */}
+                      <div className="col-span-2 flex flex-col items-start justify-center gap-0">
+                        <span className="font-medium text-xs">#{model.rank}</span>
+                        <div className={`flex items-center gap-0.5 ${model.trend_direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                          {model.trend_direction === 'up' ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+                          <span className="text-[10px]">{model.trend_percentage}</span>
+                        </div>
+                      </div>
+
+                    {/* AI Model - 7 columns on mobile (col-span-7), 6 on desktop */}
+                    <div className="col-span-7 lg:col-span-6">
+                      <div className="flex items-center gap-2">
+                        {modelLogos.get(model.model_name) ? (
+                          <div className='ranking-logo'>
+                            <img
+                              src={modelLogos.get(model.model_name)}
+                              alt={model.model_name}
+                            />
+                          </div>
+                        ) : (
+                          <div className='w-8 h-8 flex-shrink-0 rounded bg-gray-100 flex items-center justify-center'>
+                            <span className="text-sm font-medium">{model.author.charAt(0).toUpperCase()}</span>
+                          </div>
+                        )}
+                        <span className="font-medium text-xs leading-tight truncate">{model.model_name}</span>
+                      </div>
+                    </div>
+
+                    {/* Model Org - hidden on mobile, 3 columns on desktop */}
+                    <div className="hidden lg:flex lg:col-span-3 items-center">
+                      <span className="text-xs capitalize">{model.author}</span>
+                    </div>
+
+                    {/* Category - hidden on mobile, 3 columns on desktop */}
+                    <div className="hidden lg:flex lg:col-span-3 items-center">
+                      <span className="text-xs">{model.category || 'Language'}</span>
+                    </div>
+
+                    {/* Top Provider - hidden on mobile, 3 columns on desktop */}
+                    <div className="hidden lg:flex lg:col-span-3 items-center">
+                      <span className="text-xs">{model.provider || 'OpenRouter'}</span>
+                    </div>
+
+                    {/* Tokens Generated - 3 columns on mobile and desktop */}
+                    <div className="col-span-3 text-right flex items-center justify-end">
+                      <span className="text-xs font-medium">{model.tokens}</span>
+                    </div>
+
+                    {/* Value - hidden on mobile, 2 columns on desktop */}
+                    <div className="hidden lg:flex lg:col-span-2 text-right items-center justify-end">
+                      <span className="text-xs font-medium">{model.value || '-'}</span>
+                    </div>
+
+                    {/* Change - hidden on mobile, 2 columns on desktop */}
+                    <div className="hidden lg:flex lg:col-span-2 text-right items-center justify-end">
+                      <span className={`text-xs font-medium ${model.trend_direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {model.trend_percentage}
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
           </div>
         </div>
 

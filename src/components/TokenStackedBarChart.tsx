@@ -22,12 +22,37 @@ ChartJS.register(
   Title
 );
 
-const TokenStackedBarChart = () => {
-  // Extract all labels (dates)
-  const labels = mockData.dates.map(date => {
-    const d = new Date(date);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  });
+interface RankingModel {
+  id: number;
+  rank: number;
+  model_name: string;
+  author: string;
+  tokens: string;
+  trend_percentage: string;
+  trend_direction: 'up' | 'down';
+  trend_icon: string;
+  trend_color: string;
+  model_url: string;
+  author_url: string;
+  time_period: string;
+  scraped_at: string;
+}
+
+interface TokenStackedBarChartProps {
+  rankingData?: RankingModel[];
+}
+
+const TokenStackedBarChart = ({ rankingData }: TokenStackedBarChartProps) => {
+  // If we have ranking data, use it; otherwise fall back to mock data
+  const useRankingData = rankingData && rankingData.length > 0;
+
+  // Extract all labels (dates or ranks)
+  const labels = useRankingData
+    ? rankingData.slice(0, 10).map(model => model.model_name.split(' ').slice(0, 2).join(' '))
+    : mockData.dates.map(date => {
+        const d = new Date(date);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      });
 
   // Define consistent colors for each model
   const modelColors: Record<string, string> = {
@@ -43,12 +68,32 @@ const TokenStackedBarChart = () => {
     'Others': '#f97316',
   };
 
-  const datasets = mockData.models.map(model => ({
-    label: model.name,
-    data: model.data.map(value => value / 1e9), // Convert to billions
-    backgroundColor: modelColors[model.name] || '#6b7280',
-    stack: 'Stack 0',
-  }));
+  // Helper function to parse token values from strings like "4.8T tokens", "2.35T tokens", etc.
+  const parseTokenValue = (tokenStr: string): number => {
+    const num = parseFloat(tokenStr.replace(/[^\d.]/g, ''));
+    if (tokenStr.includes('T')) return num * 1000; // Convert to billions for chart
+    if (tokenStr.includes('B')) return num;
+    if (tokenStr.includes('M')) return num / 1000;
+    return num;
+  };
+
+  const datasets = useRankingData
+    ? [
+        {
+          label: 'Tokens Generated',
+          data: rankingData!.slice(0, 10).map(model => parseTokenValue(model.tokens)),
+          backgroundColor: rankingData!.slice(0, 10).map((model, index) => {
+            const colors = ['#1e40af', '#ea580c', '#3b82f6', '#eab308', '#2563eb', '#10b981', '#8b5cf6', '#14b8a6', '#4f46e5', '#f97316'];
+            return colors[index] || '#6b7280';
+          }),
+        },
+      ]
+    : mockData.models.map(model => ({
+        label: model.name,
+        data: model.data.map(value => value / 1e9), // Convert to billions
+        backgroundColor: modelColors[model.name] || '#6b7280',
+        stack: 'Stack 0',
+      }));
 
   const data = {
     labels,
@@ -58,14 +103,23 @@ const TokenStackedBarChart = () => {
   const options: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        top: 10,
+        bottom: 10,
+        left: 10,
+        right: 10,
+      },
+    },
     plugins: {
       legend: {
+        display: !useRankingData, // Hide legend for ranking data (single dataset)
         position: 'bottom',
         labels: {
           usePointStyle: true,
-          padding: 20,
+          padding: 15,
           font: {
-            size: 12,
+            size: 11,
           },
         },
       },
@@ -73,9 +127,9 @@ const TokenStackedBarChart = () => {
         callbacks: {
           label: function (context: any) {
             const value = context.parsed.y;
-            if (value >= 1000) return `${context.dataset.label}: ${(value / 1000).toFixed(1)}T`;
-            if (value >= 1) return `${context.dataset.label}: ${value.toFixed(1)}B`;
-            return `${context.dataset.label}: ${(value * 1000).toFixed(0)}M`;
+            if (value >= 1000) return `${(value / 1000).toFixed(1)}T tokens`;
+            if (value >= 1) return `${value.toFixed(1)}B tokens`;
+            return `${(value * 1000).toFixed(0)}M tokens`;
           },
         },
       },
@@ -86,13 +140,12 @@ const TokenStackedBarChart = () => {
     scales: {
       x: {
         type: 'category',
-        stacked: true,
+        stacked: !useRankingData, // Only stack for mock data
         ticks: {
-          font: { size: 10 },
-          maxRotation: 45,
-          minRotation: 45,
-          autoSkip: true,
-          maxTicksLimit: 20,
+          font: { size: 9 },
+          maxRotation: 0,
+          minRotation: 0,
+          autoSkip: false,
         },
         grid: {
           display: false,
@@ -100,13 +153,13 @@ const TokenStackedBarChart = () => {
       },
       y: {
         type: 'linear',
-        stacked: true,
+        stacked: !useRankingData, // Only stack for mock data
         beginAtZero: true,
         title: {
           display: true,
-          text: 'Tokens Generated',
+          text: 'Tokens (Billions)',
           font: {
-            size: 13,
+            size: 12,
             weight: 'bold',
           },
         },
@@ -117,8 +170,9 @@ const TokenStackedBarChart = () => {
             return `${(value * 1000).toFixed(0)}M`;
           },
           font: {
-            size: 11,
+            size: 10,
           },
+          padding: 5,
         },
         grid: {
           color: '#e5e7eb',
@@ -128,7 +182,7 @@ const TokenStackedBarChart = () => {
   };
 
   return (
-    <div className="w-full h-[32rem]">
+    <div className="w-full h-[24rem]">
       <Bar data={data} options={options} />
     </div>
   );
