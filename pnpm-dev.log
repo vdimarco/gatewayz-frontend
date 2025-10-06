@@ -153,3 +153,8 @@
    Reload env: .env.local
  ✓ Compiled in 11.1s (5713 modules)
 <w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'C:\Users\vaughn.v\Documents\GitHub\gatewayz-frontend\.next\cache\webpack\client-development\0.pack.gz_' -> 'C:\Users\vaughn.v\Documents\GitHub\gatewayz-frontend\.next\cache\webpack\client-development\0.pack.gz'
+ ✓ Compiled in 1637ms (5704 modules)
+ ✓ Compiled in 701ms (5704 modules)
+ ✓ Compiled in 855ms (5704 modules)
+ ✓ Compiled in 907ms (5704 modules)
+^CTerminate batch job (Y/N)?  ELIFECYCLE  Command failed with exit code 3221225786.

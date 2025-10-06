@@ -12,7 +12,7 @@
  * 4. Add loading states, error handling, and pagination as needed
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -22,6 +22,8 @@ import { Switch } from "@/components/ui/switch";
 import { Info, RefreshCw, ArrowUpRight, ChevronLeft, ChevronRight, CreditCard, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { redirectToCheckout } from '@/lib/stripe';
+import { getUserData, makeAuthenticatedRequest } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/config';
 
 // Transaction data type
 interface Transaction {
@@ -99,6 +101,40 @@ export default function CreditsPage() {
   const [expiryDate, setExpiryDate] = useState('');
   const [cvc, setCvc] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [loadingCredits, setLoadingCredits] = useState(true);
+
+  useEffect(() => {
+    const fetchCredits = async () => {
+      try {
+        // First try to get credits from local storage
+        const userData = getUserData();
+        if (userData && userData.credits !== undefined) {
+          setCredits(userData.credits);
+        }
+
+        // Then fetch fresh data from API
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/profile`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.credits !== undefined) {
+            setCredits(data.credits);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching credits:', error);
+        // If API fails, try to use local storage data
+        const userData = getUserData();
+        if (userData && userData.credits !== undefined) {
+          setCredits(userData.credits);
+        }
+      } finally {
+        setLoadingCredits(false);
+      }
+    };
+
+    fetchCredits();
+  }, []);
 
   const handleBuyCredits = async () => {
     setIsLoading(true);
@@ -127,11 +163,17 @@ export default function CreditsPage() {
           <h2 className="text-2xl font-semibold mr-16">Available Balance</h2>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 mr-16">
-              <Card 
+              <Card
                 className="w-96 h-14 text-xl md:text-2xl font-semibold bg-gray-50 border-gray-200 px-12"
               >
                 <CardContent className="py-[13px] flex items-center justify-center">
-                  <span className="text-xl md:text-2xl font-bold">$1000</span><span className="text-xl md:text-2xl font-bold text-muted-foreground">~$1000.07</span>
+                  {loadingCredits ? (
+                    <span className="text-xl md:text-2xl font-bold text-muted-foreground">Loading...</span>
+                  ) : credits !== null ? (
+                    <span className="text-xl md:text-2xl font-bold">${credits.toFixed(2)}</span>
+                  ) : (
+                    <span className="text-xl md:text-2xl font-bold text-muted-foreground">$0.00</span>
+                  )}
                 </CardContent>
               </Card>
             </div>

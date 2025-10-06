@@ -23,10 +23,9 @@ export function GetCreditsButton() {
     <button
       onClick={handleClick}
       disabled={isLoading}
-      className="relative px-4 py-2 rounded-md font-medium text-white bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/50 animate-pulse-glow disabled:opacity-50 disabled:cursor-not-allowed"
+      className="relative px-4 py-2 rounded-md font-medium text-white bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border border-purple-400/30 shadow-md hover:shadow-lg hover:shadow-purple-500/30"
     >
       <span className="relative z-10">{isLoading ? 'Loading...' : 'Get Credits'}</span>
-      <div className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300"></div>
     </button>
   );
 }
