@@ -105,21 +105,31 @@ const topModels = [
   { rank: 60, change: 2, model: "GPT-2-Small", org: "OpenAI", category: "Language", provider: "OpenAI", tokens: "7M", value: "$500K", changePercent: "+0.8%" },
 ];
 
-const topApps = Array.from({ length: 20 }, (_, index) => ({
-  id: `app-${index}`,
-  name: "Google",
-  description: "Autonomous Coding Agent...",
-  tokens: "21.7B",
-  growth: "+13.06%"
-}));
+interface RankingApp {
+  id: number;
+  rank: number;
+  app_name: string;
+  app_url: string;
+  tokens: string;
+  trend_percentage: string;
+  trend_direction: 'up' | 'down';
+  trend_icon: string;
+  trend_color: string;
+  time_period: string;
+  scraped_at: string;
+  description?: string;
+  logoUrl?: string;
+}
 
 export default function RankingsPage() {
   const [selectedTimeRange, setSelectedTimeRange] = useState('Top This Month');
   const [selectedSort, setSelectedSort] = useState('All');
   const [selectedTopCount, setSelectedTopCount] = useState('Top 10');
   const [rankingModels, setRankingModels] = useState<RankingModel[]>([]);
+  const [rankingApps, setRankingApps] = useState<RankingApp[]>([]);
   const [modelLogos, setModelLogos] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [loadingApps, setLoadingApps] = useState(true);
 
   // Fetch ranking models from API
   useEffect(() => {
@@ -195,6 +205,39 @@ export default function RankingsPage() {
     };
 
     fetchRankingModels();
+  }, []);
+
+  // Fetch ranking apps from API
+  useEffect(() => {
+    const fetchRankingApps = async () => {
+      try {
+        setLoadingApps(true);
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
+        const url = `${apiBaseUrl}/ranking/apps`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          console.warn('Apps ranking API not available');
+          setRankingApps([]);
+          setLoadingApps(false);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          setRankingApps(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch ranking apps:', error);
+        setRankingApps([]);
+      } finally {
+        setLoadingApps(false);
+      }
+    };
+
+    fetchRankingApps();
   }, []);
 
   // Fetch model logos
@@ -507,29 +550,60 @@ export default function RankingsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-5">
-            {topApps.map((app) => (
-              <Card key={app.id} className="p-4">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center">
-                    <img src="/devicon_google.svg" alt={app.name} className="w-10 h-10 rounded-full" />
+            {loadingApps ? (
+              // Loading skeleton for apps
+              Array.from({ length: 8 }).map((_, i) => (
+                <Card key={i} className="p-4">
+                  <div className="animate-pulse">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-full bg-gray-200"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-8 bg-gray-200 rounded"></div>
+                      <div className="h-6 bg-gray-200 rounded"></div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{app.name}</h3>
-                    <p className="text-sm ">{app.description}</p>
-                  </div>
-                </div>
-                <div className="space-y-2 flex ">
-                  <div className='flex-1'>
-                    <p className="text-2xl font-bold">{app.tokens}</p>
-                    <p className="text-xs ">Tokens Generated</p>
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-green-600">{app.growth}</p>
-                    <p className="text-xs ">Weekly Growth</p>
-                  </div>
-                </div>
+                </Card>
+              ))
+            ) : rankingApps.length === 0 ? (
+              <Card className="p-6 col-span-full">
+                <p className="text-center text-gray-500">No apps data available yet.</p>
               </Card>
-            ))}
+            ) : (
+              rankingApps.slice(0, 20).map((app) => (
+                <Card key={app.id} className="p-4">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100">
+                      {app.logoUrl ? (
+                        <img src={app.logoUrl} alt={app.app_name} className="w-10 h-10 rounded-full" />
+                      ) : (
+                        <span className="text-sm font-medium">{app.app_name.charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">{app.app_name}</h3>
+                      <p className="text-sm text-gray-600">{app.description || 'Application'}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 flex ">
+                    <div className='flex-1'>
+                      <p className="text-2xl font-bold">{app.tokens}</p>
+                      <p className="text-xs text-gray-600">Tokens Generated</p>
+                    </div>
+                    <div>
+                      <p className={`text-lg font-bold ${app.trend_direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {app.trend_percentage}
+                      </p>
+                      <p className="text-xs text-gray-600">Growth</p>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
           </div>
         </div>
       </div>
