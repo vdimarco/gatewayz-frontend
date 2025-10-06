@@ -24,7 +24,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Slider } from "@/components/ui/slider";
-import { BookText, Bot, ChevronDown, ChevronUp, FileText, ImageIcon, LayoutGrid, LayoutList, Search, Sliders as SlidersIcon, X } from 'lucide-react';
+import { BookText, Bot, ChevronDown, ChevronUp, FileText, ImageIcon, LayoutGrid, LayoutList, Music, Search, Sliders as SlidersIcon, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { stringToColor } from '@/lib/utils';
@@ -235,7 +235,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                 {allInputFormats.map((format) => {
                   const icon = format.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
                                format.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
-                               format.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> : null;
+                               format.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> :
+                               format.toLowerCase() === 'audio' ? <Music className="w-4 h-4"/> : null;
                   return (
                     <div key={format} className="flex items-center space-x-2">
                       <Checkbox
@@ -258,7 +259,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                 {allOutputFormats.map((format) => {
                   const icon = format.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
                                format.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
-                               format.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> : null;
+                               format.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> :
+                               format.toLowerCase() === 'audio' ? <Music className="w-4 h-4"/> : null;
                   return (
                     <div key={format} className="flex items-center space-x-2">
                       <Checkbox
