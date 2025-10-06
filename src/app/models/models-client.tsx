@@ -88,6 +88,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const [promptPricing, setPromptPricing] = useState(parseFloat(searchParams.get('promptPricing') || '10'));
   const [selectedParameters, setSelectedParameters] = useState<string[]>(searchParams.get('parameters')?.split(',').filter(Boolean) || []);
   const [selectedProviders, setSelectedProviders] = useState<string[]>(searchParams.get('providers')?.split(',').filter(Boolean) || []);
+  const [selectedModelSeries, setSelectedModelSeries] = useState<string[]>(searchParams.get('modelSeries')?.split(',').filter(Boolean) || []);
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'tokens-desc');
 
   // Debounce search input
@@ -110,14 +111,31 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     if (promptPricing !== 10) params.set('promptPricing', promptPricing.toString());
     if (selectedParameters.length > 0) params.set('parameters', selectedParameters.join(','));
     if (selectedProviders.length > 0) params.set('providers', selectedProviders.join(','));
+    if (selectedModelSeries.length > 0) params.set('modelSeries', selectedModelSeries.join(','));
     if (sortBy !== 'tokens-desc') params.set('sortBy', sortBy);
 
     const queryString = params.toString();
     router.replace(queryString ? `?${queryString}` : '/models', { scroll: false });
-  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, sortBy, router]);
+  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, selectedModelSeries, sortBy, router]);
 
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (value: string, checked: boolean) => {
     setter(prev => checked ? [...prev, value] : prev.filter(v => v !== value));
+  };
+
+  // Extract model series from model name (e.g., "GPT-4", "Claude", "Gemini")
+  const getModelSeries = (model: Model): string => {
+    const name = model.name.toLowerCase();
+    if (name.includes('gpt-4')) return 'GPT-4';
+    if (name.includes('gpt-3')) return 'GPT-3';
+    if (name.includes('claude')) return 'Claude';
+    if (name.includes('gemini')) return 'Gemini';
+    if (name.includes('llama')) return 'Llama';
+    if (name.includes('mistral')) return 'Mistral';
+    if (name.includes('deepseek')) return 'DeepSeek';
+    if (name.includes('qwen')) return 'Qwen';
+    if (name.includes('glm')) return 'GLM';
+    if (name.includes('phi')) return 'Phi';
+    return 'Other';
   };
 
   const resetFilters = () => {
@@ -129,6 +147,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     setPromptPricing(10);
     setSelectedParameters([]);
     setSelectedProviders([]);
+    setSelectedModelSeries([]);
     setSortBy('tokens-desc');
   };
 
@@ -161,8 +180,9 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
       const priceMatch = avgPrice <= promptPricing / 1000000 || isFree;
       const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => (model.supported_parameters || []).includes(p));
       const providerMatch = selectedProviders.length === 0 || selectedProviders.includes(model.provider_slug);
+      const seriesMatch = selectedModelSeries.length === 0 || selectedModelSeries.includes(getModelSeries(model));
 
-      return inputFormatMatch && outputFormatMatch && contextMatch && priceMatch && parameterMatch && providerMatch;
+      return inputFormatMatch && outputFormatMatch && contextMatch && priceMatch && parameterMatch && providerMatch && seriesMatch;
     });
 
     // Then sort the filtered results
@@ -183,12 +203,16 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     });
 
     return sorted;
-  }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, sortBy]);
+  }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, selectedModelSeries, sortBy, getModelSeries]);
 
   const allInputFormats = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.architecture?.input_modalities || []))).filter(Boolean), [initialModels]);
   const allOutputFormats = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.architecture?.output_modalities || []))).filter(Boolean), [initialModels]);
   const allParameters = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.supported_parameters || []))), [initialModels]);
   const allProviders = useMemo(() => Array.from(new Set(initialModels.map(m => m.provider_slug).filter(Boolean))), [initialModels]);
+  const allModelSeries = useMemo(() => {
+    const series = Array.from(new Set(initialModels.map(m => getModelSeries(m))));
+    return series.sort();
+  }, [initialModels, getModelSeries]);
 
 
   return (
@@ -250,11 +274,18 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
             <FilterSlider label="Prompt Pricing" value={promptPricing} onValueChange={setPromptPricing} min={0} max={10} step={0.1} unit="$" />
 
             <FilterDropdown
-              label="Supported Parameters"
+              label="Available Parameters"
               items={allParameters}
               selectedItems={selectedParameters}
               onSelectionChange={handleCheckboxChange(setSelectedParameters)}
               icon={<SlidersIcon className="w-4 h-4"/>}
+            />
+            <FilterDropdown
+              label="Model Series"
+              items={allModelSeries}
+              selectedItems={selectedModelSeries}
+              onSelectionChange={handleCheckboxChange(setSelectedModelSeries)}
+              icon={<Bot className="w-4 h-4"/>}
             />
             <FilterDropdown
               label="Providers"
@@ -306,6 +337,14 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                 <Badge key={param} variant="secondary" className="gap-1">
                   {param}
                   <button onClick={() => setSelectedParameters(prev => prev.filter(p => p !== param))} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {selectedModelSeries.map(series => (
+                <Badge key={series} variant="secondary" className="gap-1">
+                  {series}
+                  <button onClick={() => setSelectedModelSeries(prev => prev.filter(s => s !== series))} className="ml-1 hover:bg-muted rounded-sm">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
