@@ -13,6 +13,7 @@ import { SearchBar } from './search-bar';
 import { API_BASE_URL } from '@/lib/config';
 import { processAuthResponse, getApiKey, removeApiKey } from '@/lib/api';
 import { Separator } from "@/components/ui/separator";
+import { GetCreditsButton } from './get-credits-button';
 
 export function AppHeader() {
   const { user, login, logout, getAccessToken } = usePrivy();
@@ -104,13 +105,7 @@ export function AppHeader() {
         
         <div className="flex items-center gap-4">
           <nav className="hidden md:flex items-center gap-6 text-sm">
-            <Link
-              href="/settings/credits"
-              className="relative px-4 py-2 rounded-md font-medium text-white bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/50 animate-pulse-glow"
-            >
-              <span className="relative z-10">Get Credits</span>
-              <div className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300"></div>
-            </Link>
+            <GetCreditsButton />
             <Link href="/models" className="transition-colors hover:text-foreground/80 ">Models</Link>
             <Link href="/chat" className="transition-colors hover:text-foreground/80 ">Chat</Link>
             <Link href="/developers" className="transition-colors hover:text-foreground/80 ">Developers</Link>

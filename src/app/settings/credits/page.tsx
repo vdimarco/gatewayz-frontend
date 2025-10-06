@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Info, RefreshCw, ArrowUpRight, ChevronLeft, ChevronRight, CreditCard, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
+import { redirectToCheckout } from '@/lib/stripe';
 
 // Transaction data type
 interface Transaction {
@@ -97,6 +98,20 @@ export default function CreditsPage() {
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvc, setCvc] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleBuyCredits = async () => {
+    setIsLoading(true);
+    try {
+      // Default to $10 worth of credits - can be customized
+      await redirectToCheckout(10);
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Failed to start checkout. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -120,7 +135,13 @@ export default function CreditsPage() {
                 </CardContent>
               </Card>
             </div>
-            <Button className="bg-black text-white h-12 px-20">Buy Credits</Button>
+            <Button
+              className="bg-black text-white h-12 px-20"
+              onClick={handleBuyCredits}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : 'Buy Credits'}
+            </Button>
           </div>
         </div>  
       </div>
