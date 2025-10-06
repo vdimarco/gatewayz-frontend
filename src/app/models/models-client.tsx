@@ -135,8 +135,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     });
   }, [initialModels, searchTerm, selectedModalities, contextLength, promptPricing, selectedParameters, selectedProviders, sortBy]);
 
-  const allParameters = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.supported_parameters))), [initialModels]);
-  const allProviders = useMemo(() => Array.from(new Set(initialModels.map(m => m.provider_slug))), [initialModels]);
+  const allParameters = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.supported_parameters || []))), [initialModels]);
+  const allProviders = useMemo(() => Array.from(new Set(initialModels.map(m => m.provider_slug).filter(Boolean))), [initialModels]);
 
 
   return (
