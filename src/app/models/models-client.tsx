@@ -151,6 +151,11 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     setSortBy('tokens-desc');
   };
 
+  // Check if any filters are active
+  const hasActiveFilters = searchTerm || selectedInputFormats.length > 0 || selectedOutputFormats.length > 0 ||
+    contextLength !== 4 || promptPricing !== 10 || selectedParameters.length > 0 ||
+    selectedProviders.length > 0 || selectedModelSeries.length > 0 || sortBy !== 'tokens-desc';
+
   // Calculate search matches separately from other filters
   const searchFilteredModels = useMemo(() => {
     if (!debouncedSearchTerm) return initialModels;
@@ -311,7 +316,9 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                     ? `${filteredModels.length} of ${searchFilteredModels.length} models`
                     : `${filteredModels.length} models`}
                 </span>
-                <Button variant="ghost" size="sm" onClick={resetFilters}>Reset Filters</Button>
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={resetFilters}>Clear All Filters</Button>
+                )}
               </div>
             </div>
 
