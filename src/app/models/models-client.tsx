@@ -340,6 +340,22 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                   </button>
                 </Badge>
               ))}
+              {contextLength !== 4 && (
+                <Badge variant="secondary" className="gap-1">
+                  Context: ≥{contextLength}K tokens
+                  <button onClick={() => setContextLength(4)} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {promptPricing !== 10 && (
+                <Badge variant="secondary" className="gap-1">
+                  Price: ≤${promptPricing}/M tokens
+                  <button onClick={() => setPromptPricing(10)} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
               {selectedParameters.map(param => (
                 <Badge key={param} variant="secondary" className="gap-1">
                   {param}
