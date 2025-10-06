@@ -5,11 +5,12 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronDown, ArrowUp, ArrowDown, TrendingUp, TrendingDown } from 'lucide-react';
+import { ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
 import TokenStackedBarChart from '@/components/TokenStackedBarChart';
 import { API_BASE_URL } from '@/lib/config';
+import { extractTokenValue } from '@/lib/utils';
 
-interface ModelData {
+export interface ModelData {
   id: number;
   rank: number;
   model_name: string;
@@ -39,202 +40,589 @@ interface AppData {
   scraped_at: string; // ISO datetime string
 }
 
-
-interface RankingModel {
-  id: number;
-  rank: number;
-  model_name: string;
-  author: string;
-  tokens: string;
-  trend_percentage: string;
-  trend_direction: 'up' | 'down';
-  trend_icon: string;
-  trend_color: string;
-  model_url: string;
-  author_url: string;
-  time_period: string;
-  scraped_at: string;
-  logoUrl?: string;
-  category?: string;
-  provider?: string;
-  value?: string;
-}
-
-// Mock data for the rankings - 60 diverse models for testing
-const topModels = [
-  // Top tier models
-  { rank: 1, change: 4, model: "GPT-4o", org: "OpenAI", category: "Multimodal", provider: "OpenRouter", tokens: "2.1B", value: "$1.2B", changePercent: "+15.3%" },
-  { rank: 2, change: 1, model: "Claude-3.5-Sonnet", org: "Anthropic", category: "Language", provider: "OpenRouter", tokens: "1.8B", value: "$980M", changePercent: "+22.7%" },
-  { rank: 3, change: 2, model: "Gemini-2.0-Pro", org: "Google", category: "Multimodal", provider: "OpenRouter", tokens: "1.6B", value: "$850M", changePercent: "+18.9%" },
-  { rank: 4, change: 3, model: "GPT-4-Turbo", org: "OpenAI", category: "Language", provider: "OpenRouter", tokens: "1.4B", value: "$720M", changePercent: "+12.4%" },
-  { rank: 5, change: 1, model: "Claude-3-Opus", org: "Anthropic", category: "Language", provider: "OpenRouter", tokens: "1.2B", value: "$650M", changePercent: "+8.7%" },
-  
-  // High performing models
-  { rank: 6, change: 2, model: "Gemini-1.5-Pro", org: "Google", category: "Multimodal", provider: "OpenRouter", tokens: "980M", value: "$520M", changePercent: "+25.1%" },
-  { rank: 7, change: 4, model: "Llama-3.1-405B", org: "Meta", category: "Language", provider: "OpenRouter", tokens: "850M", value: "$480M", changePercent: "+31.2%" },
-  { rank: 8, change: 1, model: "Mistral-Large", org: "Mistral AI", category: "Language", provider: "OpenRouter", tokens: "720M", value: "$420M", changePercent: "+19.8%" },
-  { rank: 9, change: 3, model: "Qwen-2.5-72B", org: "Alibaba", category: "Language", provider: "OpenRouter", tokens: "680M", value: "$380M", changePercent: "+27.5%" },
-  { rank: 10, change: 2, model: "DeepSeek-V3", org: "DeepSeek", category: "Programming", provider: "OpenRouter", tokens: "650M", value: "$350M", changePercent: "+33.4%" },
-  
-  // Mid-tier models
-  { rank: 11, change: 4, model: "GPT-4o-Mini", org: "OpenAI", category: "Language", provider: "OpenAI", tokens: "580M", value: "$320M", changePercent: "+16.9%" },
-  { rank: 12, change: 1, model: "Claude-3-Haiku", org: "Anthropic", category: "Language", provider: "Anthropic", tokens: "520M", value: "$290M", changePercent: "+21.3%" },
-  { rank: 13, change: 2, model: "Gemini-1.5-Flash", org: "Google", category: "Multimodal", provider: "Google", tokens: "480M", value: "$260M", changePercent: "+14.7%" },
-  { rank: 14, change: 3, model: "Llama-3.1-70B", org: "Meta", category: "Language", provider: "Meta", tokens: "450M", value: "$240M", changePercent: "+18.2%" },
-  { rank: 15, change: 1, model: "Mistral-Medium", org: "Mistral AI", category: "Language", provider: "Mistral AI", tokens: "420M", value: "$220M", changePercent: "+12.8%" },
-  { rank: 16, change: 2, model: "Qwen-2.5-32B", org: "Alibaba", category: "Language", provider: "Alibaba", tokens: "380M", value: "$200M", changePercent: "+24.6%" },
-  { rank: 17, change: 4, model: "DeepSeek-Coder-V2", org: "DeepSeek", category: "Programming", provider: "DeepSeek", tokens: "350M", value: "$180M", changePercent: "+29.1%" },
-  { rank: 18, change: 1, model: "PaLM-2-Large", org: "Google", category: "Language", provider: "Google", tokens: "320M", value: "$160M", changePercent: "+7.4%" },
-  { rank: 19, change: 3, model: "Codex-Davinci-003", org: "OpenAI", category: "Programming", provider: "OpenAI", tokens: "300M", value: "$150M", changePercent: "+11.9%" },
-  { rank: 20, change: 2, model: "Claude-Instant", org: "Anthropic", category: "Language", provider: "Anthropic", tokens: "280M", value: "$140M", changePercent: "+15.7%" },
-  
-  // Specialized models
-  { rank: 21, change: 4, model: "Stable-Diffusion-XL", org: "Stability AI", category: "Vision", provider: "Stability AI", tokens: "250M", value: "$130M", changePercent: "+22.3%" },
-  { rank: 22, change: 1, model: "DALL-E-3", org: "OpenAI", category: "Vision", provider: "OpenAI", tokens: "230M", value: "$120M", changePercent: "+18.6%" },
-  { rank: 23, change: 2, model: "Midjourney-V6", org: "Midjourney", category: "Vision", provider: "Midjourney", tokens: "210M", value: "$110M", changePercent: "+26.8%" },
-  { rank: 24, change: 3, model: "Whisper-Large-V3", org: "OpenAI", category: "Audio & Speech Models", provider: "OpenAI", tokens: "190M", value: "$100M", changePercent: "+13.2%" },
-  { rank: 25, change: 1, model: "TTS-1-HD", org: "OpenAI", category: "Audio & Speech Models", provider: "OpenAI", tokens: "170M", value: "$90M", changePercent: "+9.8%" },
-  { rank: 26, change: 2, model: "MusicGen-Large", org: "Meta", category: "Audio & Speech Models", provider: "Meta", tokens: "150M", value: "$80M", changePercent: "+17.4%" },
-  { rank: 27, change: 4, model: "Embedding-3-Large", org: "OpenAI", category: "Embedding Models", provider: "OpenAI", tokens: "130M", value: "$70M", changePercent: "+20.1%" },
-  { rank: 28, change: 1, model: "Text-Embedding-3-Small", org: "OpenAI", category: "Embedding Models", provider: "OpenAI", tokens: "120M", value: "$65M", changePercent: "+14.7%" },
-  { rank: 29, change: 3, model: "E5-Large-V2", org: "Microsoft", category: "Embedding Models", provider: "Microsoft", tokens: "110M", value: "$60M", changePercent: "+11.3%" },
-  { rank: 30, change: 2, model: "BGE-Large-EN-V1.5", org: "BAAI", category: "Embedding Models", provider: "BAAI", tokens: "100M", value: "$55M", changePercent: "+16.9%" },
-  
-  // Domain-specific models
-  { rank: 31, change: 4, model: "AlphaFold-3", org: "DeepMind", category: "Domain-Specific", provider: "DeepMind", tokens: "90M", value: "$50M", changePercent: "+28.5%" },
-  { rank: 32, change: 1, model: "Gato", org: "DeepMind", category: "Reinforcement Learning", provider: "DeepMind", tokens: "85M", value: "$48M", changePercent: "+19.2%" },
-  { rank: 33, change: 2, model: "PaLM-2-Medical", org: "Google", category: "Domain-Specific", provider: "Google", tokens: "80M", value: "$45M", changePercent: "+13.8%" },
-  { rank: 34, change: 3, model: "BioBERT", org: "Allen Institute", category: "Domain-Specific", provider: "Allen Institute", tokens: "75M", value: "$42M", changePercent: "+8.9%" },
-  { rank: 35, change: 1, model: "ClinicalBERT", org: "Microsoft", category: "Domain-Specific", provider: "Microsoft", tokens: "70M", value: "$40M", changePercent: "+12.4%" },
-  { rank: 36, change: 2, model: "SciBERT", org: "Allen Institute", category: "Domain-Specific", provider: "Allen Institute", tokens: "65M", value: "$38M", changePercent: "+15.7%" },
-  { rank: 37, change: 4, model: "Legal-BERT", org: "Hugging Face", category: "Domain-Specific", provider: "Hugging Face", tokens: "60M", value: "$35M", changePercent: "+21.6%" },
-  { rank: 38, change: 1, model: "FinBERT", org: "Hugging Face", category: "Domain-Specific", provider: "Hugging Face", tokens: "55M", value: "$32M", changePercent: "+7.3%" },
-  { rank: 39, change: 3, model: "RoBERTa-Large", org: "Facebook", category: "Language", provider: "Facebook", tokens: "50M", value: "$30M", changePercent: "+10.2%" },
-  { rank: 40, change: 2, model: "DeBERTa-V3-Large", org: "Microsoft", category: "Language", provider: "Microsoft", tokens: "45M", value: "$28M", changePercent: "+14.8%" },
-  
-  // Smaller but growing models
-  { rank: 41, change: 4, model: "T5-11B", org: "Google", category: "Language", provider: "Google", tokens: "40M", value: "$25M", changePercent: "+18.9%" },
-  { rank: 42, change: 1, model: "BART-Large", org: "Facebook", category: "Language", provider: "Facebook", tokens: "38M", value: "$23M", changePercent: "+6.7%" },
-  { rank: 43, change: 2, model: "ELECTRA-Large", org: "Google", category: "Language", provider: "Google", tokens: "35M", value: "$21M", changePercent: "+9.4%" },
-  { rank: 44, change: 3, model: "ALBERT-XXLarge", org: "Google", category: "Language", provider: "Google", tokens: "32M", value: "$19M", changePercent: "+12.1%" },
-  { rank: 45, change: 1, model: "DistilBERT", org: "Hugging Face", category: "Language", provider: "Hugging Face", tokens: "30M", value: "$17M", changePercent: "+5.8%" },
-  { rank: 46, change: 2, model: "MobileBERT", org: "Google", category: "Language", provider: "Google", tokens: "28M", value: "$16M", changePercent: "+8.3%" },
-  { rank: 47, change: 4, model: "TinyBERT", org: "Huawei", category: "Language", provider: "Huawei", tokens: "25M", value: "$14M", changePercent: "+16.2%" },
-  { rank: 48, change: 1, model: "BERT-Base", org: "Google", category: "Language", provider: "Google", tokens: "22M", value: "$12M", changePercent: "+3.9%" },
-  { rank: 49, change: 3, model: "GPT-2-Large", org: "OpenAI", category: "Language", provider: "OpenAI", tokens: "20M", value: "$11M", changePercent: "+7.6%" },
-  { rank: 50, change: 2, model: "CTRL", org: "Salesforce", category: "Language", provider: "Salesforce", tokens: "18M", value: "$10M", changePercent: "+4.2%" },
-  
-  // Additional models for comprehensive testing
-  { rank: 51, change: 4, model: "XLM-RoBERTa", org: "Facebook", category: "Language", provider: "Facebook", tokens: "16M", value: "$9M", changePercent: "+11.7%" },
-  { rank: 52, change: 1, model: "mT5-Base", org: "Google", category: "Language", provider: "Google", tokens: "15M", value: "$8M", changePercent: "+6.4%" },
-  { rank: 53, change: 2, model: "UniLMv2", org: "Microsoft", category: "Language", provider: "Microsoft", tokens: "14M", value: "$7M", changePercent: "+9.1%" },
-  { rank: 54, change: 3, model: "ProphetNet", org: "Microsoft", category: "Language", provider: "Microsoft", tokens: "13M", value: "$6M", changePercent: "+13.8%" },
-  { rank: 55, change: 1, model: "PEGASUS", org: "Google", category: "Language", provider: "Google", tokens: "12M", value: "$5M", changePercent: "+2.7%" },
-  { rank: 56, change: 2, model: "BART-Base", org: "Facebook", category: "Language", provider: "Facebook", tokens: "11M", value: "$4M", changePercent: "+8.5%" },
-  { rank: 57, change: 4, model: "T5-Base", org: "Google", category: "Language", provider: "Google", tokens: "10M", value: "$3M", changePercent: "+15.3%" },
-  { rank: 58, change: 1, model: "GPT-2-Medium", org: "OpenAI", category: "Language", provider: "OpenAI", tokens: "9M", value: "$2M", changePercent: "+1.9%" },
-  { rank: 59, change: 3, model: "DistilGPT-2", org: "Hugging Face", category: "Language", provider: "Hugging Face", tokens: "8M", value: "$1M", changePercent: "+5.6%" },
-  { rank: 60, change: 2, model: "GPT-2-Small", org: "OpenAI", category: "Language", provider: "OpenAI", tokens: "7M", value: "$500K", changePercent: "+0.8%" },
+const MockModelsData: ModelData[] = [
+  {
+    id: 1,
+    rank: 1,
+    model_name: "Grok Code Fast 1",
+    author: "x-ai",
+    tokens: "1.05T tokens",
+    trend_percentage: "1%",
+    trend_direction: "down",
+    trend_icon: "↓",
+    trend_color: "red",
+    model_url: "/x-ai/grok-code-fast-1",
+    author_url: "/x-ai",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 2,
+    rank: 2,
+    model_name: "Grok 4 Fast (free)",
+    author: "x-ai",
+    tokens: "645B tokens",
+    trend_percentage: "29%",
+    trend_direction: "down",
+    trend_icon: "↓",
+    trend_color: "red",
+    model_url: "/x-ai/grok-4-fast:free",
+    author_url: "/x-ai",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 3,
+    rank: 3,
+    model_name: "Gemini 2.5 Flash",
+    author: "google",
+    tokens: "363B tokens",
+    trend_percentage: "5%",
+    trend_direction: "up",
+    trend_icon: "↑",
+    trend_color: "green",
+    model_url: "/google/gemini-2.5-flash",
+    author_url: "/google",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 4,
+    rank: 4,
+    model_name: "Claude Sonnet 4",
+    author: "anthropic",
+    tokens: "316B tokens",
+    trend_percentage: "45%",
+    trend_direction: "down",
+    trend_icon: "↓",
+    trend_color: "red",
+    model_url: "/anthropic/claude-sonnet-4",
+    author_url: "/anthropic",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 5,
+    rank: 5,
+    model_name: "Claude Sonnet 4.5",
+    author: "anthropic",
+    tokens: "298B tokens",
+    trend_percentage: "new",
+    trend_direction: "up",
+    trend_icon: "•",
+    trend_color: "purple",
+    model_url: "/anthropic/claude-sonnet-4.5",
+    author_url: "/anthropic",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 6,
+    rank: 6,
+    model_name: "DeepSeek V3.1 (free)",
+    author: "deepseek",
+    tokens: "223B tokens",
+    trend_percentage: "7%",
+    trend_direction: "up",
+    trend_icon: "↑",
+    trend_color: "green",
+    model_url: "/deepseek/deepseek-chat-v3.1:free",
+    author_url: "/deepseek",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 7,
+    rank: 7,
+    model_name: "GPT-4.1 Mini",
+    author: "openai",
+    tokens: "172B tokens",
+    trend_percentage: "150%",
+    trend_direction: "up",
+    trend_icon: "↑",
+    trend_color: "green",
+    model_url: "/openai/gpt-4.1-mini",
+    author_url: "/openai",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 8,
+    rank: 8,
+    model_name: "Gemini 2.0 Flash",
+    author: "google",
+    tokens: "141B tokens",
+    trend_percentage: "12%",
+    trend_direction: "down",
+    trend_icon: "↓",
+    trend_color: "red",
+    model_url: "/google/gemini-2.0-flash-001",
+    author_url: "/google",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 9,
+    rank: 9,
+    model_name: "Gemini 2.5 Flash Lite",
+    author: "google",
+    tokens: "141B tokens",
+    trend_percentage: "59%",
+    trend_direction: "up",
+    trend_icon: "↑",
+    trend_color: "green",
+    model_url: "/google/gemini-2.5-flash-lite",
+    author_url: "/google",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 10,
+    rank: 10,
+    model_name: "Gemini 2.5 Pro",
+    author: "google",
+    tokens: "136B tokens",
+    trend_percentage: "0%",
+    trend_direction: "up",
+    trend_icon: "→",
+    trend_color: "gray",
+    model_url: "/google/gemini-2.5-pro",
+    author_url: "/google",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 11,
+    rank: 11,
+    model_name: "DeepSeek V3 0324",
+    author: "deepseek",
+    tokens: "120B tokens",
+    trend_percentage: "15%",
+    trend_direction: "down",
+    trend_icon: "↓",
+    trend_color: "red",
+    model_url: "/deepseek/deepseek-chat-v3-0324",
+    author_url: "/deepseek",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 12,
+    rank: 12,
+    model_name: "Grok 4 Fast",
+    author: "x-ai",
+    tokens: "85.8B tokens",
+    trend_percentage: "505%",
+    trend_direction: "up",
+    trend_icon: "↑",
+    trend_color: "green",
+    model_url: "/x-ai/grok-4-fast",
+    author_url: "/x-ai",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 13,
+    rank: 13,
+    model_name: "Gemma 3 12B",
+    author: "google",
+    tokens: "80B tokens",
+    trend_percentage: "7%",
+    trend_direction: "up",
+    trend_icon: "↑",
+    trend_color: "green",
+    model_url: "/google/gemma-3-12b-it",
+    author_url: "/google",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 14,
+    rank: 14,
+    model_name: "Claude 3.7 Sonnet",
+    author: "anthropic",
+    tokens: "75.7B tokens",
+    trend_percentage: "15%",
+    trend_direction: "up",
+    trend_icon: "↑",
+    trend_color: "green",
+    model_url: "/anthropic/claude-3.7-sonnet",
+    author_url: "/anthropic",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 15,
+    rank: 15,
+    model_name: "GLM 4.6",
+    author: "z-ai",
+    tokens: "73.9B tokens",
+    trend_percentage: "new",
+    trend_direction: "up",
+    trend_icon: "•",
+    trend_color: "purple",
+    model_url: "/z-ai/glm-4.6",
+    author_url: "/z-ai",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 16,
+    rank: 16,
+    model_name: "GPT-5",
+    author: "openai",
+    tokens: "71B tokens",
+    trend_percentage: "49%",
+    trend_direction: "down",
+    trend_icon: "↓",
+    trend_color: "red",
+    model_url: "/openai/gpt-5",
+    author_url: "/openai",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 17,
+    rank: 17,
+    model_name: "gpt-oss-20b",
+    author: "openai",
+    tokens: "70.7B tokens",
+    trend_percentage: "3%",
+    trend_direction: "down",
+    trend_icon: "↓",
+    trend_color: "red",
+    model_url: "/openai/gpt-oss-20b",
+    author_url: "/openai",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 18,
+    rank: 18,
+    model_name: "gpt-oss-120b",
+    author: "openai",
+    tokens: "70B tokens",
+    trend_percentage: "39%",
+    trend_direction: "up",
+    trend_icon: "↑",
+    trend_color: "green",
+    model_url: "/openai/gpt-oss-120b",
+    author_url: "/openai",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 19,
+    rank: 19,
+    model_name: "GPT-4o-mini",
+    author: "openai",
+    tokens: "61.6B tokens",
+    trend_percentage: "4%",
+    trend_direction: "up",
+    trend_icon: "↑",
+    trend_color: "green",
+    model_url: "/openai/gpt-4o-mini",
+    author_url: "/openai",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 20,
+    rank: 20,
+    model_name: "Llama 3.1 8B Instruct",
+    author: "meta-llama",
+    tokens: "59.6B tokens",
+    trend_percentage: "768%",
+    trend_direction: "up",
+    trend_icon: "↑",
+    trend_color: "green",
+    model_url: "/meta-llama/llama-3.1-8b-instruct",
+    author_url: "/meta-llama",
+    time_period: "Top this month",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
 ];
 
-const topApps = Array.from({ length: 20 }, (_, index) => ({
-  id: `app-${index}`,
-  name: "Google",
-  description: "Autonomous Coding Agent...",
-  tokens: "21.7B",
-  growth: "+13.06%"
-}));
+const MockAppssData: AppData[] = [
+  {
+    id: 1,
+    rank: 1,
+    app_name: "Kilo Code",
+    description: "AI coding agent for VS Code",
+    tokens: "89.1B tokens",
+    is_new: false,
+    app_url: "https://kilocode.ai/",
+    domain: "kilocode.ai",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://kilocode.ai/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 2,
+    rank: 2,
+    app_name: "Cline",
+    description: "Autonomous coding agent right in your IDE",
+    tokens: "57B tokens",
+    is_new: false,
+    app_url: "https://cline.bot/",
+    domain: "cline.bot",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://cline.bot/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 3,
+    rank: 3,
+    app_name: "janitorai.com",
+    description: "",
+    tokens: "48.5B tokens",
+    is_new: true,
+    app_url: "https://janitorai.com/",
+    domain: "janitorai.com",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://janitorai.com/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 4,
+    rank: 4,
+    app_name: "BLACKBOXAI",
+    description: "AI agent for builders",
+    tokens: "47.8B tokens",
+    is_new: false,
+    app_url: "https://blackbox.ai/",
+    domain: "blackbox.ai",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://blackbox.ai/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 5,
+    rank: 5,
+    app_name: "liteLLM",
+    description: "Open-source library to simplify LLM calls",
+    tokens: "34.2B tokens",
+    is_new: false,
+    app_url: "https://litellm.ai/",
+    domain: "litellm.ai",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://litellm.ai/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 6,
+    rank: 6,
+    app_name: "Roo Code",
+    description: "A whole dev team of AI agents in your editor",
+    tokens: "22.4B tokens",
+    is_new: false,
+    app_url: "https://roocode.com/",
+    domain: "roocode.com",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://roocode.com/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 7,
+    rank: 7,
+    app_name: "SillyTavern",
+    description: "LLM frontend for power users",
+    tokens: "8.88B tokens",
+    is_new: false,
+    app_url: "https://sillytavern.app/",
+    domain: "sillytavern.app",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://sillytavern.app/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 8,
+    rank: 8,
+    app_name: "Zread.AI",
+    description: "AI code wiki with multilingual guides and architecture insights",
+    tokens: "6.87B tokens",
+    is_new: false,
+    app_url: "https://zread.ai/",
+    domain: "zread.ai",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://zread.ai/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 9,
+    rank: 9,
+    app_name: "Chub AI",
+    description: "GenAI for everyone",
+    tokens: "4.82B tokens",
+    is_new: false,
+    app_url: "https://chub.ai/",
+    domain: "chub.ai",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://chub.ai/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 10,
+    rank: 10,
+    app_name: "Pax Historia",
+    description: "An alternate history sandbox game",
+    tokens: "4.71B tokens",
+    is_new: false,
+    app_url: "https://www.paxhistoria.co/",
+    domain: "paxhistoria.co",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.paxhistoria.co/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 11,
+    rank: 11,
+    app_name: "HammerAI",
+    description: "Chat with AI characters for free",
+    tokens: "4.4B tokens",
+    is_new: false,
+    app_url: "https://www.hammerai.com/",
+    domain: "hammerai.com",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.hammerai.com/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 12,
+    rank: 12,
+    app_name: "Sophias Lorebary",
+    description: "Unofficial JanitorAI extension with advanced lorebook management",
+    tokens: "3.07B tokens",
+    is_new: false,
+    app_url: "https://lorebary.sophiamccarty.com/",
+    domain: "lorebary.sophiamccarty.com",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://lorebary.sophiamccarty.com/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 13,
+    rank: 13,
+    app_name: "OpenCode",
+    description: "AI coding agent built for the terminal",
+    tokens: "2.71B tokens",
+    is_new: false,
+    app_url: "https://opencode.ai/",
+    domain: "opencode.ai",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://opencode.ai/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 14,
+    rank: 14,
+    app_name: "OpenRouter: Chatroom",
+    description: "Chat with multiple LLMs at once",
+    tokens: "2.55B tokens",
+    is_new: false,
+    app_url: "https://openrouter.ai/chat",
+    domain: "openrouter.ai",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://openrouter.ai/chat&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 15,
+    rank: 15,
+    app_name: "GDevelop",
+    description: "AI-powered game engine",
+    tokens: "2.09B tokens",
+    is_new: false,
+    app_url: "https://gdevelop.io/",
+    domain: "gdevelop.io",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://gdevelop.io/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 16,
+    rank: 16,
+    app_name: "New API",
+    description: "LLM gateway, fork of One API",
+    tokens: "2.05B tokens",
+    is_new: false,
+    app_url: "https://github.com/Calcium-Ion/new-api",
+    domain: "github.com",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://github.com/Calcium-Ion/new-api&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 17,
+    rank: 17,
+    app_name: "Meetup Address Extraction Evaluation",
+    description: "",
+    tokens: "1.94B tokens",
+    is_new: true,
+    app_url: "https://github.com/ai-product-manager/meetup-analysis",
+    domain: "github.com",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://github.com/ai-product-manager/meetup-analysis&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 18,
+    rank: 18,
+    app_name: "Infinite Worlds",
+    description: "Build your own adventures, share them with friends",
+    tokens: "1.21B tokens",
+    is_new: false,
+    app_url: "https://infiniteworlds.app/",
+    domain: "infiniteworlds.app",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://infiniteworlds.app/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 19,
+    rank: 19,
+    app_name: "shapes inc",
+    description: "General purpose social agents",
+    tokens: "1.18B tokens",
+    is_new: false,
+    app_url: "https://shapes.inc/",
+    domain: "shapes.inc",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://shapes.inc/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+  {
+    id: 20,
+    rank: 20,
+    app_name: "TLDL: Never Take Notes Again",
+    description: "",
+    tokens: "1.1B tokens",
+    is_new: true,
+    app_url: "https://tldl.club/",
+    domain: "tldl.club",
+    image_url: "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://tldl.club/&size=256",
+    time_period: "Today",
+    scraped_at: "2025-10-06T00:00:00Z",
+  },
+];
 
 export default function RankingsPage() {
   const [selectedSort, setSelectedSort] = useState('All');
   const [selectedTopModelsCount, setSelectedTopModelsCount] = useState<number>(5);
-  const [selectedTimeRange, setSelectedTimeRange] = useState('Top This Month');
   const [selectedTopCount, setSelectedTopCount] = useState('Top 10');
-  const [rankingModels, setRankingModels] = useState<RankingModel[]>([]);
   const [modelLogos, setModelLogos] = useState<Map<string, string>>(new Map());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // Fetch ranking models from API
-  useEffect(() => {
-    const fetchRankingModels = async () => {
-      try {
-        setLoading(true);
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
-        const url = `${apiBaseUrl}/ranking/models`;
 
-        const response = await fetch(url);
+  const [selectedTimeRangeForModels, setSelectedTimeRangeForModels] = useState("Top this month");
+  const [selectedTimeRangeForApps, setSelectedTimeRangeForApps] = useState("Today");
 
-        if (!response.ok) {
-          // API endpoint not ready, use mock data
-          console.warn('Rankings API not available, using mock data');
-
-          // Convert mock data to RankingModel format
-          const mockRankingModels: RankingModel[] = topModels.map((model, index) => ({
-            id: index + 1,
-            rank: model.rank,
-            model_name: model.model,
-            author: model.org,
-            tokens: model.tokens,
-            trend_percentage: model.changePercent,
-            trend_direction: 'up' as const,
-            trend_icon: '↑',
-            trend_color: 'green',
-            model_url: '#',
-            author_url: '#',
-            time_period: 'Top this month',
-            scraped_at: new Date().toISOString(),
-            category: model.category,
-            provider: model.provider,
-            value: model.value,
-          }));
-
-          setRankingModels(mockRankingModels);
-          setLoading(false);
-          return;
-        }
-
-        const data = await response.json();
-
-        if (data.success && data.data) {
-          setRankingModels(data.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch ranking models:', error);
-
-        // Use mock data as fallback
-        const mockRankingModels: RankingModel[] = topModels.map((model, index) => ({
-          id: index + 1,
-          rank: model.rank,
-          model_name: model.model,
-          author: model.org,
-          tokens: model.tokens,
-          trend_percentage: model.changePercent,
-          trend_direction: 'up' as const,
-          trend_icon: '↑',
-          trend_color: 'green',
-          model_url: '#',
-          author_url: '#',
-          time_period: 'Top this month',
-          scraped_at: new Date().toISOString(),
-          category: model.category,
-          provider: model.provider,
-          value: model.value,
-        }));
-
-        setRankingModels(mockRankingModels);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRankingModels();
-  }, []);
+  const [models, setModels] = useState<ModelData[]>([]);
+  const [apps, setApps] = useState<AppData[]>([]);
 
   // Fetch model logos
   useEffect(() => {
     const fetchLogos = async () => {
-      if (rankingModels.length === 0) return;
-
       const logoMap = new Map<string, string>();
 
       // Map of static logos for major providers
@@ -245,7 +633,7 @@ export default function RankingsPage() {
       };
 
       await Promise.all(
-        rankingModels.slice(0, 20).map(async (model) => {
+        models.slice(0, 20).map(async (model) => {
           try {
             // Check if we have a static logo for this author
             const authorLower = model.author.toLowerCase();
@@ -289,43 +677,53 @@ export default function RankingsPage() {
     };
 
     fetchLogos();
-  }, [rankingModels]);
-
-  const [selectedTimeRangeForModels, setSelectedTimeRangeForModels] = useState("Top this month");
-  const [selectedTimeRangeForApps, setSelectedTimeRangeForApps] = useState("This Month");
-
-  const [models, setModels] = useState<ModelData[]>([]);
-  const [apps, setApps] = useState<AppData[]>([]);
+  }, [models]);
 
   useEffect(() => {
     const getModels = async () => {
-      console.log({API_BASE_URL});
-      const response = await fetch(`${API_BASE_URL}/ranking/models`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/ranking/models`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+    
+        if (response.ok) {
+          const result = await response.json();
+          setModels(result.data);
+        } else {
+          setModels(MockModelsData);
         }
-      });
-  
-      if (response.ok) {
-        const result = await response.json();
-        setModels(result.data);
+      } catch (error) {
+        console.error('Failed to fetch models:', error);
+      } finally {
+        setLoading(false);
       }
     }
     const getApps = async () => {
-      console.log({API_BASE_URL});
-      const response = await fetch(`${API_BASE_URL}/ranking/apps`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      try {
+        const response = await fetch(`${API_BASE_URL}/ranking/apps`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
   
-      if (response.ok) {
-        const result = await response.json();
-        setApps(result.data);
+        if (response.ok) {
+          const result = await response.json();
+          setApps(result.data);
+        } else {
+          setApps(MockAppssData);
+        } 
+      } catch (error) {
+        console.error('Failed to fetch apps:', error);
+      } finally {
+        setLoading(false);
       }
     }
+
     getModels();
     getApps();
   },[]);
@@ -342,50 +740,6 @@ export default function RankingsPage() {
     .filter((app) => app.time_period === selectedTimeRangeForApps)
     .sort((a, b) => a.rank - b.rank) // ascending orders
   }, [selectedTimeRangeForApps, apps])
-
-  // Filter and sort the models based on selected options
-  const filteredAndSortedModels = useMemo(() => {
-    let filtered = [...rankingModels];
-
-    // Filter by time period
-    const timePeriodMap: { [key: string]: string } = {
-      'Top This Year': 'Top this year',
-      'Top This Month': 'Top this month',
-      'Top This Week': 'Top this week'
-    };
-
-    const targetPeriod = timePeriodMap[selectedTimeRange];
-    if (targetPeriod) {
-      filtered = filtered.filter(model => model.time_period === targetPeriod);
-    }
-
-    // Apply sorting
-    if (selectedSort === 'Tokens') {
-      filtered.sort((a, b) => {
-        const aTokens = parseTokens(a.tokens);
-        const bTokens = parseTokens(b.tokens);
-        return bTokens - aTokens;
-      });
-    } else {
-      // Default sort by rank
-      filtered.sort((a, b) => a.rank - b.rank);
-    }
-    
-    // Apply top count filter
-    const count = parseInt(selectedTopCount.replace('Top ', ''));
-    filtered = filtered.slice(0, count);
-
-    return filtered;
-  }, [rankingModels, selectedTimeRange, selectedSort, selectedTopCount]);
-
-    // Helper function to parse token values
-  const parseTokens = (tokenStr: string): number => {
-    const num = parseFloat(tokenStr.replace(/[BMK]/g, ''));
-    if (tokenStr.includes('B')) return num * 1e9;
-    if (tokenStr.includes('M')) return num * 1e6;
-    if (tokenStr.includes('K')) return num * 1e3;
-    return num;
-  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -404,7 +758,7 @@ export default function RankingsPage() {
              <div className="mb-2">
                <h3 className="text-base font-semibold text-gray-800">Top 10 Models - Tokens Generated</h3>
              </div>
-             <TokenStackedBarChart rankingData={rankingModels} />
+             <TokenStackedBarChart rankingData={models} />
            </Card>
          </div>
 
@@ -448,7 +802,6 @@ export default function RankingsPage() {
                 <DropdownMenuContent>
                   <DropdownMenuItem onSelect={() => setSelectedSort('All')}>All</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setSelectedSort('Tokens')}>Tokens</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setSelectedSort('Value')}>Value</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -463,8 +816,7 @@ export default function RankingsPage() {
               <div className="col-span-3 font-semibold text-xs text-gray-600">Category</div>
               <div className="col-span-3 font-semibold text-xs text-gray-600">Top Provider</div>
               <div className="col-span-3 font-semibold text-xs text-gray-600 text-right">Tokens Generated</div>
-              <div className="col-span-2 font-semibold text-xs text-gray-600 text-right">Value</div>
-              <div className="col-span-2 font-semibold text-xs text-gray-600 text-right">Change</div>
+              <div className="col-span-3 font-semibold text-xs text-gray-600 text-right">Change</div>
             </div>
           </Card>
 
@@ -478,19 +830,19 @@ export default function RankingsPage() {
                   </div>
                 </Card>
               ))
-            ) : filteredAndSortedModels.length === 0 ? (
+            ) : filteredModels.length === 0 ? (
               <Card className="p-6">
                 <p className="text-center text-gray-500">No models found for the selected time period.</p>
               </Card>
             ) : (
-              filteredAndSortedModels.map((model, index) => (
-                <Card key={model.id} className="p-0 overflow-hidden">
+              filteredModels.map((model, index) => (
+                <Card key={index} className="p-0 overflow-hidden">
                   <div className="ranking-row">
                       {/* Rank - 2 columns on mobile (col-span-2), 2 on desktop */}
                       <div className="col-span-2 flex flex-col items-start justify-center gap-0">
                         <span className="font-medium text-xs">#{model.rank}</span>
                         <div className={`flex items-center gap-0.5 ${model.trend_direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                          {model.trend_direction === 'up' ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+                          {model.trend_direction === 'up' ? <ArrowUp className="w-2.5 h-2.5" /> : <ArrowDown className="w-2.5 h-2.5" />}
                           <span className="text-[10px]">{model.trend_percentage}</span>
                         </div>
                       </div>
@@ -534,13 +886,8 @@ export default function RankingsPage() {
                       <span className="text-xs font-medium">{model.tokens}</span>
                     </div>
 
-                    {/* Value - hidden on mobile, 2 columns on desktop */}
-                    <div className="hidden lg:flex lg:col-span-2 text-right items-center justify-end">
-                      <span className="text-xs font-medium">{model.value || '-'}</span>
-                    </div>
-
                     {/* Change - hidden on mobile, 2 columns on desktop */}
-                    <div className="hidden lg:flex lg:col-span-2 text-right items-center justify-end">
+                    <div className="hidden lg:flex lg:col-span-3 text-right items-center justify-end">
                       <span className={`text-xs font-medium ${model.trend_direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
                         {model.trend_percentage}
                       </span>
@@ -578,37 +925,54 @@ export default function RankingsPage() {
                 <DropdownMenuContent>
                   <DropdownMenuItem onSelect={() => setSelectedSort('All')}>All</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setSelectedSort('Tokens')}>Tokens</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setSelectedSort('Value')}>Value</DropdownMenuItem>
-              </DropdownMenuContent>
+                </DropdownMenuContent>
             </DropdownMenu>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-5">
-            {filteredApps.map((app) => (
-              <Card key={app.id} className="p-4">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center">
-                    <img src={app.image_url} alt={app.app_name} className="w-10 h-10 rounded-full" />
+          {filteredApps.length === 0 ? (
+            <Card className="p-6">
+              <p className="text-center text-gray-500">
+                No apps found for the selected time period.
+              </p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-5 cursor-pointer">
+              {filteredApps.map((app) => (
+                <Card key={app.id} className="p-4">
+                  {/* App header */}
+                  <div className="flex items-start gap-3 mb-4">
+                    <img
+                      src={app.image_url}
+                      alt={app.app_name}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <div>
+                      <h3 className="font-semibold">{app.app_name}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {app.description}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{app.app_name}</h3>
-                    <p className="text-sm ">{app.description}</p>
+
+                  {/* Stats section */}
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-2xl font-bold">
+                        {/* {app.tokens ? app.tokens.replace(/[^\d.]/g, '') : '0'} */}
+                        {app.tokens ? extractTokenValue(app.tokens) : '0'}
+                      </p>
+                      <p className="text-xs text-gray-500">Tokens Generated</p>
+                    </div>
+                    {/* <div className="text-right">
+                      <p className="text-lg font-bold text-green-600">---</p>
+                      <p className="text-xs text-gray-500">Weekly Growth</p>
+                    </div> */}
                   </div>
-                </div>
-                <div className="space-y-2 flex ">
-                  <div className='flex-1'>
-                    <p className="text-2xl font-bold">{app.tokens.slice(0, -6)}</p>
-                    <p className="text-xs ">Tokens Generated</p>
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-green-600">---</p>
-                    <p className="text-xs ">Weekly Growth</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
