@@ -15,6 +15,11 @@ export const redirectToCheckout = async (amount: number, userEmail?: string, use
     // Get API key from localStorage
     const apiKey = getApiKey();
 
+    console.log('Checkout - API key exists:', !!apiKey);
+    console.log('Checkout - Amount:', amount);
+    console.log('Checkout - User email:', userEmail);
+    console.log('Checkout - User ID:', userId);
+
     if (!apiKey) {
       throw new Error('You must be logged in to purchase credits');
     }
@@ -35,7 +40,8 @@ export const redirectToCheckout = async (amount: number, userEmail?: string, use
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Stripe checkout error:', errorData);
+      console.error('Stripe checkout error response:', errorData);
+      console.error('Response status:', response.status);
       throw new Error(errorData.error || 'Failed to create checkout session');
     }
 
