@@ -97,15 +97,21 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     setSortBy('tokens-desc');
   };
 
-  const filteredModels = useMemo(() => {
-    // First filter, then sort
-    const filtered = initialModels.filter((model) => {
-      const searchTermMatch =
-        (model.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+  // Calculate search matches separately from other filters
+  const searchFilteredModels = useMemo(() => {
+    if (!searchTerm) return initialModels;
+
+    return initialModels.filter((model) => {
+      return (model.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (model.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (model.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (model.provider_slug || '').toLowerCase().includes(searchTerm.toLowerCase());
+    });
+  }, [initialModels, searchTerm]);
 
+  const filteredModels = useMemo(() => {
+    // First filter, then sort
+    const filtered = searchFilteredModels.filter((model) => {
       const modalityMatch = selectedModalities.length === 0 || selectedModalities.every(m =>
         model.architecture?.input_modalities?.some(im => im.toLowerCase() === m.toLowerCase())
       );
@@ -117,7 +123,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
       const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => (model.supported_parameters || []).includes(p));
       const providerMatch = selectedProviders.length === 0 || selectedProviders.includes(model.provider_slug);
 
-      return searchTermMatch && modalityMatch && contextMatch && priceMatch && parameterMatch && providerMatch;
+      return modalityMatch && contextMatch && priceMatch && parameterMatch && providerMatch;
     });
 
     // Then sort the filtered results
@@ -138,7 +144,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     });
 
     return sorted;
-  }, [initialModels, searchTerm, selectedModalities, contextLength, promptPricing, selectedParameters, selectedProviders, sortBy]);
+  }, [searchFilteredModels, selectedModalities, contextLength, promptPricing, selectedParameters, selectedProviders, sortBy]);
 
   const allParameters = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.supported_parameters || []))), [initialModels]);
   const allProviders = useMemo(() => Array.from(new Set(initialModels.map(m => m.provider_slug).filter(Boolean))), [initialModels]);
@@ -199,7 +205,11 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                   <h1 className="text-2xl font-bold">Models</h1>
               </div>
               <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                <span className="text-sm text-muted-foreground">{filteredModels.length} models</span>
+                <span className="text-sm text-muted-foreground">
+                  {searchTerm && filteredModels.length !== searchFilteredModels.length
+                    ? `${filteredModels.length} of ${searchFilteredModels.length} models`
+                    : `${filteredModels.length} models`}
+                </span>
                 <Button variant="ghost" size="sm" onClick={resetFilters}>Reset Filters</Button>
               </div>
           </div>
