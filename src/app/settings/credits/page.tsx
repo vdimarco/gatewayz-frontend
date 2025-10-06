@@ -54,14 +54,18 @@ const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
   };
 
   const getTransactionType = (type: string) => {
-    if (type.toLowerCase().includes('purchase') || type.toLowerCase().includes('deposit')) {
-      return 'Purchase';
-    } else if (type.toLowerCase().includes('usage') || type.toLowerCase().includes('spend')) {
-      return 'Usage';
-    } else if (type.toLowerCase().includes('refund')) {
-      return 'Refund';
-    }
-    return type;
+    const typeMap: { [key: string]: string } = {
+      'trial': 'Trial Credits',
+      'purchase': 'Purchase',
+      'admin_credit': 'Admin Credit',
+      'admin_debit': 'Admin Debit',
+      'api_usage': 'API Usage',
+      'refund': 'Refund',
+      'bonus': 'Bonus',
+      'transfer': 'Transfer'
+    };
+
+    return typeMap[type.toLowerCase()] || type.charAt(0).toUpperCase() + type.slice(1);
   };
 
   return (
@@ -73,7 +77,7 @@ const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
             <span className="text-muted-foreground ml-2">- {transaction.description}</span>
           )}
         </div>
-        <div className="font-medium">
+        <div className={`font-medium ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
           {transaction.amount >= 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
         </div>
         <div className="font-medium">{formatDate(transaction.created_at)}</div>
@@ -152,49 +156,21 @@ function CreditsPageContent() {
         setLoadingCredits(false);
       }
 
-      // Fetch transactions (payment history)
+      // Fetch transactions (all credit transactions - trial, purchases, usage, admin, etc.)
       try {
-        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/stripe/payments?limit=10`);
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/credit-transactions?limit=50`);
         if (response.ok) {
           const data = await response.json();
-          if (Array.isArray(data.payments)) {
-            // Map payment data to transaction format and calculate running balance
-            let runningBalance = credits || 0; // Start with current balance
-
-            const mappedTransactions = data.payments.map((payment: any, index: number) => {
-              // For the first transaction (most recent), balance is current balance
-              // For subsequent ones, subtract the previous transactions
-              const transactionAmount = payment.status === 'completed' ? payment.amount : 0;
-
-              // If this is not the first item, we need to calculate backwards
-              if (index === 0) {
-                // Most recent transaction - balance after is current balance
-                return {
-                  id: payment.id,
-                  amount: payment.amount,
-                  transaction_type: payment.status === 'completed' ? 'Purchase' : payment.status,
-                  created_at: payment.created_at,
-                  description: `Payment ${payment.status}`,
-                  status: payment.status,
-                  balance: runningBalance
-                };
-              } else {
-                // Older transactions - subtract all completed transactions after this one
-                const balanceAfter = runningBalance - data.payments.slice(0, index).reduce((sum: number, p: any) => {
-                  return sum + (p.status === 'completed' ? p.amount : 0);
-                }, 0);
-
-                return {
-                  id: payment.id,
-                  amount: payment.amount,
-                  transaction_type: payment.status === 'completed' ? 'Purchase' : payment.status,
-                  created_at: payment.created_at,
-                  description: `Payment ${payment.status}`,
-                  status: payment.status,
-                  balance: balanceAfter
-                };
-              }
-            });
+          if (Array.isArray(data.transactions)) {
+            // Transactions already include balance_after from the database
+            const mappedTransactions = data.transactions.map((txn: any) => ({
+              id: txn.id,
+              amount: txn.amount,
+              transaction_type: txn.transaction_type,
+              created_at: txn.created_at,
+              description: txn.description,
+              balance: txn.balance_after // Use the balance from the database
+            }));
 
             setTransactions(mappedTransactions);
           }
