@@ -198,7 +198,7 @@ export default function ApiKeysPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching API keys:', error);
+      console.log('Error fetching API keys:', error);
       toast({
         title: "Error",
         description: "Failed to load API keys. Please try again.",
@@ -302,7 +302,7 @@ export default function ApiKeysPage() {
         });
       }
     } catch (error) {
-      console.error('Error creating API key:', error);
+      console.log('Error creating API key:', error);
       toast({
         title: "Error",
         description: "Failed to create API key. Please try again.",
@@ -338,7 +338,7 @@ export default function ApiKeysPage() {
         });
       }
     } catch (error) {
-      console.error('Error deleting API key:', error);
+      console.log('Error deleting API key:', error);
       toast({
         title: "Error",
         description: "Failed to delete API key. Please try again.",

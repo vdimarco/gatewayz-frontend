@@ -200,7 +200,7 @@ function CreditsPageContent() {
       // Default to $10 worth of credits - can be customized
       await redirectToCheckout(10, userData.email, userData.user_id);
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.log('Checkout error:', error);
       alert('Failed to start checkout. Please try again.');
     } finally {
       setIsLoading(false);

@@ -86,7 +86,7 @@ export async function streamChat({
               onContent?.(fullContent);
             }
           } catch (e) {
-            console.error('Error parsing SSE data:', e);
+            console.log('Error parsing SSE data:', e);
           }
         }
       }
@@ -95,7 +95,7 @@ export async function streamChat({
     onComplete?.(fullContent, fullReasoning || undefined);
     return { content: fullContent, reasoning: fullReasoning || undefined };
   } catch (error) {
-    console.error('Stream error:', error);
+    console.log('Stream error:', error);
     const err = error instanceof Error ? error : new Error('Unknown error');
     onError?.(err);
     throw err;

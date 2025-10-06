@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
       billingAddress,
     });
   } catch (error) {
-    console.error('Stripe customer fetch error:', error);
+    console.log('Stripe customer fetch error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch customer data' },
       { status: 500 }

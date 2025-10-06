@@ -153,7 +153,7 @@ export default function DevelopersPage() {
                     console.log('Set ranking models:', data.data.length);
                 }
             } catch (error) {
-                console.error('Failed to fetch ranking models:', error);
+                console.log('Failed to fetch ranking models:', error);
             } finally {
                 setLoading(false);
             }
@@ -187,7 +187,7 @@ export default function DevelopersPage() {
                             }
                         }
                     } catch (error) {
-                        console.error(`Failed to fetch logo for ${author}:`, error);
+                        console.log(`Failed to fetch logo for ${author}:`, error);
                     }
                 })
             );

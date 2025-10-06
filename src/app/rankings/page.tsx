@@ -100,7 +100,7 @@ export default function RankingsPage() {
               }
             }
           } catch (error) {
-            console.error(`Failed to fetch logo for ${model.model_name}:`, error);
+            console.log(`Failed to fetch logo for ${model.model_name}:`, error);
           }
         })
       );
@@ -129,7 +129,7 @@ export default function RankingsPage() {
           setModels([])
         }
       } catch (error) {
-        console.error('Failed to fetch models:', error);
+        console.log('Failed to fetch models:', error);
       } finally {
         setLoading(false);
       }
@@ -150,7 +150,7 @@ export default function RankingsPage() {
           setApps([]);
         }
       } catch (error) {
-        console.error('Failed to fetch apps:', error);
+        console.log('Failed to fetch apps:', error);
       } finally {
         setLoading(false);
       }
