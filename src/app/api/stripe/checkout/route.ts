@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       apiVersion: '2025-01-27.acacia',
     });
 
-    const { amount } = await req.json();
+    const { amount, userEmail, userId } = await req.json();
 
     // Validate amount
     if (!amount || amount < 1) {
@@ -47,10 +47,13 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: 'payment',
+      customer_email: userEmail, // Pre-fill email if provided
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/settings/credits?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/settings/credits`,
       metadata: {
         credits: amount.toString(),
+        userId: userId?.toString() || '',
+        userEmail: userEmail || '',
       },
     });
 

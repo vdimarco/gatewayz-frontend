@@ -9,7 +9,7 @@ export const getStripe = () => {
   return stripePromise;
 };
 
-export const redirectToCheckout = async (amount: number) => {
+export const redirectToCheckout = async (amount: number, userEmail?: string, userId?: number) => {
   try {
     // Create checkout session
     const response = await fetch('/api/stripe/checkout', {
@@ -17,7 +17,11 @@ export const redirectToCheckout = async (amount: number) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ amount }),
+      body: JSON.stringify({
+        amount,
+        userEmail,
+        userId,
+      }),
     });
 
     if (!response.ok) {

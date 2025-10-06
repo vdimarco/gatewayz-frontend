@@ -13,13 +13,14 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Info, RefreshCw, ArrowUpRight, ChevronLeft, ChevronRight, CreditCard, MoreHorizontal } from "lucide-react";
+import { Info, RefreshCw, ArrowUpRight, ChevronLeft, ChevronRight, CreditCard, MoreHorizontal, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { redirectToCheckout } from '@/lib/stripe';
 import { getUserData, makeAuthenticatedRequest } from '@/lib/api';
@@ -91,6 +92,7 @@ const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
 };
 
 export default function CreditsPage() {
+  const searchParams = useSearchParams();
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -100,6 +102,20 @@ export default function CreditsPage() {
   const [loadingCredits, setLoadingCredits] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  // Check for success message from Stripe redirect
+  useEffect(() => {
+    const sessionId = searchParams?.get('session_id');
+    if (sessionId) {
+      setShowSuccessMessage(true);
+      // Auto-hide after 10 seconds
+      setTimeout(() => setShowSuccessMessage(false), 10000);
+
+      // Clean up URL
+      window.history.replaceState({}, '', '/settings/credits');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -173,7 +189,26 @@ export default function CreditsPage() {
           <RefreshCw className="h-5 w-5" />
         </Button> */}
       </div>
-      
+
+      {/* Success message after Stripe payment */}
+      {showSuccessMessage && (
+        <div className="mx-auto max-w-2xl">
+          <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium text-green-900 dark:text-green-100">Payment successful!</p>
+              <p className="text-sm text-green-700 dark:text-green-300">Your credits have been added to your account.</p>
+            </div>
+            <button
+              onClick={() => setShowSuccessMessage(false)}
+              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold mr-16">Available Balance</h2>
