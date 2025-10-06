@@ -12,7 +12,7 @@ import { addDays, format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Download, Filter, Info, Maximize, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
-import { makeAuthenticatedRequest } from '@/lib/api';
+import { makeAuthenticatedRequest, getApiKey } from '@/lib/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
 
@@ -90,6 +90,15 @@ export default function ActivityPage() {
   const fetchActivityData = async () => {
     try {
       setLoading(true);
+
+      // Check if user is authenticated before fetching
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        console.log('Waiting for authentication to complete...');
+        setLoading(false);
+        return;
+      }
+
       const fromDate = date?.from ? format(date.from, 'yyyy-MM-dd') : format(addDays(new Date(), -29), 'yyyy-MM-dd');
       const toDate = date?.to ? format(date.to, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
 
