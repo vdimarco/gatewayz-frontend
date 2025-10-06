@@ -102,15 +102,21 @@ export default function CreditsPage() {
   const [loadingTransactions, setLoadingTransactions] = useState(true);
 
   useEffect(() => {
-    const fetchCredits = async () => {
-      try {
-        // First try to get credits from local storage
-        const userData = getUserData();
-        if (userData && userData.credits !== undefined) {
-          setCredits(userData.credits);
-        }
+    const fetchData = async () => {
+      // First try to get credits from local storage immediately
+      const userData = getUserData();
+      if (userData && userData.credits !== undefined) {
+        setCredits(userData.credits);
+        setLoadingCredits(false);
+      }
 
-        // Then fetch fresh data from API
+      // Wait a bit for authentication to complete if no user data yet
+      if (!userData) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      try {
+        // Fetch fresh data from API
         const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/profile`);
         if (response.ok) {
           const data = await response.json();
@@ -119,37 +125,31 @@ export default function CreditsPage() {
           }
         }
       } catch (error) {
-        console.error('Error fetching credits:', error);
-        // If API fails, try to use local storage data
-        const userData = getUserData();
-        if (userData && userData.credits !== undefined) {
-          setCredits(userData.credits);
-        }
+        // Silently handle error - we already have local storage data
+        console.log('Could not fetch fresh credits data');
       } finally {
         setLoadingCredits(false);
       }
-    };
 
-    const fetchTransactions = async () => {
+      // Fetch transactions
       try {
         const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/transactions`);
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data.transactions)) {
-            setTransactions(data.transactions.slice(0, 10)); // Show only last 10 transactions
+            setTransactions(data.transactions.slice(0, 10));
           } else if (Array.isArray(data)) {
             setTransactions(data.slice(0, 10));
           }
         }
       } catch (error) {
-        console.error('Error fetching transactions:', error);
+        console.log('Could not fetch transactions');
       } finally {
         setLoadingTransactions(false);
       }
     };
 
-    fetchCredits();
-    fetchTransactions();
+    fetchData();
   }, []);
 
   const handleBuyCredits = async () => {
