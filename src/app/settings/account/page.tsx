@@ -10,14 +10,67 @@ import { Eye, EyeOff, MoreHorizontal } from "lucide-react";
 import { usePrivy } from '@privy-io/react-auth';
 import { getUserData } from '@/lib/api';
 
+interface StripePaymentMethod {
+  id: string;
+  brand?: string;
+  last4?: string;
+  exp_month?: number;
+  exp_year?: number;
+}
+
+interface StripeBillingAddress {
+  line1: string | null;
+  line2: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+  country: string | null;
+}
+
 export default function AccountPage() {
   const { user: privyUser, logout } = usePrivy();
   const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [stripePaymentMethods, setStripePaymentMethods] = useState<StripePaymentMethod[]>([]);
+  const [stripeBillingAddress, setStripeBillingAddress] = useState<StripeBillingAddress | null>(null);
+  const [loadingStripe, setLoadingStripe] = useState(false);
+  const [customerName, setCustomerName] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Fetch Stripe customer data
+  useEffect(() => {
+    const fetchStripeData = async () => {
+      if (!privyUser) return;
+
+      const email = getUserEmail();
+      if (!email || email === 'No email') return;
+
+      try {
+        setLoadingStripe(true);
+        const response = await fetch(`/api/stripe/customer?email=${encodeURIComponent(email)}`);
+
+        if (response.ok) {
+          const data = await response.json();
+          setStripePaymentMethods(data.paymentMethods || []);
+          setStripeBillingAddress(data.billingAddress);
+          if (data.customer?.name) {
+            setCustomerName(data.customer.name);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch Stripe data:', error);
+      } finally {
+        setLoadingStripe(false);
+      }
+    };
+
+    if (mounted && privyUser) {
+      fetchStripeData();
+    }
+  }, [mounted, privyUser]);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
@@ -72,6 +125,40 @@ export default function AccountPage() {
   const userEmail = getUserEmail();
   const userName = getUserName();
   const connectedAccounts = getConnectedAccounts();
+
+  const openStripePortal = async () => {
+    try {
+      const response = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: userEmail }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        window.location.href = data.url;
+      } else {
+        console.error('Failed to create portal session');
+      }
+    } catch (error) {
+      console.error('Error opening Stripe portal:', error);
+    }
+  };
+
+  const getBrandLogo = (brand?: string) => {
+    switch (brand?.toLowerCase()) {
+      case 'visa':
+        return '/formkit_visa.svg';
+      case 'mastercard':
+        return '/mastercard-logo.svg';
+      case 'amex':
+        return '/amex-logo.svg';
+      default:
+        return '/formkit_visa.svg';
+    }
+  };
 
   return (
     <div className="space-y-8 lg:min-w-[600px] xl:min-w-[1000px]">
@@ -178,10 +265,15 @@ export default function AccountPage() {
         <div className="flex items-center py-4 border-y border-gray-200">
           <div className="w-1/3 text-base font-medium">Full Name</div>
           <div className="w-1/3 flex justify-center">
-            <span className="text-base">{userName}</span>
+            <span className="text-base">{customerName || userName}</span>
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
+            <Button
+              variant="link"
+              className="text-blue-400 p-0 h-auto text-base"
+              onClick={openStripePortal}
+              disabled={!stripePaymentMethods.length}
+            >
               Edit Name
             </Button>
           </div>
@@ -191,12 +283,31 @@ export default function AccountPage() {
         <div className="flex items-center py-4 border-b border-gray-200">
           <div className="w-1/3 text-base font-medium">Billing Address</div>
           <div className="w-1/3 flex justify-center">
-            <div className="text-base text-center text-muted-foreground">
-              <div>Not set</div>
-            </div>
+            {loadingStripe ? (
+              <span className="text-base text-muted-foreground">Loading...</span>
+            ) : stripeBillingAddress ? (
+              <div className="text-sm text-center">
+                {stripeBillingAddress.line1 && <div>{stripeBillingAddress.line1}</div>}
+                {stripeBillingAddress.line2 && <div>{stripeBillingAddress.line2}</div>}
+                {stripeBillingAddress.city && stripeBillingAddress.state && (
+                  <div>{stripeBillingAddress.city}, {stripeBillingAddress.state}</div>
+                )}
+                {stripeBillingAddress.postal_code && <div>{stripeBillingAddress.postal_code}</div>}
+                {stripeBillingAddress.country && <div>{stripeBillingAddress.country}</div>}
+              </div>
+            ) : (
+              <div className="text-base text-center text-muted-foreground">
+                <div>Not set</div>
+              </div>
+            )}
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
+            <Button
+              variant="link"
+              className="text-blue-400 p-0 h-auto text-base"
+              onClick={openStripePortal}
+              disabled={!stripePaymentMethods.length}
+            >
               Edit Address
             </Button>
           </div>
@@ -205,14 +316,52 @@ export default function AccountPage() {
         {/* Payment Method */}
         <div className="flex items-center py-4 border-b border-gray-200">
           <div className="w-1/3 text-base font-medium">Payment Method</div>
-          <div className="w-1/3 flex flex-col items-center justify-center gap-1">
-            <span className="text-base text-muted-foreground">No payment method</span>
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
-              Add Payment Method
-            </Button>
+          <div className="w-1/3 flex flex-col items-center justify-center gap-2">
+            {loadingStripe ? (
+              <span className="text-base text-muted-foreground">Loading...</span>
+            ) : stripePaymentMethods.length > 0 ? (
+              <>
+                {stripePaymentMethods.map((pm, index) => (
+                  <div key={pm.id} className="flex items-center gap-2">
+                    <div className="w-8 h-5 rounded text-white text-xs flex items-center justify-center font-bold">
+                      <img src={getBrandLogo(pm.brand)} alt={pm.brand || 'Card'} className="w-6 h-6" />
+                    </div>
+                    <span className="text-base">**** {pm.last4}</span>
+                    {index === 0 && (
+                      <span className="text-xs bg-gray-100 px-1 py-1 rounded border border-gray-300">Primary</span>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  variant="link"
+                  className="text-blue-400 p-0 h-auto text-base"
+                  onClick={openStripePortal}
+                >
+                  Manage Payment Methods
+                </Button>
+              </>
+            ) : (
+              <>
+                <span className="text-base text-muted-foreground">No payment method</span>
+                <Button
+                  variant="link"
+                  className="text-blue-400 p-0 h-auto text-base"
+                  onClick={openStripePortal}
+                  disabled
+                >
+                  Add Payment Method
+                </Button>
+              </>
+            )}
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={openStripePortal}
+              disabled={!stripePaymentMethods.length}
+            >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </div>
