@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { providerData } from '@/lib/provider-data';
 import { generateChartData, generateStatsTable } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import ReactMarkdown from "react-markdown";
 import { cn } from '@/lib/utils';
 import { stringToColor } from '@/lib/utils';
 import { API_BASE_URL } from '@/lib/config';
@@ -203,7 +204,7 @@ export default function ModelProfilePage() {
 
     if (loading) {
         return (
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center flex-1">
                 <p className="text-muted-foreground">Loading model...</p>
             </div>
         );
@@ -237,7 +238,18 @@ export default function ModelProfilePage() {
                     </div>
                 </div>
                  <div className="mt-4 text-muted-foreground">
-                    <p>{model.description}</p>
+                    {/* <p>{model.description}</p> */}
+                    <ReactMarkdown
+                        components={{
+                        a: ({ children, ...props }) => (
+                            <span className="text-blue-600 underline cursor-pointer" {...props}>
+                            {children}
+                            </span>
+                        ),
+                        }}
+                    >
+                        {model.description}
+                    </ReactMarkdown>
                 </div>
             </header>
 
