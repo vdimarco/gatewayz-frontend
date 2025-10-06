@@ -28,44 +28,12 @@ import { API_BASE_URL } from '@/lib/config';
 // Transaction data type
 interface Transaction {
   id: number;
-  credits: number;
-  value: number;
-  date: string;
-  type: 'purchase' | 'refund' | 'usage';
+  amount: number;
+  transaction_type: string;
+  created_at: string;
   description?: string;
+  status?: string;
 }
-
-// Mock data for transactions
-const mockTransactions: Transaction[] = [
-  {
-    id: 1,
-    credits: 900,
-    value: 900,
-    date: "17/09/2025",
-    type: "purchase"
-  },
-  {
-    id: 2,
-    credits: 10,
-    value: 10,
-    date: "17/09/2025",
-    type: "purchase"
-  },
-  {
-    id: 3,
-    credits: 70,
-    value: 70,
-    date: "17/09/2025",
-    type: "purchase"
-  },
-  {
-    id: 4,
-    credits: 20,
-    value: 20,
-    date: "17/09/2025",
-    type: "purchase"
-  }
-];
 
 // Reusable TransactionRow component
 const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
@@ -74,16 +42,43 @@ const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
     console.log('More options clicked for transaction:', transaction.id);
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
+  const getTransactionType = (type: string) => {
+    if (type.toLowerCase().includes('purchase') || type.toLowerCase().includes('deposit')) {
+      return 'Purchase';
+    } else if (type.toLowerCase().includes('usage') || type.toLowerCase().includes('spend')) {
+      return 'Usage';
+    } else if (type.toLowerCase().includes('refund')) {
+      return 'Refund';
+    }
+    return type;
+  };
+
   return (
     <div className="px-4 py-3 hover:bg-gray-50">
       <div className="grid grid-cols-4 gap-4 items-center text-sm">
-        <div className="font-medium">{transaction.credits} Credits</div>
-        <div className="font-medium">${transaction.value}</div>
-        <div className="font-medium">{transaction.date}</div>
+        <div className="font-medium">
+          {getTransactionType(transaction.transaction_type)}
+          {transaction.description && (
+            <span className="text-muted-foreground ml-2">- {transaction.description}</span>
+          )}
+        </div>
+        <div className="font-medium">
+          {transaction.amount >= 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
+        </div>
+        <div className="font-medium">{formatDate(transaction.created_at)}</div>
         <div className="flex justify-end">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="h-8 w-8 p-0"
             onClick={handleMoreClick}
           >
@@ -103,6 +98,8 @@ export default function CreditsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [credits, setCredits] = useState<number | null>(null);
   const [loadingCredits, setLoadingCredits] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(true);
 
   useEffect(() => {
     const fetchCredits = async () => {
@@ -133,7 +130,26 @@ export default function CreditsPage() {
       }
     };
 
+    const fetchTransactions = async () => {
+      try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/transactions`);
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data.transactions)) {
+            setTransactions(data.transactions.slice(0, 10)); // Show only last 10 transactions
+          } else if (Array.isArray(data)) {
+            setTransactions(data.slice(0, 10));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+      } finally {
+        setLoadingTransactions(false);
+      }
+    };
+
     fetchCredits();
+    fetchTransactions();
   }, []);
 
   const handleBuyCredits = async () => {
@@ -264,16 +280,26 @@ export default function CreditsPage() {
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
             <div className="grid grid-cols-4 gap-4 text-sm font-medium">
               <div>Recent Transactions</div>
-              <div>Value</div>
+              <div>Amount</div>
               <div>Date</div>
               <div></div>
             </div>
           </div>
-           <div className="divide-y divide-gray-200">
-             {mockTransactions.map((transaction) => (
-               <TransactionRow key={transaction.id} transaction={transaction} />
-             ))}
-           </div>
+          <div className="divide-y divide-gray-200">
+            {loadingTransactions ? (
+              <div className="px-4 py-8 text-center text-muted-foreground">
+                Loading transactions...
+              </div>
+            ) : transactions.length === 0 ? (
+              <div className="px-4 py-8 text-center text-muted-foreground">
+                No transactions yet
+              </div>
+            ) : (
+              transactions.map((transaction) => (
+                <TransactionRow key={transaction.id} transaction={transaction} />
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>
