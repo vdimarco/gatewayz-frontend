@@ -939,15 +939,15 @@ export default function RankingsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-5 cursor-pointer">
               {filteredApps.map((app) => (
-                <Card key={app.id} className="p-4">
+                <Card key={app.id} className="p-4 flex flex-col h-full">
                   {/* App header */}
-                  <div className="flex items-start gap-3 mb-4">
+                  <div className="flex items-start gap-3 mb-4 flex-grow">
                     <img
                       src={app.image_url}
                       alt={app.app_name}
-                      className="w-10 h-10 rounded-full"
+                      className="w-10 h-10 rounded-full flex-shrink-0"
                     />
-                    <div>
+                    <div className="min-h-[60px]">
                       <h3 className="font-semibold">{app.app_name}</h3>
                       <p className="text-sm text-gray-600 line-clamp-2">
                         {app.description}
@@ -955,19 +955,14 @@ export default function RankingsPage() {
                     </div>
                   </div>
 
-                  {/* Stats section */}
-                  <div className="flex justify-between items-end">
+                  {/* Stats section - positioned at bottom */}
+                  <div className="mt-auto">
                     <div>
                       <p className="text-2xl font-bold">
-                        {/* {app.tokens ? app.tokens.replace(/[^\d.]/g, '') : '0'} */}
                         {app.tokens ? extractTokenValue(app.tokens) : '0'}
                       </p>
                       <p className="text-xs text-gray-500">Tokens Generated</p>
                     </div>
-                    {/* <div className="text-right">
-                      <p className="text-lg font-bold text-green-600">---</p>
-                      <p className="text-xs text-gray-500">Weekly Growth</p>
-                    </div> */}
                   </div>
                 </Card>
               ))}
