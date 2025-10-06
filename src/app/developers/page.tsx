@@ -45,13 +45,31 @@ const OrganizationCard = ({ org }: { org: Organization }) => {
     const trendColor = avgTrendPercentage >= 0 ? 'text-green-600' : 'text-red-600';
     const trendSign = avgTrendPercentage >= 0 ? '+' : '';
 
+    // Map author names to logo file names
+    const getLogoUrl = (author: string): string | null => {
+        const logoMap: Record<string, string> = {
+            'openai': '/openai-logo.svg',
+            'google': '/google-logo.svg',
+            'anthropic': '/anthropic-logo.svg',
+            'meta': '/Meta_Logo-black.svg',
+            'deepseek': '/deepseek-logo.svg',
+            'mistralai': '/Meta_Logo-black.svg', // Fallback until Mistral logo is added
+            'x-ai': '/xai-logo.svg',
+            'x ai': '/xai-logo.svg',
+            'openrouter': '/OpenAI_Logo-black.svg', // Fallback until OpenRouter logo is added
+        };
+        return logoMap[author.toLowerCase()] || null;
+    };
+
+    const logoUrl = org.logoUrl || getLogoUrl(org.author);
+
     return (
         <Card className="flex flex-col bg-card border rounded-lg">
             <CardContent className="p-6 pb-2 flex-grow">
                 <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-100 overflow-hidden">
-                        {org.logoUrl ? (
-                            <img src={org.logoUrl} alt={org.name} className="w-12 h-12 object-cover" />
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-white overflow-hidden">
+                        {logoUrl ? (
+                            <img src={logoUrl} alt={org.name} className="w-10 h-10 object-contain" />
                         ) : (
                             <Bot className="w-6 h-6 text-gray-600" />
                         )}
