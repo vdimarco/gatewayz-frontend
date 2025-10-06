@@ -213,6 +213,8 @@ export default function ApiKeysPage() {
     if (!mounted) return;
 
     let hasStartedFetch = false;
+    let interval: NodeJS.Timeout | null = null;
+    let timeout: NodeJS.Timeout | null = null;
 
     // Check for API key periodically until authentication completes
     const checkAndFetch = () => {
@@ -221,8 +223,8 @@ export default function ApiKeysPage() {
       const apiKey = getApiKey();
       if (apiKey) {
         hasStartedFetch = true;
-        clearInterval(interval);
-        clearTimeout(timeout);
+        if (interval) clearInterval(interval);
+        if (timeout) clearTimeout(timeout);
         fetchApiKeys();
       }
     };
@@ -231,17 +233,17 @@ export default function ApiKeysPage() {
     checkAndFetch();
 
     // If no key yet, keep checking every 200ms for up to 5 seconds
-    const interval = setInterval(checkAndFetch, 200);
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
+    interval = setInterval(checkAndFetch, 200);
+    timeout = setTimeout(() => {
+      if (interval) clearInterval(interval);
       if (!hasStartedFetch) {
         setLoading(false);
       }
     }, 5000);
 
     return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
+      if (interval) clearInterval(interval);
+      if (timeout) clearTimeout(timeout);
     };
   }, [mounted]);
 
