@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -76,12 +76,22 @@ const ModelCard = ({ model }: { model: Model }) => {
 export default function ModelsClient({ initialModels }: { initialModels: Model[] }) {
   const [layout, setLayout] = useState("list");
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedModalities, setSelectedModalities] = useState<string[]>([]);
   const [contextLength, setContextLength] = useState(64);
   const [promptPricing, setPromptPricing] = useState(0.5);
   const [selectedParameters, setSelectedParameters] = useState<string[]>([]);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('tokens-desc');
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (value: string, checked: boolean) => {
     setter(prev => checked ? [...prev, value] : prev.filter(v => v !== value));
@@ -99,15 +109,16 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
   // Calculate search matches separately from other filters
   const searchFilteredModels = useMemo(() => {
-    if (!searchTerm) return initialModels;
+    if (!debouncedSearchTerm) return initialModels;
 
+    const lowerSearch = debouncedSearchTerm.toLowerCase();
     return initialModels.filter((model) => {
-      return (model.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (model.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (model.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (model.provider_slug || '').toLowerCase().includes(searchTerm.toLowerCase());
+      return (model.name || '').toLowerCase().includes(lowerSearch) ||
+        (model.description || '').toLowerCase().includes(lowerSearch) ||
+        (model.id || '').toLowerCase().includes(lowerSearch) ||
+        (model.provider_slug || '').toLowerCase().includes(lowerSearch);
     });
-  }, [initialModels, searchTerm]);
+  }, [initialModels, debouncedSearchTerm]);
 
   const filteredModels = useMemo(() => {
     // First filter, then sort
@@ -206,7 +217,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
               </div>
               <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
                 <span className="text-sm text-muted-foreground">
-                  {searchTerm && filteredModels.length !== searchFilteredModels.length
+                  {debouncedSearchTerm && filteredModels.length !== searchFilteredModels.length
                     ? `${filteredModels.length} of ${searchFilteredModels.length} models`
                     : `${filteredModels.length} models`}
                 </span>
