@@ -23,7 +23,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Slider } from "@/components/ui/slider";
-import { BookText, Bot, ChevronDown, ChevronUp, FileText, ImageIcon, LayoutGrid, LayoutList, Search, Sliders as SlidersIcon } from 'lucide-react';
+import { BookText, Bot, ChevronDown, ChevronUp, FileText, ImageIcon, LayoutGrid, LayoutList, Search, Sliders as SlidersIcon, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { stringToColor } from '@/lib/utils';
@@ -210,7 +210,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
         <SidebarInset className="flex-1 overflow-auto">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+          <div className="flex flex-col gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                   <SidebarTrigger className="lg:hidden" />
                   <h1 className="text-2xl font-bold">Models</h1>
@@ -223,6 +224,59 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                 </span>
                 <Button variant="ghost" size="sm" onClick={resetFilters}>Reset Filters</Button>
               </div>
+            </div>
+
+            {/* Active Filters */}
+            <div className="flex flex-wrap gap-2">
+              {debouncedSearchTerm && (
+                <Badge variant="secondary" className="gap-1">
+                  Search: {debouncedSearchTerm}
+                  <button onClick={() => { setSearchTerm(""); setDebouncedSearchTerm(""); }} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {selectedModalities.map(modality => (
+                <Badge key={modality} variant="secondary" className="gap-1">
+                  {modality}
+                  <button onClick={() => setSelectedModalities(prev => prev.filter(m => m !== modality))} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {contextLength > 64 && (
+                <Badge variant="secondary" className="gap-1">
+                  Context ≥ {contextLength}K
+                  <button onClick={() => setContextLength(64)} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {promptPricing < 0.5 && (
+                <Badge variant="secondary" className="gap-1">
+                  Price ≤ ${promptPricing}/M
+                  <button onClick={() => setPromptPricing(0.5)} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {selectedParameters.map(param => (
+                <Badge key={param} variant="secondary" className="gap-1">
+                  {param}
+                  <button onClick={() => setSelectedParameters(prev => prev.filter(p => p !== param))} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {selectedProviders.map(provider => (
+                <Badge key={provider} variant="secondary" className="gap-1">
+                  {provider}
+                  <button onClick={() => setSelectedProviders(prev => prev.filter(p => p !== provider))} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
