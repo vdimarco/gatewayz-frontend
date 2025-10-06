@@ -15,7 +15,8 @@ export const stringToColor = (str: string | null | undefined) => {
   // Use a slightly different HSL range for better pastel colors
   return `hsl(${h}, 60%, 85%)`;
 };
-export const extractTokenValue = (str: string): string | null=>  {
-  const match = str.match(/^(\d+(?:\.\d+)?[BTMK])\s+tokens$/i);
+
+export const extractTokenValue = (str: string): string | null => {
+  const match = str.match(/^(\d+(?:\.\d+)?[BTMK])\s*tokens$/i);
   return match ? match[1] : null;
-}
+};
