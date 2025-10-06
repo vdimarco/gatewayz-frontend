@@ -51,7 +51,9 @@ export function AppHeader() {
               has_accepted_terms: user.hasAcceptedTerms,
               is_guest: user.isGuest
             },
-            token: token || ''
+            token: token || '',
+            auto_create_api_key: true,
+            trial_credits: 10.00  // $10 in trial credits for new users
           };
 
           console.log('Sending auth request:', JSON.stringify(requestBody, null, 2));
