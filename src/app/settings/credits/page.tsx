@@ -34,6 +34,7 @@ interface Transaction {
   created_at: string;
   description?: string;
   status?: string;
+  balance?: number; // Running balance after this transaction
 }
 
 // Reusable TransactionRow component
@@ -65,7 +66,7 @@ const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
 
   return (
     <div className="px-4 py-3 hover:bg-gray-50">
-      <div className="grid grid-cols-4 gap-4 items-center text-sm">
+      <div className="grid grid-cols-5 gap-4 items-center text-sm">
         <div className="font-medium">
           {getTransactionType(transaction.transaction_type)}
           {transaction.description && (
@@ -76,6 +77,9 @@ const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
           {transaction.amount >= 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
         </div>
         <div className="font-medium">{formatDate(transaction.created_at)}</div>
+        <div className="font-medium text-right">
+          {transaction.balance !== undefined ? `$${transaction.balance.toFixed(2)}` : '-'}
+        </div>
         <div className="flex justify-end">
           <Button
             variant="ghost"
@@ -154,15 +158,44 @@ function CreditsPageContent() {
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data.payments)) {
-            // Map payment data to transaction format
-            const mappedTransactions = data.payments.map((payment: any) => ({
-              id: payment.id,
-              amount: payment.amount,
-              transaction_type: payment.status === 'completed' ? 'Purchase' : payment.status,
-              created_at: payment.created_at,
-              description: `Payment ${payment.status}`,
-              status: payment.status
-            }));
+            // Map payment data to transaction format and calculate running balance
+            let runningBalance = credits || 0; // Start with current balance
+
+            const mappedTransactions = data.payments.map((payment: any, index: number) => {
+              // For the first transaction (most recent), balance is current balance
+              // For subsequent ones, subtract the previous transactions
+              const transactionAmount = payment.status === 'completed' ? payment.amount : 0;
+
+              // If this is not the first item, we need to calculate backwards
+              if (index === 0) {
+                // Most recent transaction - balance after is current balance
+                return {
+                  id: payment.id,
+                  amount: payment.amount,
+                  transaction_type: payment.status === 'completed' ? 'Purchase' : payment.status,
+                  created_at: payment.created_at,
+                  description: `Payment ${payment.status}`,
+                  status: payment.status,
+                  balance: runningBalance
+                };
+              } else {
+                // Older transactions - subtract all completed transactions after this one
+                const balanceAfter = runningBalance - data.payments.slice(0, index).reduce((sum: number, p: any) => {
+                  return sum + (p.status === 'completed' ? p.amount : 0);
+                }, 0);
+
+                return {
+                  id: payment.id,
+                  amount: payment.amount,
+                  transaction_type: payment.status === 'completed' ? 'Purchase' : payment.status,
+                  created_at: payment.created_at,
+                  description: `Payment ${payment.status}`,
+                  status: payment.status,
+                  balance: balanceAfter
+                };
+              }
+            });
+
             setTransactions(mappedTransactions);
           }
         }
@@ -330,10 +363,11 @@ function CreditsPageContent() {
       <div className="space-y-4">
         <div className="border border-gray-200 overflow-hidden border-x-0">
           <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <div className="grid grid-cols-4 gap-4 text-sm font-medium">
+            <div className="grid grid-cols-5 gap-4 text-sm font-medium">
               <div>Recent Transactions</div>
               <div>Amount</div>
               <div>Date</div>
+              <div className="text-right">Balance After</div>
               <div></div>
             </div>
           </div>
