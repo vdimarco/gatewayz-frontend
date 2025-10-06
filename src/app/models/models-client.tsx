@@ -445,7 +445,7 @@ const FilterSlider = ({ label, value, onValueChange, min, max, step, unit }: { l
     return (
         <SidebarGroup>
             <SidebarGroupLabel>{label}</SidebarGroupLabel>
-            <Slider defaultValue={[value]} min={min} max={max} step={step} onValueChange={(v) => onValueChange(v[0])} />
+            <Slider value={[value]} min={min} max={max} step={step} onValueChange={(v) => onValueChange(v[0])} />
             <div className="flex justify-between text-xs text-muted-foreground mt-1">
                 <span>{min}{unit}</span>
                 <span>{value}{unit}</span>
