@@ -21,8 +21,7 @@ interface Model {
 async function getModels(): Promise<Model[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/models?gateway=all`, {
-      next: { revalidate: 300 }, // Cache for 5 minutes
-      cache: 'no-store' // Disable cache during development
+      next: { revalidate: 0 } // Always fetch fresh data
     });
     const data = await response.json();
     return data.data || [];

@@ -45,10 +45,10 @@ interface Model {
 }
 
 const ModelCard = ({ model }: { model: Model }) => {
-  const isFree = parseFloat(model.pricing.prompt) === 0 && parseFloat(model.pricing.completion) === 0;
-  const inputCost = (parseFloat(model.pricing.prompt) * 1000000).toFixed(2);
-  const outputCost = (parseFloat(model.pricing.completion) * 1000000).toFixed(2);
-  const contextK = Math.round(model.context_length / 1000);
+  const isFree = parseFloat(model.pricing?.prompt || '0') === 0 && parseFloat(model.pricing?.completion || '0') === 0;
+  const inputCost = (parseFloat(model.pricing?.prompt || '0') * 1000000).toFixed(2);
+  const outputCost = (parseFloat(model.pricing?.completion || '0') * 1000000).toFixed(2);
+  const contextK = model.context_length > 0 ? Math.round(model.context_length / 1000) : 0;
 
   return (
     <Link href={`/models/${encodeURIComponent(model.id)}`} className="h-full">
@@ -60,11 +60,11 @@ const ModelCard = ({ model }: { model: Model }) => {
             </h3>
             <Badge variant="outline" className="text-xs" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
           </div>
-          <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0 font-medium">{contextK}K</div>
+          <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0 font-medium">{contextK > 0 ? `${contextK}K` : 'Pending'}</div>
         </div>
-        <p className="text-muted-foreground text-sm flex-grow line-clamp-2 mb-4">{model.description}</p>
+        <p className="text-muted-foreground text-sm flex-grow line-clamp-2 mb-4">{model.description || 'No description available'}</p>
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-3 border-t">
-          <span className="whitespace-nowrap">{contextK}K context</span>
+          <span className="whitespace-nowrap">{contextK > 0 ? `${contextK}K context` : 'Pending sync'}</span>
           <span className="whitespace-nowrap">${inputCost}/M in</span>
           <span className="whitespace-nowrap">${outputCost}/M out</span>
         </div>
@@ -118,16 +118,17 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     return sortedModels.filter((model) => {
       const searchTermMatch =
         model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        model.description.toLowerCase().includes(searchTerm.toLowerCase());
+        (model.description || '').toLowerCase().includes(searchTerm.toLowerCase());
 
       const modalityMatch = selectedModalities.length === 0 || selectedModalities.every(m =>
-        model.architecture.input_modalities.some(im => im.toLowerCase() === m.toLowerCase())
+        model.architecture?.input_modalities?.some(im => im.toLowerCase() === m.toLowerCase())
       );
-      const contextMatch = model.context_length >= contextLength * 1000;
-      const isFree = parseFloat(model.pricing.prompt) === 0 && parseFloat(model.pricing.completion) === 0;
-      const avgPrice = (parseFloat(model.pricing.prompt) + parseFloat(model.pricing.completion)) / 2;
+      // Include models with context_length of 0 (pending metadata sync)
+      const contextMatch = model.context_length === 0 || model.context_length >= contextLength * 1000;
+      const isFree = parseFloat(model.pricing?.prompt || '0') === 0 && parseFloat(model.pricing?.completion || '0') === 0;
+      const avgPrice = (parseFloat(model.pricing?.prompt || '0') + parseFloat(model.pricing?.completion || '0')) / 2;
       const priceMatch = avgPrice <= promptPricing / 1000000 || isFree;
-      const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => model.supported_parameters.includes(p));
+      const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => (model.supported_parameters || []).includes(p));
       const providerMatch = selectedProviders.length === 0 || selectedProviders.includes(model.provider_slug);
 
       return searchTermMatch && modalityMatch && contextMatch && priceMatch && parameterMatch && providerMatch;
