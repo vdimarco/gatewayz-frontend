@@ -172,6 +172,13 @@ export default function ApiKeysPage() {
   }, []);
 
   const fetchApiKeys = async () => {
+    // Check if user is authenticated first
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await makeAuthenticatedRequest(
@@ -203,7 +210,12 @@ export default function ApiKeysPage() {
   };
 
   useEffect(() => {
-    fetchApiKeys();
+    // Wait a bit for authentication to complete before fetching
+    const timer = setTimeout(() => {
+      fetchApiKeys();
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const handleCreateKey = async () => {
