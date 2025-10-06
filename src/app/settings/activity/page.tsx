@@ -12,7 +12,7 @@ import { addDays, format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Download, Filter, Info, Maximize, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
-import { makeAuthenticatedRequest } from '@/lib/api';
+import { makeAuthenticatedRequest, getApiKey } from '@/lib/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
 
@@ -40,39 +40,75 @@ interface ActivityStats {
   }[];
 }
 
-const ActivityChart = ({ dataKey, title, value, currency = false, data }: { dataKey: "spend" | "tokens" | "requests", title: string, value: string, currency?: boolean, data: any[] }) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      <Maximize className="h-4 w-4 text-muted-foreground" />
-    </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold">{currency && '$'}{value}</div>
-      <div className="h-[120px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 5, right: 10, left: -30, bottom: 0 }}>
-            <defs>
-              <linearGradient id={`color${dataKey}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="date" hide />
-            <YAxis hide domain={['dataMin - 10', 'dataMax + 10']} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--background))',
-                borderColor: 'hsl(var(--border))',
-              }}
-              labelFormatter={(label) => format(new Date(label), "PPP")}
-            />
-            <Area type="monotone" dataKey={dataKey} stroke="hsl(var(--primary))" fillOpacity={1} fill={`url(#color${dataKey})`} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-    </CardContent>
-  </Card>
-);
+const ActivityChart = ({ dataKey, title, value, currency = false, data }: { dataKey: "spend" | "tokens" | "requests", title: string, value: string, currency?: boolean, data: any[] }) => {
+  // Ensure we have at least 3 data points for a better visual chart
+  const chartData = data.length > 0 ? data : [];
+
+  // If only 1 data point, add padding points before and after for visual context
+  let displayData = chartData;
+  if (chartData.length === 1) {
+    const singlePoint = chartData[0];
+    const date = new Date(singlePoint.date);
+    displayData = [
+      {
+        date: addDays(date, -1).toISOString().slice(0, 10),
+        [dataKey]: 0,
+      },
+      singlePoint,
+      {
+        date: addDays(date, 1).toISOString().slice(0, 10),
+        [dataKey]: 0,
+      },
+    ];
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Maximize className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{currency && '$'}{value}</div>
+        <div className="h-[120px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={displayData} margin={{ top: 5, right: 10, left: -30, bottom: 0 }}>
+              <defs>
+                <linearGradient id={`color${dataKey}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+              <XAxis dataKey="date" hide />
+              <YAxis hide domain={[0, 'dataMax + 10']} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--background))',
+                  borderColor: 'hsl(var(--border))',
+                }}
+                labelFormatter={(label) => format(new Date(label), "PPP")}
+                formatter={(value: any) => [
+                  currency ? `$${Number(value).toFixed(2)}` : Number(value).toLocaleString(),
+                  title
+                ]}
+              />
+              <Area
+                type="monotone"
+                dataKey={dataKey}
+                stroke="hsl(var(--primary))"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill={`url(#color${dataKey})`}
+                dot={chartData.length <= 3 ? { fill: 'hsl(var(--primary))', r: 4 } : false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function ActivityPage() {
   const [date, setDate] = useState<DateRange | undefined>({
@@ -90,6 +126,15 @@ export default function ActivityPage() {
   const fetchActivityData = async () => {
     try {
       setLoading(true);
+
+      // Check if user is authenticated before fetching
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        console.log('Waiting for authentication to complete...');
+        setLoading(false);
+        return;
+      }
+
       const fromDate = date?.from ? format(date.from, 'yyyy-MM-dd') : format(addDays(new Date(), -29), 'yyyy-MM-dd');
       const toDate = date?.to ? format(date.to, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
 
@@ -151,7 +196,7 @@ export default function ActivityPage() {
             </Button>
         </div>
         <p className="text-muted-foreground">
-          See how you&apos;ve been using models on OpenRouter. Privacy <Info className="inline h-4 w-4" />
+          See how you&apos;ve been using models on Gatewayz
         </p>
       </div>
 

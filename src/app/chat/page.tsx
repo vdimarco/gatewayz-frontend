@@ -49,6 +49,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
+import { usePrivy } from '@privy-io/react-auth';
 
 type Message = {
     role: 'user' | 'assistant';
@@ -404,6 +405,7 @@ const ChatSkeleton = () => (
 
 function ChatPageContent() {
     const searchParams = useSearchParams();
+    const { login } = usePrivy();
     const [message, setMessage] = useState('');
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -678,7 +680,17 @@ function ChatPageContent() {
                 toast({
                     title: "Authentication required",
                     description: "Please log in to use the chat feature.",
-                    variant: 'destructive'
+                    variant: 'destructive',
+                    action: (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => login()}
+                            className="bg-white hover:bg-gray-100 text-destructive border-destructive/20"
+                        >
+                            Log In
+                        </Button>
+                    ),
                 });
                 setLoading(false);
                 return;
