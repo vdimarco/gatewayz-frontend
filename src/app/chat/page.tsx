@@ -42,9 +42,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
 import { getApiKey, getUserData } from '@/lib/api';
-import { streamChat } from '@/lib/streaming-chat';
-import { StreamingMessage } from '@/components/chat/streaming-message';
 import { ChatHistoryAPI, ChatSession as ApiChatSession, ChatMessage as ApiChatMessage, handleApiError } from '@/lib/chat-history';
+import { Copy, Share2, RotateCcw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -142,12 +141,16 @@ const apiHelpers = {
     loadChatSessions: async (userId: string): Promise<ChatSession[]> => {
         try {
             const apiKey = getApiKey();
+            console.log('Chat sessions - API Key found:', !!apiKey);
+            console.log('Chat sessions - API Key preview:', apiKey ? `${apiKey.substring(0, 10)}...` : 'None');
+            
             if (!apiKey) {
                 console.warn('No API key found, returning empty sessions');
                 return [];
             }
 
             const chatAPI = new ChatHistoryAPI(apiKey);
+            console.log('Chat sessions - Making API request to getSessions');
             const apiSessions = await chatAPI.getSessions(50, 0);
             
             // Load messages for each session
@@ -217,6 +220,9 @@ const apiHelpers = {
     createChatSession: async (title: string, model?: string): Promise<ChatSession> => {
         try {
             const apiKey = getApiKey();
+            console.log('Create session - API Key found:', !!apiKey);
+            console.log('Create session - API Key preview:', apiKey ? `${apiKey.substring(0, 10)}...` : 'None');
+            
             if (!apiKey) {
                 console.warn('No API key found, creating local session');
                 // Fallback to local session
@@ -233,6 +239,7 @@ const apiHelpers = {
             }
 
             const chatAPI = new ChatHistoryAPI(apiKey);
+            console.log('Create session - Making API request to createSession');
             const apiSession = await chatAPI.createSession(title, model);
             
             return {
@@ -575,8 +582,6 @@ function ChatPageContent() {
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [streamingContent, setStreamingContent] = useState('');
-    const [streamingReasoning, setStreamingReasoning] = useState('');
     const [selectedModel, setSelectedModel] = useState<ModelOption | null>({
         value: 'switchpoint/router',
         label: 'Switchpoint Router',
@@ -889,8 +894,6 @@ function ChatPageContent() {
         // Set the message to the last user message and send it again
         setMessage(lastUserMessage.content);
         setLoading(true);
-        setStreamingContent('');
-        setStreamingReasoning('');
         
         // Trigger the send message after a short delay
         setTimeout(() => {
@@ -937,8 +940,6 @@ function ChatPageContent() {
             fileInputRef.current.value = '';
         }
         setLoading(true);
-        setStreamingContent('');
-        setStreamingReasoning('');
 
         try {
             const apiKey = getApiKey();
@@ -971,63 +972,30 @@ function ChatPageContent() {
                 ];
             }
 
-            // Try streaming first, fallback to regular API if streaming fails
-            let content: string;
-            
-            try {
-                const streamResult = await streamChat({
-                    modelName: selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value,
-                    prompt: userMessage,
-                    apiKey,
-                    onContent: (streamingContent) => {
-                        setStreamingContent(streamingContent);
-                    },
-                    onReasoning: (streamingReasoning) => {
-                        setStreamingReasoning(streamingReasoning);
-                    },
-                    onComplete: (fullContent, fullReasoning) => {
-                        setStreamingContent('');
-                        setStreamingReasoning('');
-                        console.log('Streaming completed:', { fullContent: fullContent.substring(0, 100), fullReasoning: fullReasoning?.substring(0, 100) });
-                    },
-                    onError: (error) => {
-                        console.error('Streaming error:', error);
-                        setStreamingContent('');
-                        setStreamingReasoning('');
-                        throw error;
-                    }
-                });
-                content = streamResult.content;
-            } catch (streamError) {
-                console.warn('Streaming failed, falling back to regular API:', streamError);
-                setStreamingContent('');
-                setStreamingReasoning('');
-                
-                // Fallback to regular API call
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`,
-                    },
-                    body: JSON.stringify({
-                        model: selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value,
-                        messages: [{ role: 'user', content: messageContent }],
-                    }),
-                });
+            // Make regular API call
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                },
+                body: JSON.stringify({
+                    model: selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value,
+                    messages: [{ role: 'user', content: messageContent }],
+                }),
+            });
 
-                if (!response.ok) {
-                    if (response.status === 429) {
-                        const errorData = await response.json().catch(() => ({}));
-                        throw new Error(errorData.detail || 'Rate limit exceeded. Please try again later.');
-                    }
+            if (!response.ok) {
+                if (response.status === 429) {
                     const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error?.message || errorData.detail || `Request failed with status ${response.status}`);
+                    throw new Error(errorData.detail || 'Rate limit exceeded. Please try again later.');
                 }
-
-                const data = await response.json();
-                content = data.choices?.[0]?.message?.content || data.response || 'No response';
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error?.message || errorData.detail || `Request failed with status ${response.status}`);
             }
+
+            const data = await response.json();
+            const content = data.choices?.[0]?.message?.content || data.response || 'No response';
 
             const finalSessions = sessions.map(session => {
                 if (session.id === activeSessionId) {
@@ -1125,8 +1093,6 @@ function ChatPageContent() {
                 return session;
             });
             setSessions(revertedSessions);
-            setStreamingContent('');
-            setStreamingReasoning('');
             setLoading(false);
         }
     };
@@ -1207,31 +1173,38 @@ function ChatPageContent() {
                         <div className="text-sm whitespace-pre-wrap text-white">{msg.content}</div>
                       </div>
                     ) : (
-                      <StreamingMessage
-                        content={msg.content}
-                        reasoning={msg.reasoning}
-                        modelName={selectedModel?.label}
-                        isStreaming={false}
-                        onRegenerate={handleRegenerate}
-                      />
+                      <div className="rounded-lg p-3 bg-white border">
+                        <div className="flex items-center justify-between mb-2">
+                          {selectedModel?.label && <p className="text-xs font-semibold">{selectedModel.label}</p>}
+                        </div>
+                        <div className="text-sm prose prose-sm max-w-none">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkMath]}
+                            rehypePlugins={[rehypeKatex]}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
+                        {/* Action Buttons - always visible in bottom right */}
+                        <div className="flex items-center justify-end gap-1 mt-3 pt-2 border-t border-gray-100">
+                          <Button variant="ghost" size="sm" onClick={() => navigator.clipboard.writeText(msg.content)} className="h-8 w-8 p-0 hover:bg-gray-100" title="Copy response">
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => navigator.share({ text: msg.content })} className="h-8 w-8 p-0 hover:bg-gray-100" title="Share response">
+                            <Share2 className="h-4 w-4" />
+                          </Button>
+                          {handleRegenerate && (
+                            <Button variant="ghost" size="sm" onClick={handleRegenerate} className="h-8 w-8 p-0 hover:bg-gray-100" title="Regenerate response">
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
               ))}
-              {loading && streamingContent && (
-                <div className="flex items-start gap-3">
-                  <div className="flex flex-col gap-1 items-start">
-                    <StreamingMessage
-                      content={streamingContent}
-                      reasoning={streamingReasoning}
-                      modelName={selectedModel?.label}
-                      isStreaming={true}
-                      onRegenerate={handleRegenerate}
-                    />
-                  </div>
-                </div>
-              )}
-              {loading && !streamingContent && <ChatSkeleton />}
+              {loading && <ChatSkeleton />}
             </div>
           )}
 

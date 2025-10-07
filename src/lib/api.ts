@@ -36,8 +36,15 @@ export const saveApiKey = (apiKey: string): void => {
 
 export const getApiKey = (): string | null => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem(API_KEY_STORAGE_KEY);
+    const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+    console.log('Retrieving API key from localStorage:', {
+      found: !!apiKey,
+      preview: apiKey ? `${apiKey.substring(0, 10)}...` : 'None',
+      storage_key: API_KEY_STORAGE_KEY
+    });
+    return apiKey;
   }
+  console.log('getApiKey called on server side, returning null');
   return null;
 };
 
@@ -92,8 +99,15 @@ export const makeAuthenticatedRequest = async (
 
 // Process authentication response
 export const processAuthResponse = (response: AuthResponse): void => {
+  console.log('Processing auth response:', {
+    success: response.success,
+    has_api_key: !!response.api_key,
+    api_key_preview: response.api_key ? `${response.api_key.substring(0, 10)}...` : 'None'
+  });
+  
   if (response.success && response.api_key) {
     saveApiKey(response.api_key);
+    console.log('API key saved to localStorage');
     
     // Convert credits to integer to match backend expectations
     const creditsAsInteger = Math.floor(response.credits);
@@ -109,6 +123,7 @@ export const processAuthResponse = (response: AuthResponse): void => {
     };
     
     saveUserData(userData);
+    console.log('User data saved to localStorage');
     
     console.log('User authenticated successfully:', {
       user_id: response.user_id,
@@ -116,6 +131,11 @@ export const processAuthResponse = (response: AuthResponse): void => {
       credits: creditsAsInteger,
       original_credits: response.credits,
       is_new_user: response.is_new_user
+    });
+  } else {
+    console.warn('Authentication response invalid:', {
+      success: response.success,
+      has_api_key: !!response.api_key
     });
   }
 };
