@@ -16,19 +16,29 @@ import { Separator } from "@/components/ui/separator";
 import { GetCreditsButton } from './get-credits-button';
 
 export function AppHeader() {
-  const { user, login, logout, getAccessToken } = usePrivy();
+  const { user, ready, login, logout, getAccessToken, authenticated } = usePrivy();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   useEffect(() => {
     const authenticateUser = async () => {
+      // Wait for Privy to be ready before authenticating
+      if (!ready) {
+        return;
+      }
+
       if(user) {
         try {
           // Check if we already have an API key for this user
           const existingApiKey = getApiKey();
           if (existingApiKey) {
             console.log('User already authenticated with API key');
+            setIsAuthenticating(false);
             return;
           }
+
+          setIsAuthenticating(true);
+          console.log('Starting authentication flow for new user...');
 
           const token = await getAccessToken();
           console.log({user});
@@ -69,9 +79,14 @@ export function AppHeader() {
           if (response.ok) {
             const result = await response.json();
             console.log('Authentication successful:', result);
-            
+
             // Process and save the API key and user data
             processAuthResponse(result);
+
+            setIsAuthenticating(false);
+
+            // Force a page refresh to update the UI
+            window.location.reload();
           } else {
             const errorText = await response.text();
             console.error('Authentication failed:', response.status, response.statusText);
@@ -81,17 +96,19 @@ export function AppHeader() {
           }
         } catch (error) {
           console.error('Error during authentication:', error);
+          setIsAuthenticating(false);
           logout();
           removeApiKey();
         }
       } else {
         // User logged out, remove stored API key
         removeApiKey();
+        setIsAuthenticating(false);
       }
     }
-    
+
     authenticateUser();
-  }, [user, getAccessToken])
+  }, [user, ready, getAccessToken])
 
   return (
     <header className="sticky top-0 z-50 w-full h-[65px] border-b bg-header flex items-center">

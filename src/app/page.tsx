@@ -183,7 +183,7 @@ export default function Home() {
   const [activeModelIndex, setActiveModelIndex] = useState<number | null>(0);
   const [message, setMessage] = useState('');
   const router = useRouter();
-  const { user, login } = usePrivy();
+  const { user, ready, login } = usePrivy();
   const [apiKey, setApiKey] = useState('');
   const carouselRef = useRef<HTMLDivElement>(null);
   const [carouselOffset, setCarouselOffset] = useState(0);
@@ -195,6 +195,11 @@ export default function Home() {
   // Load the actual API key when user is authenticated
   useEffect(() => {
     const loadApiKey = () => {
+      // Wait for Privy to be ready
+      if (!ready) {
+        return;
+      }
+
       if (user) {
         const userApiKey = getApiKey();
         if (userApiKey) {
@@ -227,7 +232,7 @@ export default function Home() {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  }, [user]);
+  }, [user, ready]);
 
   // Dynamic code examples with actual API key
   const codeExamples = {
