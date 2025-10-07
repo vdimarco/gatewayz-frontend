@@ -681,45 +681,24 @@ if __name__ == "__main__":
         </CardContent>
       </Card>
 
-      {/* Step 3: Python Integration */}
+      {/* Step 3: Run Claude Code */}
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">
               3
             </div>
-            <Terminal className="h-6 w-6" />
-            Claude Terminal Integration Python Code
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative">
-            <div className="absolute top-2 right-2">
-              <CopyButton text={pythonCode} id="python-code" />
-            </div>
-            <pre className="text-xs sm:text-sm">{pythonCode}</pre>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Step 4: Run and Code Faster */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">
-              4
-            </div>
             <Play className="h-6 w-6" />
-            Run the Python File and Code Faster with Claude
+            Start Using Claude Code
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
-            Save the code above as <code className="bg-muted px-2 py-1 rounded">chat.py</code> and run:
+            Once the setup script completes, run Claude Code from your terminal or IDE:
           </p>
           <div className="bg-muted p-4 rounded-lg font-mono text-sm flex items-center justify-between">
-            <code>python chat.py</code>
-            <CopyButton text="python chat.py" id="run-python" />
+            <code>claude</code>
+            <CopyButton text="claude" id="run-claude" />
           </div>
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <p className="text-sm text-blue-900 dark:text-blue-100">
