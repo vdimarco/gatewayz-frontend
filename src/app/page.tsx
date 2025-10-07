@@ -12,6 +12,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Check, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getApiKey } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/config';
 
 interface FeaturedModel {
   name: string;
@@ -21,6 +22,22 @@ interface FeaturedModel {
   growth: string;
   color: string;
   logo_url?: string;
+}
+
+interface RankingModelData {
+  id: number;
+  rank: number;
+  model_name: string;
+  author: string;
+  tokens: string;
+  trend_percentage: string;
+  trend_direction: "up" | "down";
+  trend_icon: string;
+  trend_color: string;
+  model_url: string;
+  author_url: string;
+  time_period: string;
+  scraped_at: string;
 }
 
 const FeaturedModelCard = ({
@@ -281,18 +298,86 @@ console.log(completion.choices[0].message);`,
     ]
   }'`
   };
-  const [featuredModels, setFeaturedModels] = useState<FeaturedModel[]>([
-      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' },
-      { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/openai-logo.svg' },
-      { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' },
-      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' },
-      { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/openai-logo.svg' },
-      { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' },
-      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' },
-      { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/openai-logo.svg' },
-      { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' },
-      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' }
-  ]);
+  const [featuredModels, setFeaturedModels] = useState<FeaturedModel[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(true);
+
+  // Fetch models from rankings API
+  useEffect(() => {
+    const fetchRankingModels = async () => {
+      try {
+        setIsLoadingModels(true);
+        const response = await fetch(`${API_BASE_URL}/ranking/models`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          const rankingModels: RankingModelData[] = result.data || [];
+
+          // Map ranking data to featured model format
+          const mappedModels: FeaturedModel[] = rankingModels.slice(0, 10).map((model) => {
+            // Get logo based on author
+            const authorLower = model.author.toLowerCase();
+            let logo_url = '/logo_black.svg'; // Default logo
+
+            if (authorLower.includes('google')) {
+              logo_url = '/Google_Logo-black.svg';
+            } else if (authorLower.includes('openai')) {
+              logo_url = '/OpenAI_Logo-black.svg';
+            } else if (authorLower.includes('anthropic')) {
+              logo_url = '/anthropic-logo.svg';
+            } else if (authorLower.includes('meta')) {
+              logo_url = '/meta-logo.svg';
+            } else if (authorLower.includes('deepseek')) {
+              logo_url = '/deepseek-logo.svg';
+            }
+
+            // Format growth percentage
+            const growth = model.trend_direction === 'up'
+              ? `+${model.trend_percentage}`
+              : model.trend_direction === 'down'
+                ? `-${model.trend_percentage}`
+                : model.trend_percentage;
+
+            return {
+              name: model.model_name,
+              by: model.author,
+              tokens: model.tokens,
+              latency: '--', // Not provided by ranking API
+              growth: growth,
+              color: model.trend_direction === 'up' ? 'bg-green-400' : model.trend_direction === 'down' ? 'bg-red-400' : 'bg-gray-400',
+              logo_url: logo_url
+            };
+          });
+
+          setFeaturedModels(mappedModels);
+        } else {
+          console.error('Failed to fetch ranking models');
+          // Set fallback models if API fails
+          setFeaturedModels([
+            { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/Google_Logo-black.svg' },
+            { name: 'GPT-4', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/OpenAI_Logo-black.svg' },
+            { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching ranking models:', error);
+        // Set fallback models on error
+        setFeaturedModels([
+          { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/Google_Logo-black.svg' },
+          { name: 'GPT-4', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/OpenAI_Logo-black.svg' },
+          { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' }
+        ]);
+      } finally {
+        setIsLoadingModels(false);
+      }
+    };
+
+    fetchRankingModels();
+  }, []);
 
   // Auto-advance carousel every 3 seconds
   useEffect(() => {
