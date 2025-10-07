@@ -565,11 +565,11 @@ console.log(completion.choices[0].message);`,
            {user && apiKey && (
              <div className="w-full mt-8">
                <div className="mb-2">
-                 <label className="text-sm font-medium text-gray-700">Your Default API Key</label>
+                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Your Default API Key</label>
                </div>
                <div className="relative">
                  <Input
-                   className="h-12 pr-28 font-mono text-sm"
+                   className="h-12 pr-28 font-mono text-sm bg-background text-foreground"
                    value={apiKey}
                    type={showApiKey ? "text" : "password"}
                    readOnly
@@ -577,7 +577,7 @@ console.log(completion.choices[0].message);`,
                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
                    <button
                      onClick={() => setShowApiKey(!showApiKey)}
-                     className="p-1 hover:bg-gray-100 rounded"
+                     className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                    >
                      {showApiKey ? (
                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -592,7 +592,7 @@ console.log(completion.choices[0].message);`,
                    </button>
                    <button
                      onClick={handleCopyApiKey}
-                     className="p-1 hover:bg-gray-100 rounded"
+                     className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                    >
                      <Copy className="w-5 h-5" />
                    </button>
@@ -622,31 +622,18 @@ console.log(completion.choices[0].message);`,
 
            <style jsx>{`
              @keyframes led-shimmer {
-               0% {
-                 background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899);
-                 opacity: 1;
-               }
-               25% {
-                 background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #06b6d4);
-                 opacity: 0.9;
+               0%, 100% {
+                 background-position: 0% 50%;
                }
                50% {
-                 background: linear-gradient(90deg, #8b5cf6, #ec4899, #06b6d4, #3b82f6);
-                 opacity: 1;
-               }
-               75% {
-                 background: linear-gradient(90deg, #ec4899, #06b6d4, #3b82f6, #8b5cf6);
-                 opacity: 0.9;
-               }
-               100% {
-                 background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899);
-                 opacity: 1;
+                 background-position: 100% 50%;
                }
              }
 
              .animate-led-shimmer {
-               background-size: 300% 300%;
-               animation: led-shimmer 3s ease-in-out infinite;
+               background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #06b6d4, #3b82f6);
+               background-size: 200% 200%;
+               animation: led-shimmer 4s ease-in-out infinite;
              }
            `}</style>
         </section>

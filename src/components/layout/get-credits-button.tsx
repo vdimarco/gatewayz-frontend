@@ -56,31 +56,18 @@ export function GetCreditsButton() {
 
       <style jsx>{`
         @keyframes led-shimmer {
-          0% {
-            background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899);
-            opacity: 1;
-          }
-          25% {
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #06b6d4);
-            opacity: 0.9;
+          0%, 100% {
+            background-position: 0% 50%;
           }
           50% {
-            background: linear-gradient(90deg, #8b5cf6, #ec4899, #06b6d4, #3b82f6);
-            opacity: 1;
-          }
-          75% {
-            background: linear-gradient(90deg, #ec4899, #06b6d4, #3b82f6, #8b5cf6);
-            opacity: 0.9;
-          }
-          100% {
-            background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899);
-            opacity: 1;
+            background-position: 100% 50%;
           }
         }
 
         .animate-led-shimmer {
-          background-size: 300% 300%;
-          animation: led-shimmer 3s ease-in-out infinite;
+          background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #06b6d4, #3b82f6);
+          background-size: 200% 200%;
+          animation: led-shimmer 4s ease-in-out infinite;
         }
       `}</style>
     </>
