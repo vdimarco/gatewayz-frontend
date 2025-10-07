@@ -58,9 +58,27 @@ export function AppHeader() {
           // Check if we already have an API key for this user
           const existingApiKey = getApiKey();
           if (existingApiKey) {
-            console.log('User already authenticated with API key');
-            setIsAuthenticating(false);
-            return;
+            // Verify the API key is still valid by making a quick test request
+            try {
+              const testResponse = await fetch(`${API_BASE_URL}/user/profile`, {
+                headers: {
+                  'Authorization': `Bearer ${existingApiKey}`
+                }
+              });
+
+              if (testResponse.ok) {
+                console.log('User already authenticated with valid API key');
+                setIsAuthenticating(false);
+                return;
+              } else if (testResponse.status === 401) {
+                console.warn('Stored API key is invalid, re-authenticating...');
+                removeApiKey();
+                // Continue to re-authenticate below
+              }
+            } catch (error) {
+              console.error('Error validating API key:', error);
+              // Continue to re-authenticate
+            }
           }
 
           setIsAuthenticating(true);

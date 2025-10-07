@@ -37,14 +37,8 @@ export const saveApiKey = (apiKey: string): void => {
 export const getApiKey = (): string | null => {
   if (typeof window !== 'undefined') {
     const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-    console.log('Retrieving API key from localStorage:', {
-      found: !!apiKey,
-      preview: apiKey ? `${apiKey.substring(0, 10)}...` : 'None',
-      storage_key: API_KEY_STORAGE_KEY
-    });
     return apiKey;
   }
-  console.log('getApiKey called on server side, returning null');
   return null;
 };
 
@@ -76,7 +70,7 @@ export const makeAuthenticatedRequest = async (
   options: RequestInit = {}
 ): Promise<Response> => {
   const apiKey = getApiKey();
-  
+
   if (!apiKey) {
     throw new Error('No API key found. User must be authenticated.');
   }
@@ -94,7 +88,15 @@ export const makeAuthenticatedRequest = async (
     },
   };
 
-  return fetch(endpoint, requestOptions);
+  const response = await fetch(endpoint, requestOptions);
+
+  // If we get a 401, the API key is invalid - clear it
+  if (response.status === 401) {
+    console.warn('API key is invalid (401), clearing stored credentials');
+    removeApiKey();
+  }
+
+  return response;
 };
 
 // Process authentication response
