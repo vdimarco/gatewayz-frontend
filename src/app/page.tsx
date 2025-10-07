@@ -194,9 +194,14 @@ export default function Home() {
 
   // Load the actual API key when user is authenticated
   useEffect(() => {
-    const userApiKey = getApiKey();
-    if (userApiKey) {
-      setApiKey(userApiKey);
+    if (user) {
+      const userApiKey = getApiKey();
+      if (userApiKey) {
+        setApiKey(userApiKey);
+      } else {
+        // User is authenticated but no API key yet - show placeholder
+        setApiKey('');
+      }
     } else {
       setApiKey(''); // Show placeholder when not authenticated
     }
