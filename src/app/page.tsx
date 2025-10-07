@@ -332,7 +332,7 @@ console.log(completion.choices[0].message);`,
             } else if (authorLower.includes('meta')) {
               logo_url = '/Meta_Logo-black.svg';
             } else if (authorLower.includes('deepseek')) {
-              logo_url = '/DeepSeek_Logo-black.svg';
+              logo_url = '/deepseek-icon.svg';
             } else if (authorLower.includes('x-ai') || authorLower.includes('xai')) {
               logo_url = '/xai-logo.svg';
             }
