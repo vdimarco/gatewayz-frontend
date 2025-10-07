@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
+import { Check, Copy } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface FeaturedModel {
   name: string;
@@ -176,6 +178,53 @@ const AnnouncementCard = ({ title, description, date, isNew }: { title: string, 
     </div>
 )
 
+const codeExamples = {
+  python: `from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.gatewayz.ai/v1",
+    api_key="YOUR_API_KEY"
+)
+
+completion = client.chat.completions.create(
+    model="gpt-4",
+    messages=[
+        {"role": "user", "content": "Hello!"}
+    ]
+)
+
+print(completion.choices[0].message)`,
+
+  javascript: `import OpenAI from "openai";
+
+const openai = new OpenAI({
+  baseURL: "https://api.gatewayz.ai/v1",
+  apiKey: "YOUR_API_KEY",
+});
+
+const completion = await openai.chat.completions.create({
+  model: "gpt-4",
+  messages: [
+    { role: "user", content: "Hello!" }
+  ],
+});
+
+console.log(completion.choices[0].message);`,
+
+  curl: `curl https://api.gatewayz.ai/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -d '{
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello!"
+      }
+    ]
+  }'`
+};
+
 export default function Home() {
   const [activeModelIndex, setActiveModelIndex] = useState<number | null>(0);
   const [message, setMessage] = useState('');
@@ -184,6 +233,9 @@ export default function Home() {
   const [apiKey, setApiKey] = useState('0000000000000000000000000000000000000000');
   const carouselRef = useRef<HTMLDivElement>(null);
   const [carouselOffset, setCarouselOffset] = useState(0);
+  const [activeCodeTab, setActiveCodeTab] = useState<'python' | 'javascript' | 'curl'>('python');
+  const [codeCopied, setCodeCopied] = useState(false);
+  const { toast } = useToast();
   const [featuredModels, setFeaturedModels] = useState<FeaturedModel[]>([
       { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' },
       { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/openai-logo.svg' },
@@ -264,6 +316,16 @@ export default function Home() {
       // If not logged in, trigger login
       login();
     }
+  };
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(codeExamples[activeCodeTab]);
+    setCodeCopied(true);
+    toast({
+      title: "Code copied!",
+      description: "The code has been copied to your clipboard.",
+    });
+    setTimeout(() => setCodeCopied(false), 2000);
   };
   
   return (
@@ -412,7 +474,70 @@ export default function Home() {
               <p className=" text-bold text-center text-xl">3 Lines To Get Gatewayz Running, No Stack Overhaul Required.</p>
             </div>
           </div>
-          <img src="/integration.svg" alt="Integrations" width="100%" height="100%" />
+
+          {/* Interactive Code Block */}
+          <div className="rounded-lg border bg-card overflow-hidden">
+            {/* Tabs */}
+            <div className="flex items-center justify-between border-b bg-muted/30">
+              <div className="flex">
+                <button
+                  onClick={() => setActiveCodeTab('python')}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    activeCodeTab === 'python'
+                      ? 'bg-background text-foreground border-b-2 border-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Python
+                </button>
+                <button
+                  onClick={() => setActiveCodeTab('javascript')}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    activeCodeTab === 'javascript'
+                      ? 'bg-background text-foreground border-b-2 border-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  JavaScript
+                </button>
+                <button
+                  onClick={() => setActiveCodeTab('curl')}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    activeCodeTab === 'curl'
+                      ? 'bg-background text-foreground border-b-2 border-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  cURL
+                </button>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopyCode}
+                className="mr-2"
+              >
+                {codeCopied ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Code Display */}
+            <div className="p-4 bg-slate-950 text-slate-50 overflow-x-auto">
+              <pre className="text-sm leading-relaxed">
+                <code>{codeExamples[activeCodeTab]}</code>
+              </pre>
+            </div>
+          </div>
            <div className="w-full flex flex-row items-center gap-10 mt-8">
              <div className="relative flex-1">
                <Input 
