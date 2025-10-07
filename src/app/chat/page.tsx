@@ -584,6 +584,8 @@ function ChatPageContent() {
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [editedTitle, setEditedTitle] = useState('');
     const [selectedModel, setSelectedModel] = useState<ModelOption | null>({
         value: 'switchpoint/router',
         label: 'Switchpoint Router',
@@ -1175,10 +1177,46 @@ function ChatPageContent() {
               </Sheet>
             </div>
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <h1 className="text-lg lg:text-2xl font-semibold truncate">{activeSession?.title || 'Untitled Chat'}</h1>
-              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0 hidden sm:flex">
-                <Pencil className="h-4 w-4" />
-              </Button>
+              {isEditingTitle ? (
+                <Input
+                  type="text"
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  onBlur={() => {
+                    if (editedTitle.trim() && editedTitle !== activeSession?.title && activeSessionId) {
+                      handleRenameSession(activeSessionId, editedTitle.trim());
+                    }
+                    setIsEditingTitle(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (editedTitle.trim() && editedTitle !== activeSession?.title && activeSessionId) {
+                        handleRenameSession(activeSessionId, editedTitle.trim());
+                      }
+                      setIsEditingTitle(false);
+                    } else if (e.key === 'Escape') {
+                      setIsEditingTitle(false);
+                    }
+                  }}
+                  autoFocus
+                  className="text-lg lg:text-2xl font-semibold h-auto px-2 py-1"
+                />
+              ) : (
+                <>
+                  <h1 className="text-lg lg:text-2xl font-semibold truncate">{activeSession?.title || 'Untitled Chat'}</h1>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 flex-shrink-0 hidden sm:flex"
+                    onClick={() => {
+                      setEditedTitle(activeSession?.title || '');
+                      setIsEditingTitle(true);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 bg-card flex-shrink-0">
