@@ -137,11 +137,14 @@ const ChartCard = ({ modelName, title, dataKey, yAxisFormatter }: { modelName: s
     )
 }
 
+type TabType = 'Overview' | 'Providers' | 'Apps' | 'Activity' | 'Uptime' | 'API';
+
 export default function ModelProfilePage() {
     const params = useParams();
     const [model, setModel] = useState<Model | null>(null);
     const [allModels, setAllModels] = useState<Model[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<TabType>('Overview');
 
     const modelId = useMemo(() => {
         const id = params.name as string;
@@ -255,8 +258,18 @@ export default function ModelProfilePage() {
 
             <nav className="border-b overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
                 <div className="flex gap-4 lg:gap-6">
-                    {['Overview', 'Providers', 'Apps', 'Activity', 'Uptime', 'API'].map(item => (
-                        <Button key={item} variant="ghost" className="rounded-none border-b-2 border-transparent hover:border-primary data-[active]:border-primary data-[active]:text-primary whitespace-nowrap flex-shrink-0">
+                    {(['Overview', 'Providers', 'Apps', 'Activity', 'Uptime', 'API'] as TabType[]).map(item => (
+                        <Button
+                            key={item}
+                            variant="ghost"
+                            className={cn(
+                                "rounded-none border-b-2 whitespace-nowrap flex-shrink-0",
+                                activeTab === item
+                                    ? "border-primary text-primary"
+                                    : "border-transparent hover:border-primary"
+                            )}
+                            onClick={() => setActiveTab(item)}
+                        >
                             {item}
                         </Button>
                     ))}
@@ -264,66 +277,163 @@ export default function ModelProfilePage() {
             </nav>
 
             <main>
-                <Section 
-                  title={`Providers for ${model.name}`}
-                  description="OpenRouter routes requests to the best providers that are able to handle your prompt size and parameters, with fallbacks to maximize uptime."
-                  className="pt-8 pb-0"
-                >
-                    <ProvidersDisplay modelName={model.name} />
-                </Section>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-                    <ChartCard
-                        modelName={model.name}
-                        title="Throughput"
-                        dataKey="throughput"
-                        yAxisFormatter={(value) => `${value} tps`}
-                    />
-                     <ChartCard
-                        modelName={model.name}
-                        title="Latency"
-                        dataKey="latency"
-                        yAxisFormatter={(value) => `${value}s`}
-                    />
-                </div>
-
-                <Suspense fallback={<div className="py-8 text-center text-muted-foreground">Loading apps...</div>}>
-                    <TopAppsTable />
-                </Suspense>
-
-                <Section title={`Uptime from our API and our providers`}>
-                    <Card>
-                        <CardContent className="h-[200px] p-2">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={generateChartData([], 'throughput').slice(0,30)}>
-                                    <Tooltip 
-                                        formatter={(value) => [value, "Uptime"]}
-                                    />
-                                    <Area type="monotone" dataKey="value" strokeWidth={2} stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2) / 0.1)" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-                </Section>
-
-                <Section title="Is My Data Private?">
-                    <p className="text-muted-foreground">Yes, your data is private by default. See our <Link href="#" className="text-primary hover:underline">privacy policy</Link>.</p>
-                </Section>
-
-                <Section title={`More models from ${model.provider_slug}`}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {relatedModels.map(relatedModel => (
-                            <Link key={relatedModel.id} href={`/models/${encodeURIComponent(relatedModel.id)}`}>
-                                <Card className="hover:border-primary h-full">
-                                    <CardContent className="p-4">
-                                        <h3 className="font-semibold">{relatedModel.name}</h3>
-                                        <p className="text-sm text-muted-foreground mt-2 truncate">{relatedModel.description}</p>
+                {activeTab === 'Overview' && (
+                    <>
+                        <Section
+                          title="Model Details"
+                          className="pt-8 pb-0"
+                        >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-base">Pricing</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Prompt:</span>
+                                                <span className="font-medium">${model.pricing.prompt}/1M tokens</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Completion:</span>
+                                                <span className="font-medium">${model.pricing.completion}/1M tokens</span>
+                                            </div>
+                                        </div>
                                     </CardContent>
                                 </Card>
-                            </Link>
-                        ))}
-                    </div>
-                </Section>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-base">Capabilities</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="flex flex-wrap gap-2">
+                                            {model.architecture.input_modalities.map((modality) => (
+                                                <Badge key={modality} variant="secondary">{modality}</Badge>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </Section>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+                            <ChartCard
+                                modelName={model.name}
+                                title="Throughput"
+                                dataKey="throughput"
+                                yAxisFormatter={(value) => `${value} tps`}
+                            />
+                             <ChartCard
+                                modelName={model.name}
+                                title="Latency"
+                                dataKey="latency"
+                                yAxisFormatter={(value) => `${value}s`}
+                            />
+                        </div>
+
+                        <Section title="Is My Data Private?">
+                            <p className="text-muted-foreground">Yes, your data is private by default. See our <Link href="#" className="text-primary hover:underline">privacy policy</Link>.</p>
+                        </Section>
+
+                        <Section title={`More models from ${model.provider_slug}`}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {relatedModels.map(relatedModel => (
+                                    <Link key={relatedModel.id} href={`/models/${encodeURIComponent(relatedModel.id)}`}>
+                                        <Card className="hover:border-primary h-full">
+                                            <CardContent className="p-4">
+                                                <h3 className="font-semibold">{relatedModel.name}</h3>
+                                                <p className="text-sm text-muted-foreground mt-2 truncate">{relatedModel.description}</p>
+                                            </CardContent>
+                                        </Card>
+                                    </Link>
+                                ))}
+                            </div>
+                        </Section>
+                    </>
+                )}
+
+                {activeTab === 'Providers' && (
+                    <Section
+                      title={`Providers for ${model.name}`}
+                      description="Gatewayz routes requests to the best providers that are able to handle your prompt size and parameters, with fallbacks to maximize uptime."
+                      className="pt-8 pb-0"
+                    >
+                        <ProvidersDisplay modelName={model.name} />
+                    </Section>
+                )}
+
+                {activeTab === 'Apps' && (
+                    <Suspense fallback={<div className="py-8 text-center text-muted-foreground">Loading apps...</div>}>
+                        <Section title="Top Apps" className="pt-8">
+                            <TopAppsTable />
+                        </Section>
+                    </Suspense>
+                )}
+
+                {activeTab === 'Activity' && (
+                    <Section title="Recent Activity" className="pt-8">
+                        <Card>
+                            <CardContent className="p-8 text-center text-muted-foreground">
+                                Activity tracking coming soon
+                            </CardContent>
+                        </Card>
+                    </Section>
+                )}
+
+                {activeTab === 'Uptime' && (
+                    <Section title={`Uptime from our API and our providers`} className="pt-8">
+                        <Card>
+                            <CardContent className="h-[200px] p-2">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={generateChartData([], 'throughput').slice(0,30)}>
+                                        <Tooltip
+                                            formatter={(value) => [value, "Uptime"]}
+                                        />
+                                        <Area type="monotone" dataKey="value" strokeWidth={2} stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2) / 0.1)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </Section>
+                )}
+
+                {activeTab === 'API' && (
+                    <Section title="API Documentation" className="pt-8">
+                        <Card>
+                            <CardContent className="p-6 space-y-4">
+                                <div>
+                                    <h3 className="font-semibold mb-2">Model ID</h3>
+                                    <code className="bg-muted px-3 py-2 rounded block">{model.id}</code>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold mb-2">Example Request</h3>
+                                    <pre className="bg-muted p-4 rounded overflow-x-auto text-xs">
+{`curl https://api.gatewayz.ai/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -d '{
+    "model": "${model.id}",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello!"
+      }
+    ]
+  }'`}
+                                    </pre>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold mb-2">Supported Parameters</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {model.supported_parameters.map((param) => (
+                                            <Badge key={param} variant="outline">{param}</Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Section>
+                )}
             </main>
         </div>
         </TooltipProvider>
