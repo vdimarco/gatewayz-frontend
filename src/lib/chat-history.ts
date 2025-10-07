@@ -1,0 +1,222 @@
+// Chat History API Types and Interfaces
+
+export interface ChatMessage {
+  id: number;
+  session_id: number;
+  role: 'user' | 'assistant';
+  content: string;
+  model?: string;
+  tokens?: number;
+  created_at: string; // ISO 8601 format
+}
+
+export interface ChatSession {
+  id: number;
+  user_id: number;
+  title: string;
+  model: string;
+  created_at: string; // ISO 8601 format
+  updated_at: string; // ISO 8601 format
+  is_active: boolean;
+  messages?: ChatMessage[]; // Only included when fetching specific session
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  count?: number; // For list responses
+}
+
+export interface ErrorResponse {
+  detail: string;
+  status_code: number;
+}
+
+export interface ChatStats {
+  total_sessions: number;
+  total_messages: number;
+  active_sessions: number;
+  total_tokens: number;
+  average_messages_per_session: number;
+}
+
+export interface SearchRequest {
+  query: string;
+  limit?: number;
+}
+
+export interface CreateSessionRequest {
+  title?: string;
+  model?: string;
+}
+
+export interface UpdateSessionRequest {
+  title?: string;
+  model?: string;
+}
+
+export interface SaveMessageRequest {
+  role: 'user' | 'assistant';
+  content: string;
+  model?: string;
+  tokens?: number;
+}
+
+// Chat History API Service Class
+export class ChatHistoryAPI {
+  private apiKey: string;
+  private baseUrl: string;
+
+  constructor(apiKey: string, baseUrl: string = '/api/chat') {
+    this.apiKey = apiKey;
+    this.baseUrl = baseUrl;
+  }
+
+  /**
+   * Makes an authenticated API request
+   * @private
+   */
+  private async makeRequest<T>(
+    method: string,
+    endpoint: string,
+    body: any = null
+  ): Promise<ApiResponse<T>> {
+    const config: RequestInit = {
+      method,
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    if (body) {
+      config.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(`${this.baseUrl}${endpoint}`, config);
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  /**
+   * Creates a new chat session
+   */
+  async createSession(title?: string, model?: string): Promise<ChatSession> {
+    const result = await this.makeRequest<ChatSession>('POST', '/sessions', { 
+      title: title || `Chat ${new Date().toLocaleString()}`,
+      model: model || 'openai/gpt-3.5-turbo'
+    });
+    return result.data!;
+  }
+
+  /**
+   * Retrieves all chat sessions for the authenticated user
+   */
+  async getSessions(limit: number = 50, offset: number = 0): Promise<ChatSession[]> {
+    const result = await this.makeRequest<ChatSession[]>('GET', `/sessions?limit=${limit}&offset=${offset}`);
+    return result.data || [];
+  }
+
+  /**
+   * Retrieves a specific chat session with all its messages
+   */
+  async getSession(sessionId: number): Promise<ChatSession> {
+    const result = await this.makeRequest<ChatSession>('GET', `/sessions/${sessionId}`);
+    return result.data!;
+  }
+
+  /**
+   * Updates a chat session's title or model
+   */
+  async updateSession(sessionId: number, title?: string, model?: string): Promise<ChatSession> {
+    const result = await this.makeRequest<ChatSession>('PUT', `/sessions/${sessionId}`, { 
+      title, 
+      model 
+    });
+    return result.data!;
+  }
+
+  /**
+   * Deletes a chat session and all its messages
+   */
+  async deleteSession(sessionId: number): Promise<boolean> {
+    await this.makeRequest('DELETE', `/sessions/${sessionId}`);
+    return true;
+  }
+
+  /**
+   * Saves a message to a chat session
+   */
+  async saveMessage(
+    sessionId: number, 
+    role: 'user' | 'assistant', 
+    content: string, 
+    model?: string, 
+    tokens?: number
+  ): Promise<ChatMessage> {
+    const response = await fetch(`${this.baseUrl}/sessions/${sessionId}/messages`, {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        role,
+        content,
+        model: model || '',
+        tokens: tokens || 0
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to save message');
+    }
+
+    const result = await response.json();
+    return result.data;
+  }
+
+  /**
+   * Searches chat sessions by title or message content
+   */
+  async searchSessions(query: string, limit: number = 20): Promise<ChatSession[]> {
+    const result = await this.makeRequest<ChatSession[]>('POST', '/search', { 
+      query, 
+      limit 
+    });
+    return result.data || [];
+  }
+
+  /**
+   * Retrieves statistics about the user's chat sessions
+   */
+  async getStats(): Promise<ChatStats> {
+    const result = await this.makeRequest<ChatStats>('GET', '/stats');
+    return result.data!;
+  }
+}
+
+// Utility functions for error handling
+export const handleApiError = (error: any): string => {
+  if (error.message.includes('401')) {
+    return 'Authentication failed. Please check your API key.';
+  } else if (error.message.includes('404')) {
+    return 'Session not found.';
+  } else if (error.message.includes('500')) {
+    return 'Server error. Please try again later.';
+  } else {
+    return error.message || 'An unexpected error occurred.';
+  }
+};
+
+// Helper function to create API instance
+export const createChatHistoryAPI = (apiKey: string): ChatHistoryAPI => {
+  return new ChatHistoryAPI(apiKey);
+};

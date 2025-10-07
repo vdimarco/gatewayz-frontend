@@ -79,6 +79,19 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Additional deduplication as a safety measure
+  const deduplicatedModels = useMemo(() => {
+    const seen = new Set<string>();
+    return initialModels.filter(model => {
+      if (seen.has(model.id)) {
+        console.warn(`Duplicate model ID found: ${model.id}`);
+        return false;
+      }
+      seen.add(model.id);
+      return true;
+    });
+  }, [initialModels]);
+
   const [layout, setLayout] = useState("list");
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || "");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchParams.get('search') || "");
@@ -158,16 +171,16 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
   // Calculate search matches separately from other filters
   const searchFilteredModels = useMemo(() => {
-    if (!debouncedSearchTerm) return initialModels;
+    if (!debouncedSearchTerm) return deduplicatedModels;
 
     const lowerSearch = debouncedSearchTerm.toLowerCase();
-    return initialModels.filter((model) => {
+    return deduplicatedModels.filter((model) => {
       return (model.name || '').toLowerCase().includes(lowerSearch) ||
         (model.description || '').toLowerCase().includes(lowerSearch) ||
         (model.id || '').toLowerCase().includes(lowerSearch) ||
         (model.provider_slug || '').toLowerCase().includes(lowerSearch);
     });
-  }, [initialModels, debouncedSearchTerm]);
+  }, [deduplicatedModels, debouncedSearchTerm]);
 
   const filteredModels = useMemo(() => {
     // First filter, then sort
@@ -210,14 +223,14 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     return sorted;
   }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, selectedModelSeries, sortBy, getModelSeries]);
 
-  const allInputFormats = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.architecture?.input_modalities || []))).filter(Boolean), [initialModels]);
-  const allOutputFormats = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.architecture?.output_modalities || []))).filter(Boolean), [initialModels]);
-  const allParameters = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.supported_parameters || []))), [initialModels]);
-  const allProviders = useMemo(() => Array.from(new Set(initialModels.map(m => m.provider_slug).filter(Boolean))), [initialModels]);
+  const allInputFormats = useMemo(() => Array.from(new Set(deduplicatedModels.flatMap(m => m.architecture?.input_modalities || []))).filter(Boolean), [deduplicatedModels]);
+  const allOutputFormats = useMemo(() => Array.from(new Set(deduplicatedModels.flatMap(m => m.architecture?.output_modalities || []))).filter(Boolean), [deduplicatedModels]);
+  const allParameters = useMemo(() => Array.from(new Set(deduplicatedModels.flatMap(m => m.supported_parameters || []))), [deduplicatedModels]);
+  const allProviders = useMemo(() => Array.from(new Set(deduplicatedModels.map(m => m.provider_slug).filter(Boolean))), [deduplicatedModels]);
   const allModelSeries = useMemo(() => {
-    const series = Array.from(new Set(initialModels.map(m => getModelSeries(m))));
+    const series = Array.from(new Set(deduplicatedModels.map(m => getModelSeries(m))));
     return series.sort();
-  }, [initialModels, getModelSeries]);
+  }, [deduplicatedModels, getModelSeries]);
 
 
   return (
