@@ -180,68 +180,12 @@ if __name__ == "__main__":
         </CardContent>
       </Card>
 
-      {/* Step 2: Get Gatewayz API Key */}
+      {/* Step 2: Python Integration */}
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">
               2
-            </div>
-            <Key className="h-6 w-6" />
-            Get Gatewayz API Key
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-            <li>
-              Sign up at{" "}
-              <a
-                href="https://beta.gatewayz.ai"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                beta.gatewayz.ai
-              </a>
-            </li>
-            <li>Click on your profile and navigate to API Keys</li>
-            <li>Generate your API key</li>
-          </ol>
-          <Link href="/settings/keys">
-            <Button className="w-full sm:w-auto">
-              Go to API Keys →
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-
-      {/* Step 3: API Request */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">
-              3
-            </div>
-            <Code className="h-6 w-6" />
-            API Request to Communicate with AI
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto relative">
-            <div className="absolute top-2 right-2">
-              <CopyButton text={curlCommand} id="curl-command" />
-            </div>
-            <pre className="text-xs sm:text-sm">{curlCommand}</pre>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Step 4: Python Integration */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">
-              4
             </div>
             <Terminal className="h-6 w-6" />
             Claude Terminal Integration Python Code
@@ -257,12 +201,12 @@ if __name__ == "__main__":
         </CardContent>
       </Card>
 
-      {/* Step 5: Run and Code Faster */}
+      {/* Step 3: Run and Code Faster */}
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">
-              5
+              3
             </div>
             <Play className="h-6 w-6" />
             Run the Python File and Code Faster with Claude
