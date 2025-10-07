@@ -330,9 +330,11 @@ console.log(completion.choices[0].message);`,
             } else if (authorLower.includes('anthropic')) {
               logo_url = '/anthropic-logo.svg';
             } else if (authorLower.includes('meta')) {
-              logo_url = '/meta-logo.svg';
+              logo_url = '/Meta_Logo-black.svg';
             } else if (authorLower.includes('deepseek')) {
-              logo_url = '/deepseek-logo.svg';
+              logo_url = '/DeepSeek_Logo-black.svg';
+            } else if (authorLower.includes('x-ai') || authorLower.includes('xai')) {
+              logo_url = '/xai-logo.svg';
             }
 
             // Format growth percentage

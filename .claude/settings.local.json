@@ -25,7 +25,9 @@
       "Bash(git pull:*)",
       "Bash(npm run build:*)",
       "Bash(npm run dev:*)",
-      "Bash(pnpm add:*)"
+      "Bash(pnpm add:*)",
+      "Bash(gh pr checkout:*)",
+      "Bash(gh pr:*)"
     ],
     "deny": [],
     "ask": []
