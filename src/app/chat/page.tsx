@@ -1153,7 +1153,7 @@ function ChatPageContent() {
                 // Handle rate limit errors (429)
                 else if (errorMessage.includes('Rate limit') || errorMessage.includes('429')) {
                     toastTitle = "Rate Limit Reached";
-                    toastDescription = "You're sending requests too quickly. Please wait 30-60 seconds before trying again.";
+                    toastDescription = "You've exceeded the limit of 100 requests per minute (burst of 20). Please wait a moment before trying again.";
                 }
 
                 toast({

@@ -10,7 +10,7 @@ interface RateLimitHandlerProps {
 }
 
 export function RateLimitHandler({ show, onDismiss }: RateLimitHandlerProps) {
-  const [countdown, setCountdown] = useState(60);
+  const [countdown, setCountdown] = useState(30);
 
   useEffect(() => {
     if (!show) return;
@@ -19,7 +19,7 @@ export function RateLimitHandler({ show, onDismiss }: RateLimitHandlerProps) {
       setCountdown((prev) => {
         if (prev <= 1) {
           onDismiss?.();
-          return 60;
+          return 30;
         }
         return prev - 1;
       });
@@ -37,7 +37,7 @@ export function RateLimitHandler({ show, onDismiss }: RateLimitHandlerProps) {
         <AlertTitle>Too Many Requests</AlertTitle>
         <AlertDescription className="space-y-2">
           <p>
-            We've detected too many authentication attempts. Please wait a moment before trying again.
+            Rate limit exceeded (100 requests/minute, burst of 20). Please wait a moment before trying again.
           </p>
           <div className="flex items-center gap-2 text-sm">
             <Clock className="h-4 w-4" />
