@@ -14,11 +14,37 @@ import { API_BASE_URL } from '@/lib/config';
 import { processAuthResponse, getApiKey, removeApiKey } from '@/lib/api';
 import { Separator } from "@/components/ui/separator";
 import { GetCreditsButton } from './get-credits-button';
+import { Copy, ExternalLink } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 export function AppHeader() {
   const { user, ready, login, logout, getAccessToken, authenticated } = usePrivy();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { toast } = useToast();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  const getWalletAddress = (user: any) => {
+    // Get the first wallet address from linked accounts
+    const walletAccount = user?.linkedAccounts?.find((account: any) => account.type === 'wallet');
+    return walletAccount?.address || '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6'; // Mock address for now
+  };
+
+  const formatAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: "Address copied to clipboard" });
+    } catch (error) {
+      toast({
+        title: "Failed to copy address",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     const authenticateUser = async () => {
@@ -151,7 +177,22 @@ export function AppHeader() {
           </nav>
           <div className="hidden md:flex items-center gap-2">
             {user ? (
-              <UserNav user={user} />
+              <>
+                <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg">
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {formatAddress(getWalletAddress(user))}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-4 w-4 p-0"
+                    onClick={() => copyToClipboard(getWalletAddress(user))}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+                <UserNav user={user} />
+              </>
             ) : (
               <Button variant="outline" onClick={() => login()}>Sign In</Button>
             )}
@@ -212,6 +253,22 @@ export function AppHeader() {
                       <Separator className="my-4" />
                       <div className="flex flex-col gap-2">
                         <p className="text-xs font-semibold text-muted-foreground uppercase px-2">
+                          Wallet Address
+                        </p>
+                        <div className="flex items-center gap-2 px-2 py-2 bg-muted/50 rounded-lg">
+                          <span className="text-xs text-muted-foreground font-mono flex-1">
+                            {formatAddress(getWalletAddress(user))}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-4 w-4 p-0"
+                            onClick={() => copyToClipboard(getWalletAddress(user))}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase px-2 mt-4">
                           Account
                         </p>
                         <Link

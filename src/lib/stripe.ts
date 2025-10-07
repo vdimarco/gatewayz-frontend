@@ -40,8 +40,8 @@ export const redirectToCheckout = async (amount: number, userEmail?: string, use
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Stripe checkout error response:', errorData);
-      console.error('Response status:', response.status);
+      console.log('Stripe checkout error response:', errorData);
+      console.log('Response status:', response.status);
       throw new Error(errorData.error || 'Failed to create checkout session');
     }
 
@@ -56,7 +56,7 @@ export const redirectToCheckout = async (amount: number, userEmail?: string, use
       throw new Error('No checkout URL received from server');
     }
   } catch (error) {
-    console.error('Error redirecting to checkout:', error);
+    console.log('Error redirecting to checkout:', error);
     throw error;
   }
 };

@@ -161,7 +161,7 @@ export default function ActivityPage() {
         setActivityLog(logData.logs || []);
       }
     } catch (error) {
-      console.error('Failed to fetch activity data:', error);
+      console.log('Failed to fetch activity data:', error);
       // Use fallback data on error
       const fallbackChartData = Array.from({ length: 30 }, (_, i) => ({
         date: addDays(new Date(), -29 + i).toISOString().slice(0, 10),

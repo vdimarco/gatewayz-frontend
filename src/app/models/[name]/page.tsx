@@ -170,7 +170,7 @@ export default function ModelProfilePage() {
                             return;
                         }
                     } catch (e) {
-                        console.error('Cache parse error:', e);
+                        console.log('Cache parse error:', e);
                     }
                 }
 
@@ -189,7 +189,7 @@ export default function ModelProfilePage() {
                 const foundModel = models.find((m: Model) => m.id === modelId);
                 setModel(foundModel || null);
             } catch (error) {
-                console.error('Failed to fetch models:', error);
+                console.log('Failed to fetch models:', error);
             } finally {
                 setLoading(false);
             }

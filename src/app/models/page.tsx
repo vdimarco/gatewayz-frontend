@@ -27,7 +27,7 @@ async function getModels(): Promise<Model[]> {
     const data = await response.json();
     return data.data || [];
   } catch (error) {
-    console.error('Failed to fetch models:', error);
+    console.log('Failed to fetch models:', error);
     return [];
   }
 }

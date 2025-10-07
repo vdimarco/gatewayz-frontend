@@ -17,7 +17,7 @@ export function GetCreditsButton() {
       // Default to $10 worth of credits
       await redirectToCheckout(10, userData?.email, userData?.user_id);
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.log('Checkout error:', error);
       alert('Failed to start checkout. Please try again.');
       setIsLoading(false);
     }

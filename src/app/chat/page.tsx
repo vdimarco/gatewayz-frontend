@@ -445,7 +445,7 @@ function ChatPageContent() {
                         });
                     }
                 })
-                .catch(err => console.error('Failed to fetch model:', err));
+                .catch(err => console.log('Failed to fetch model:', err));
         }
 
         // Set the message from URL parameter and flag for auto-send
@@ -500,7 +500,7 @@ function ChatPageContent() {
                     }
                 }
             } catch (error) {
-                console.error('Failed to load chat sessions:', error);
+                console.log('Failed to load chat sessions:', error);
                 // Fallback to creating a new chat
                 createNewChat();
             }

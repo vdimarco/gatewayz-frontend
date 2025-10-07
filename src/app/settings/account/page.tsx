@@ -61,7 +61,7 @@ export default function AccountPage() {
           }
         }
       } catch (error) {
-        console.error('Failed to fetch Stripe data:', error);
+        console.log('Failed to fetch Stripe data:', error);
       } finally {
         setLoadingStripe(false);
       }
@@ -140,10 +140,10 @@ export default function AccountPage() {
         const data = await response.json();
         window.location.href = data.url;
       } else {
-        console.error('Failed to create portal session');
+        console.log('Failed to create portal session');
       }
     } catch (error) {
-      console.error('Error opening Stripe portal:', error);
+      console.log('Error opening Stripe portal:', error);
     }
   };
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { PrivyProvider } from '@privy-io/react-auth';
+import { base } from 'viem/chains';
 import { ReactNode } from 'react';
-
 interface PrivyProviderWrapperProps {
   children: ReactNode;
 }
@@ -24,6 +24,12 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
           accentColor: '#000000',
           logo: '/logo_black.svg',
         },
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: "users-without-wallets",
+          },
+        },
+        defaultChain: base
       }}
     >
       {children}

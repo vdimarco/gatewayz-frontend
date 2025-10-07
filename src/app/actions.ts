@@ -40,7 +40,7 @@ export async function chat(input: ChatInput): Promise<string> {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-      console.error('Server action - API error:', errorData);
+      console.log('Server action - API error:', errorData);
       throw new Error(errorData.error || errorData.details || errorData.message || `API error: ${response.status}`);
     }
 
@@ -49,7 +49,7 @@ export async function chat(input: ChatInput): Promise<string> {
 
     return data.response || data.message || data.content || 'No response from AI';
   } catch (error) {
-    console.error('Server action - Error:', error);
+    console.log('Server action - Error:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to get response from AI');
   }
 }
