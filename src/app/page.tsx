@@ -562,6 +562,26 @@ console.log(completion.choices[0].message);`,
               color: #e2e8f0;
             }
           `}</style>
+
+           <div className="w-full flex justify-center mt-8">
+             <div className="relative group inline-block">
+               {/* Multi-layered LED-style glow with color shifting */}
+               <div className="absolute -inset-[3px] rounded-lg opacity-90 blur-md animate-led-shimmer"></div>
+               <div className="absolute -inset-[2px] rounded-lg opacity-80 blur-sm animate-led-shimmer" style={{ animationDelay: '0.5s' }}></div>
+
+               {/* Elevated neon border - visible underneath */}
+               <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 opacity-100 animate-led-shimmer" style={{ top: '2px' }}></div>
+
+               {/* Button with elevation effect */}
+               <Button
+                 className="relative bg-black hover:bg-gray-900 text-white hover:text-white h-12 px-12 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)]"
+                 onClick={handleGenerateApiKey}
+               >
+                 {user ? 'Claim Trial Credits' : 'Generate API Key'}
+               </Button>
+             </div>
+           </div>
+
            {user && apiKey && (
              <div className="w-full mt-8">
                <div className="mb-2">
@@ -600,25 +620,6 @@ console.log(completion.choices[0].message);`,
                </div>
              </div>
            )}
-
-           <div className="w-full flex justify-center mt-8">
-             <div className="relative group inline-block">
-               {/* Multi-layered LED-style glow with color shifting */}
-               <div className="absolute -inset-[3px] rounded-lg opacity-90 blur-md animate-led-shimmer"></div>
-               <div className="absolute -inset-[2px] rounded-lg opacity-80 blur-sm animate-led-shimmer" style={{ animationDelay: '0.5s' }}></div>
-
-               {/* Elevated neon border - visible underneath */}
-               <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 opacity-100 animate-led-shimmer" style={{ top: '2px' }}></div>
-
-               {/* Button with elevation effect */}
-               <Button
-                 className="relative bg-black hover:bg-gray-900 text-white hover:text-white h-12 px-12 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)]"
-                 onClick={handleGenerateApiKey}
-               >
-                 {user ? 'Claim Trial Credits' : 'Generate API Key'}
-               </Button>
-             </div>
-           </div>
 
            <style jsx>{`
              @keyframes led-shimmer {
