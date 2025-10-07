@@ -34,33 +34,28 @@ export async function POST(
       );
     }
 
-    // Truncate content if too long for URL (keep first 1500 chars to stay under URL limit)
-    const maxContentLength = 1500;
-    const truncatedContent = content.length > maxContentLength 
-      ? content.substring(0, maxContentLength) + '...' 
-      : content;
-    
-    const queryParams = new URLSearchParams({
+    const url = `${API_BASE_URL}/v1/chat/sessions/${cleanSessionId}/messages`;
+
+    const messageData = {
       role: role,
-      content: truncatedContent,
+      content: content,
       model: model || '',
-      tokens: (tokens || 0).toString(),
+      tokens: tokens || 0,
       created_at: new Date().toISOString()
-    });
-    
-    const url = `${API_BASE_URL}/v1/chat/sessions/${cleanSessionId}/messages?${queryParams}`;
-    
+    };
+
     console.log(`Chat messages API - Saving message at: ${url}`);
-    console.log(`Chat messages API - Content length: ${content.length} chars (truncated: ${truncatedContent.length} chars)`);
+    console.log(`Chat messages API - Content length: ${content.length} chars`);
     console.log(`Chat messages API - API Key:`, apiKey ? `${apiKey.substring(0, 10)}...` : 'None');
     console.log(`Chat messages API - Session ID: ${id} (cleaned: ${cleanSessionId})`);
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
-      }
+      },
+      body: JSON.stringify(messageData)
     });
     
     console.log(`Chat messages API - Response status: ${response.status}`);
