@@ -102,40 +102,9 @@ export function StreamingMessage({ content, reasoning, modelName, isStreaming, o
 
       {/* Main Content */}
       {content && (
-        <div className="rounded-lg p-3 bg-white border group">
+        <div className="rounded-lg p-3 bg-white border">
           <div className="flex items-center justify-between mb-2">
             {modelName && <p className="text-xs font-semibold">{modelName}</p>}
-            {/* Action Buttons - only show when not streaming */}
-            {!isStreaming && (
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCopy}
-                  className="h-8 w-8 p-0"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleShare}
-                  className="h-8 w-8 p-0"
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
-                {onRegenerate && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onRegenerate}
-                    className="h-8 w-8 p-0"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            )}
           </div>
           <div className="text-sm prose prose-sm max-w-none">
             <ReactMarkdown
@@ -165,6 +134,40 @@ export function StreamingMessage({ content, reasoning, modelName, isStreaming, o
             </ReactMarkdown>
             {isStreaming && <span className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />}
           </div>
+          {/* Action Buttons - always visible in bottom right */}
+          {!isStreaming && (
+            <div className="flex items-center justify-end gap-1 mt-3 pt-2 border-t border-gray-100">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopy}
+                className="h-8 w-8 p-0 hover:bg-gray-100"
+                title="Copy response"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+                className="h-8 w-8 p-0 hover:bg-gray-100"
+                title="Share response"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+              {onRegenerate && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onRegenerate}
+                  className="h-8 w-8 p-0 hover:bg-gray-100"
+                  title="Regenerate response"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
