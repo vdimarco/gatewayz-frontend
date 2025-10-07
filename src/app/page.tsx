@@ -468,6 +468,37 @@ console.log(completion.choices[0].message);`,
   
   return (
     <div className="bg-background text-foreground">
+      {/* Claude Code Integration Banner */}
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2">
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor"/>
+                </svg>
+              </div>
+              <div>
+                <p className="font-semibold text-sm sm:text-base">
+                  🚀 New: Integrate Claude Code with Gatewayz API
+                </p>
+                <p className="text-xs sm:text-sm text-white/90">
+                  Access multiple AI models, save costs, and build faster
+                </p>
+              </div>
+            </div>
+            <Link href="/claude-code">
+              <Button
+                variant="secondary"
+                className="bg-white text-purple-600 hover:bg-white/90 whitespace-nowrap"
+              >
+                Get Started →
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 " style={{position: 'relative'}}>
         {/* Hero Section */}
         <img 
