@@ -438,19 +438,33 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
                         <ul>
                             {chatSessions.map(session => (
                                 <li key={session.id} className="group relative">
-                                    <Button 
+                                    <Button
                                         variant={activeSessionId === session.id ? "secondary" : "ghost"}
-                                        className="w-full justify-start items-start text-left flex flex-col h-auto py-2 rounded-lg pr-8"
+                                        className="w-full justify-start items-start text-left flex flex-col h-auto py-2 rounded-lg pr-16"
                                         onClick={() => setActiveSessionId(session.id)}
                                     >
-                                        <span className="font-medium truncate w-full">
+                                        <span className="font-medium truncate w-full flex items-center gap-2">
                                             {session.title}
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const newTitle = prompt('Rename chat:', session.title);
+                                                    if (newTitle && newTitle.trim() && newTitle !== session.title) {
+                                                        onRenameSession(session.id, newTitle.trim());
+                                                    }
+                                                }}
+                                            >
+                                                <Pencil className="h-3 w-3" />
+                                            </Button>
                                         </span>
                                         <span className="text-xs text-muted-foreground">
                                             {formatDistanceToNow(session.startTime, { addSuffix: true })}
                                         </span>
                                     </Button>
-                                    
+
                                     {/* Three dots menu - only visible on hover */}
                                     <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <DropdownMenu>
