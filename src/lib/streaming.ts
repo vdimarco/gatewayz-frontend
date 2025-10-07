@@ -29,6 +29,29 @@ export async function* streamChatResponse(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
+
+    // Handle specific error cases with helpful messages
+    if (response.status === 403) {
+      throw new Error(
+        errorData.detail || errorData.error?.message ||
+        'API key validation failed. Your session may need to refresh. Please try logging out and back in.'
+      );
+    }
+
+    if (response.status === 429) {
+      throw new Error(
+        errorData.detail || errorData.error?.message ||
+        'Rate limit exceeded: Burst limit exceeded'
+      );
+    }
+
+    if (response.status === 401) {
+      throw new Error(
+        'Authentication failed. Please check your API key or log in again.'
+      );
+    }
+
+    // Generic error with the response message
     throw new Error(
       errorData.error?.message ||
       errorData.detail ||

@@ -1068,31 +1068,50 @@ function ChatPageContent() {
                 // Save messages to API
                 try {
                     if (activeSessionId) {
-                        // Save user message
-                        const userResult = await apiHelpers.saveMessage(activeSessionId, 'user', userMessage, selectedModel?.value, undefined, sessions);
+                        // Get the current session from the React state
+                        const currentSession = sessions.find(s => s.id === activeSessionId);
 
-                        // Update sessions with API session ID from user message before saving assistant message
+                        // Save user message - this may create a new API session
+                        const userResult = await apiHelpers.saveMessage(
+                            activeSessionId,
+                            'user',
+                            userMessage,
+                            selectedModel?.value,
+                            undefined,
+                            sessions
+                        );
+
+                        // Create updated sessions with the API session ID if one was created
                         let updatedSessions = sessions;
-                        if (userResult?.apiSessionId) {
+                        if (userResult?.apiSessionId && userResult.apiSessionId !== currentSession?.apiSessionId) {
+                            console.log(`Updating session ${activeSessionId} with API session ID: ${userResult.apiSessionId}`);
                             updatedSessions = sessions.map(session =>
                                 session.id === activeSessionId
                                     ? { ...session, apiSessionId: userResult.apiSessionId }
                                     : session
                             );
+                            // Update React state
                             setSessions(updatedSessions);
                         }
 
-                        // Save assistant message with updated sessions that include the API session ID
-                        const assistantResult = await apiHelpers.saveMessage(activeSessionId, 'assistant', finalContent, selectedModel?.value, undefined, updatedSessions);
+                        // Save assistant message - use the updated sessions that include the API session ID
+                        const assistantResult = await apiHelpers.saveMessage(
+                            activeSessionId,
+                            'assistant',
+                            finalContent,
+                            selectedModel?.value,
+                            undefined,
+                            updatedSessions
+                        );
 
                         // Update session title in API if this is the first message
-                        const currentSession = sessions.find(s => s.id === activeSessionId);
-                        if (isFirstMessage && currentSession?.apiSessionId) {
+                        const sessionForTitle = updatedSessions.find(s => s.id === activeSessionId);
+                        if (isFirstMessage && sessionForTitle?.apiSessionId) {
                             try {
                                 const apiKey = getApiKey();
                                 if (apiKey) {
                                     const chatAPI = new ChatHistoryAPI(apiKey);
-                                    await chatAPI.updateSession(currentSession.apiSessionId, userMessage);
+                                    await chatAPI.updateSession(sessionForTitle.apiSessionId, userMessage);
                                 }
                             } catch (error) {
                                 console.error('Failed to update session title in API:', error);
@@ -1121,9 +1140,25 @@ function ChatPageContent() {
                     return session;
                 }));
 
+                // Determine error type and provide helpful message
+                const errorMessage = streamError instanceof Error ? streamError.message : 'Failed to get response';
+                let toastTitle = "Error";
+                let toastDescription = errorMessage;
+
+                // Handle API key validation errors (403)
+                if (errorMessage.includes('API key') || errorMessage.includes('403')) {
+                    toastTitle = "Session Expired";
+                    toastDescription = "Your session has expired. Please refresh the page and log in again.";
+                }
+                // Handle rate limit errors (429)
+                else if (errorMessage.includes('Rate limit') || errorMessage.includes('429')) {
+                    toastTitle = "Rate Limit Reached";
+                    toastDescription = "You're sending requests too quickly. Please wait 30-60 seconds before trying again.";
+                }
+
                 toast({
-                    title: "Error",
-                    description: streamError instanceof Error ? streamError.message : 'Failed to get response',
+                    title: toastTitle,
+                    description: toastDescription,
                     variant: 'destructive'
                 });
             }
