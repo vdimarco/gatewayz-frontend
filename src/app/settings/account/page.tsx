@@ -3,10 +3,8 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, MoreHorizontal } from "lucide-react";
 import { usePrivy } from '@privy-io/react-auth';
 import { getUserData } from '@/lib/api';
 
@@ -18,21 +16,10 @@ interface StripePaymentMethod {
   exp_year?: number;
 }
 
-interface StripeBillingAddress {
-  line1: string | null;
-  line2: string | null;
-  city: string | null;
-  state: string | null;
-  postal_code: string | null;
-  country: string | null;
-}
-
 export default function AccountPage() {
   const { user: privyUser, logout } = usePrivy();
-  const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [stripePaymentMethods, setStripePaymentMethods] = useState<StripePaymentMethod[]>([]);
-  const [stripeBillingAddress, setStripeBillingAddress] = useState<StripeBillingAddress | null>(null);
   const [loadingStripe, setLoadingStripe] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -57,7 +44,6 @@ export default function AccountPage() {
         if (response.ok) {
           const data = await response.json();
           setStripePaymentMethods(data.paymentMethods || []);
-          setStripeBillingAddress(data.billingAddress);
           if (data.customer?.name) {
             setCustomerName(data.customer.name);
           }
@@ -275,40 +261,23 @@ export default function AccountPage() {
           </div>
           <div className="w-1/3 flex items-center justify-end">
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => alert('Account options coming soon')}
+              variant="link"
+              className="text-blue-400 p-0 h-auto text-base"
+              onClick={() => {
+                const account = connectedAccounts[0];
+                if (account) {
+                  if (confirm(`Disconnect ${account.type === 'google_oauth' ? 'Google' : 'GitHub'} account?`)) {
+                    alert('Disconnect functionality coming soon');
+                  }
+                }
+              }}
+              disabled={connectedAccounts.length === 0}
             >
-              <MoreHorizontal className="h-4 w-4" />
+              Manage
             </Button>
           </div>
         </div>
 
-        {/* Password */}
-        <div className="flex items-center py-4 border-b border-gray-200">
-          <div className="w-1/3 text-base font-medium">Password</div>
-          <div className="w-1/3 flex justify-center gap-2">
-            <span className="text-base">**********</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-4 w-4 p-0"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
-          </div>
-          <div className="w-1/3 flex items-center justify-end">
-            <Button
-              variant="link"
-              className="text-blue-400 p-0 h-auto text-base"
-              onClick={() => alert('Password reset functionality coming soon')}
-            >
-              Reset Password
-            </Button>
-          </div>
-        </div>
       </div>
 
       {/* Billing Details Section */}
@@ -329,40 +298,6 @@ export default function AccountPage() {
               disabled={!stripePaymentMethods.length}
             >
               Edit Name
-            </Button>
-          </div>
-        </div>
-
-        {/* Billing Address */}
-        <div className="flex items-center py-4 border-b border-gray-200">
-          <div className="w-1/3 text-base font-medium">Billing Address</div>
-          <div className="w-1/3 flex justify-center">
-            {loadingStripe ? (
-              <span className="text-base text-muted-foreground">Loading...</span>
-            ) : stripeBillingAddress ? (
-              <div className="text-sm text-center">
-                {stripeBillingAddress.line1 && <div>{stripeBillingAddress.line1}</div>}
-                {stripeBillingAddress.line2 && <div>{stripeBillingAddress.line2}</div>}
-                {stripeBillingAddress.city && stripeBillingAddress.state && (
-                  <div>{stripeBillingAddress.city}, {stripeBillingAddress.state}</div>
-                )}
-                {stripeBillingAddress.postal_code && <div>{stripeBillingAddress.postal_code}</div>}
-                {stripeBillingAddress.country && <div>{stripeBillingAddress.country}</div>}
-              </div>
-            ) : (
-              <div className="text-base text-center text-muted-foreground">
-                <div>Not set</div>
-              </div>
-            )}
-          </div>
-          <div className="w-1/3 flex items-center justify-end">
-            <Button
-              variant="link"
-              className="text-blue-400 p-0 h-auto text-base"
-              onClick={openStripePortal}
-              disabled={!stripePaymentMethods.length}
-            >
-              Edit Address
             </Button>
           </div>
         </div>
@@ -410,13 +345,12 @@ export default function AccountPage() {
           </div>
           <div className="w-1/3 flex items-center justify-end">
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
+              variant="link"
+              className="text-blue-400 p-0 h-auto text-base"
               onClick={openStripePortal}
               disabled={!stripePaymentMethods.length}
             >
-              <MoreHorizontal className="h-4 w-4" />
+              Edit
             </Button>
           </div>
         </div>
