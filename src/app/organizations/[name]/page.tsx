@@ -206,8 +206,8 @@ export default function OrganizationPage() {
   if (!organizationName) {
     return <div>Loading...</div>;
   }
-  
-  if (!orgRankingData && orgModels.length === 0) {
+
+  if (!loading && !orgRankingData && orgModels.length === 0 && apiModels.length === 0) {
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
             <h1 className="text-2xl font-bold">Organization not found.</h1>
