@@ -11,7 +11,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { addDays, format } from 'date-fns';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ProvidersDisplay } from '@/components/models/provider-card';
-import { Maximize } from 'lucide-react';
+import { Maximize, Copy, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { providerData } from '@/lib/provider-data';
 import { generateChartData, generateStatsTable } from '@/lib/data';
@@ -145,6 +145,7 @@ export default function ModelProfilePage() {
     const [allModels, setAllModels] = useState<Model[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<TabType>('Overview');
+    const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
 
     const modelId = useMemo(() => {
         const id = params.name as string;
@@ -204,6 +205,18 @@ export default function ModelProfilePage() {
       if(!model) return [];
       return allModels.filter(m => m.provider_slug === model.provider_slug && m.id !== model.id).slice(0,3);
     }, [model, allModels]);
+
+    const copyToClipboard = async (text: string, id: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedStates({ ...copiedStates, [id]: true });
+            setTimeout(() => {
+                setCopiedStates({ ...copiedStates, [id]: false });
+            }, 2000);
+        } catch (error) {
+            console.error('Failed to copy:', error);
+        }
+    };
 
     if (loading) {
         return (
@@ -400,13 +413,67 @@ export default function ModelProfilePage() {
                 {activeTab === 'API' && (
                     <Section title="API Documentation" className="pt-8">
                         <Card>
-                            <CardContent className="p-6 space-y-4">
+                            <CardContent className="p-6 space-y-6">
                                 <div>
-                                    <h3 className="font-semibold mb-2">Model ID</h3>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="font-semibold">Model ID</h3>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 px-2"
+                                            onClick={() => copyToClipboard(model.id, 'model-id')}
+                                        >
+                                            {copiedStates['model-id'] ? (
+                                                <>
+                                                    <Check className="h-4 w-4 mr-1 text-green-600" />
+                                                    Copied
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="h-4 w-4 mr-1" />
+                                                    Copy
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
                                     <code className="bg-muted px-3 py-2 rounded block">{model.id}</code>
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold mb-2">Example Request</h3>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="font-semibold">Example Request</h3>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 px-2"
+                                            onClick={() => copyToClipboard(
+`curl https://api.gatewayz.ai/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -d '{
+    "model": "${model.id}",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello!"
+      }
+    ]
+  }'`,
+                                                'example-request'
+                                            )}
+                                        >
+                                            {copiedStates['example-request'] ? (
+                                                <>
+                                                    <Check className="h-4 w-4 mr-1 text-green-600" />
+                                                    Copied
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="h-4 w-4 mr-1" />
+                                                    Copy
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
                                     <pre className="bg-muted p-4 rounded overflow-x-auto text-xs">
 {`curl https://api.gatewayz.ai/v1/chat/completions \\
   -H "Content-Type: application/json" \\
