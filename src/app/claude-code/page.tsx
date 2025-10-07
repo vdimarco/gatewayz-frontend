@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Terminal, Key, Code, Play } from "lucide-react";
+import { Copy, Check, Terminal, Key, Code, Play, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
@@ -86,6 +86,21 @@ export default function ClaudeCodePage() {
         variant: "destructive",
       });
     }
+  };
+
+  const downloadScript = (content: string, filename: string) => {
+    // Convert to Unix line endings (LF)
+    const normalizedContent = content.replace(/\r\n/g, '\n');
+    const blob = new Blob([normalizedContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast({ title: "Script downloaded" });
   };
 
   const CopyButton = ({ text, id }: { text: string; id: string }) => (
@@ -636,7 +651,19 @@ if __name__ == "__main__":
 
           {/* Script Display */}
           <div className="bg-muted p-4 rounded-lg font-mono text-xs overflow-x-auto relative max-h-96 overflow-y-auto">
-            <div className="absolute top-2 right-2 z-10">
+            <div className="absolute top-2 right-2 z-10 flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => {
+                  const script = selectedOS === 'macos' ? macosSetupScript : selectedOS === 'windows' ? windowsSetupScript : linuxSetupScript;
+                  const filename = selectedOS === 'windows' ? 'setup-claude-gatewayz.bat' : 'setup-claude-gatewayz.sh';
+                  downloadScript(script, filename);
+                }}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
               <CopyButton
                 text={selectedOS === 'macos' ? macosSetupScript : selectedOS === 'windows' ? windowsSetupScript : linuxSetupScript}
                 id="setup-script"
@@ -656,25 +683,25 @@ if __name__ == "__main__":
             </p>
             {selectedOS === 'macos' && (
               <ol className="text-sm text-amber-900 dark:text-amber-100 list-decimal ml-5 mt-2 space-y-1">
-                <li>Save the script as <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">setup-claude-gatewayz.sh</code></li>
+                <li>Click the download button above or save the script as <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">setup-claude-gatewayz.sh</code></li>
                 <li>Make it executable: <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">chmod +x setup-claude-gatewayz.sh</code></li>
                 <li>Run it: <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">./setup-claude-gatewayz.sh</code></li>
-                <li>Enter your Gatewayz API key when prompted (starts with gw_)</li>
+                <li>Your Gatewayz API key is pre-populated in the script</li>
               </ol>
             )}
             {selectedOS === 'windows' && (
               <ol className="text-sm text-amber-900 dark:text-amber-100 list-decimal ml-5 mt-2 space-y-1">
-                <li>Save the script as <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">setup-claude-gatewayz.bat</code></li>
+                <li>Click the download button above or save the script as <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">setup-claude-gatewayz.bat</code></li>
                 <li>Run it: <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">setup-claude-gatewayz.bat</code></li>
-                <li>Enter your Gatewayz API key when prompted (starts with gw_)</li>
+                <li>Your Gatewayz API key is pre-populated in the script</li>
               </ol>
             )}
             {selectedOS === 'linux' && (
               <ol className="text-sm text-amber-900 dark:text-amber-100 list-decimal ml-5 mt-2 space-y-1">
-                <li>Save the script as <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">setup-claude-gatewayz.sh</code></li>
+                <li>Click the download button above or save the script as <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">setup-claude-gatewayz.sh</code></li>
                 <li>Make it executable: <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">chmod +x setup-claude-gatewayz.sh</code></li>
                 <li>Run it: <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">./setup-claude-gatewayz.sh</code></li>
-                <li>Enter your Gatewayz API key when prompted (starts with gw_)</li>
+                <li>Your Gatewayz API key is pre-populated in the script</li>
               </ol>
             )}
           </div>
