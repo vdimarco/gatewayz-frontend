@@ -38,6 +38,7 @@ interface RankingModelData {
   author_url: string;
   time_period: string;
   scraped_at: string;
+  logo_url: string;
 }
 
 const FeaturedModelCard = ({

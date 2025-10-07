@@ -26,6 +26,7 @@ type RankingModel = {
     author_url: string;
     time_period: string;
     scraped_at: string;
+    logo_url: string;
 }
 
 type Organization = {
@@ -162,42 +163,18 @@ export default function DevelopersPage() {
         fetchRankingModels();
     }, []);
 
-    // Fetch organization logos
+    // Build organization logos from API response
     useEffect(() => {
-        const fetchLogos = async () => {
-            // Get unique authors from ranking models
-            const uniqueAuthors = Array.from(new Set(rankingModels.map(m => m.author)));
-            const logoMap = new Map<string, string>();
+        const logoMap = new Map<string, string>();
+        
+        // Use logo_url from the API response for each model
+        rankingModels.forEach(model => {
+            if (model.logo_url) {
+                logoMap.set(model.author, model.logo_url);
+            }
+        });
 
-            await Promise.all(
-                uniqueAuthors.map(async (author) => {
-                    try {
-                        // Use the first model from this author to get the logo
-                        const authorModel = rankingModels.find(m => m.author === author);
-                        if (!authorModel) return;
-
-                        // Format model name for API: "author/model-name"
-                        const modelId = `${author}/${authorModel.model_name.replace(/ /g, '-')}`;
-                        const response = await fetch(`/api/model-logo?modelId=${encodeURIComponent(modelId)}`);
-
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.model?.authorData?.avatarUrl) {
-                                logoMap.set(author, data.model.authorData.avatarUrl);
-                            }
-                        }
-                    } catch (error) {
-                        console.log(`Failed to fetch logo for ${author}:`, error);
-                    }
-                })
-            );
-
-            setOrganizationLogos(logoMap);
-        };
-
-        if (rankingModels.length > 0) {
-            fetchLogos();
-        }
+        setOrganizationLogos(logoMap);
     }, [rankingModels]);
 
     const organizations: Organization[] = useMemo(() => {

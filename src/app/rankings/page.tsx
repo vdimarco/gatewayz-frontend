@@ -24,6 +24,7 @@ export interface ModelData {
   author_url: string;
   time_period: string;
   scraped_at: string; // ISO datetime string
+  logo_url: string;
 }
 
 interface AppData {
@@ -42,74 +43,13 @@ interface AppData {
 
 export default function RankingsPage() {
   const [selectedTopModelsCount, setSelectedTopModelsCount] = useState<number>(5);
-  const [modelLogos, setModelLogos] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(false);
-
 
   const [selectedTimeRangeForModels, setSelectedTimeRangeForModels] = useState("Top this month");
   const [selectedTimeRangeForApps, setSelectedTimeRangeForApps] = useState("Today");
 
   const [models, setModels] = useState<ModelData[]>([]);
   const [apps, setApps] = useState<AppData[]>([]);
-
-  // Fetch model logos
-  useEffect(() => {
-    const fetchLogos = async () => {
-      const logoMap = new Map<string, string>();
-
-      // Map of static logos for major providers
-      const staticLogos: { [key: string]: string } = {
-        'google': '/google-logo.svg',
-        'openai': '/openai-logo.svg',
-        'anthropic': '/anthropic-logo.svg',
-      };
-
-      await Promise.all(
-        models.slice(0, 20).map(async (model) => {
-          try {
-            // Check if we have a static logo for this author
-            const authorLower = model.author.toLowerCase();
-            const staticLogo = staticLogos[authorLower];
-            if (staticLogo) {
-              logoMap.set(model.model_name, staticLogo);
-              return;
-            }
-
-            // Special handling for specific models
-            let modelId = '';
-
-            // X-AI / Grok models - use xai organization
-            if (authorLower.includes('x-ai') || authorLower.includes('xai')) {
-              modelId = `xai/grok-2-1212`;  // Use a known Grok model for logo
-            }
-            // DeepSeek models - use deepseek-ai organization
-            else if (authorLower.includes('deepseek')) {
-              modelId = `deepseek-ai/DeepSeek-V3`;  // Use a known DeepSeek model for logo
-            }
-            // Default: use author/model-name
-            else {
-              modelId = `${model.author}/${model.model_name.replace(/ /g, '-')}`;
-            }
-
-            const response = await fetch(`/api/model-logo?modelId=${encodeURIComponent(modelId)}`);
-
-            if (response.ok) {
-              const data = await response.json();
-              if (data.model?.authorData?.avatarUrl) {
-                logoMap.set(model.model_name, data.model.authorData.avatarUrl);
-              }
-            }
-          } catch (error) {
-            console.log(`Failed to fetch logo for ${model.model_name}:`, error);
-          }
-        })
-      );
-
-      setModelLogos(logoMap);
-    };
-
-    fetchLogos();
-  }, [models]);
 
   useEffect(() => {
     const getModels = async () => {
@@ -271,11 +211,20 @@ export default function RankingsPage() {
                     {/* AI Model - 7 columns on mobile (col-span-7), 6 on desktop */}
                     <div className="col-span-7 lg:col-span-6">
                       <div className="flex items-center gap-2">
-                        {modelLogos.get(model.model_name) ? (
+                        {model.logo_url ? (
                           <div className='ranking-logo'>
                             <img
-                              src={modelLogos.get(model.model_name)}
+                              src={model.logo_url}
                               alt={model.model_name}
+                              onError={(e) => {
+                                // Fallback to author initial if logo fails to load
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = `<div class='w-8 h-8 flex-shrink-0 rounded bg-gray-100 flex items-center justify-center'><span class="text-sm font-medium">${model.author.charAt(0).toUpperCase()}</span></div>`;
+                                }
+                              }}
                             />
                           </div>
                         ) : (
