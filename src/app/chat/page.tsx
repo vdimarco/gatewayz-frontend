@@ -1070,18 +1070,20 @@ function ChatPageContent() {
                     if (activeSessionId) {
                         // Save user message
                         const userResult = await apiHelpers.saveMessage(activeSessionId, 'user', userMessage, selectedModel?.value, undefined, sessions);
-                        // Save assistant message
-                        const assistantResult = await apiHelpers.saveMessage(activeSessionId, 'assistant', finalContent, selectedModel?.value, undefined, sessions);
 
-                        // If an API session was created, update the session with the API session ID
-                        if (userResult?.apiSessionId || assistantResult?.apiSessionId) {
-                            const apiSessionId = userResult?.apiSessionId || assistantResult?.apiSessionId;
-                            setSessions(prev => prev.map(session =>
+                        // Update sessions with API session ID from user message before saving assistant message
+                        let updatedSessions = sessions;
+                        if (userResult?.apiSessionId) {
+                            updatedSessions = sessions.map(session =>
                                 session.id === activeSessionId
-                                    ? { ...session, apiSessionId }
+                                    ? { ...session, apiSessionId: userResult.apiSessionId }
                                     : session
-                            ));
+                            );
+                            setSessions(updatedSessions);
                         }
+
+                        // Save assistant message with updated sessions that include the API session ID
+                        const assistantResult = await apiHelpers.saveMessage(activeSessionId, 'assistant', finalContent, selectedModel?.value, undefined, updatedSessions);
 
                         // Update session title in API if this is the first message
                         const currentSession = sessions.find(s => s.id === activeSessionId);
