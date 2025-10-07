@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
 import { Check, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getApiKey } from '@/lib/api';
 
 interface FeaturedModel {
   name: string;
@@ -230,12 +231,22 @@ export default function Home() {
   const [message, setMessage] = useState('');
   const router = useRouter();
   const { user, login } = usePrivy();
-  const [apiKey, setApiKey] = useState('0000000000000000000000000000000000000000');
+  const [apiKey, setApiKey] = useState('');
   const carouselRef = useRef<HTMLDivElement>(null);
   const [carouselOffset, setCarouselOffset] = useState(0);
   const [activeCodeTab, setActiveCodeTab] = useState<'python' | 'javascript' | 'curl'>('python');
   const [codeCopied, setCodeCopied] = useState(false);
   const { toast } = useToast();
+
+  // Load the actual API key when user is authenticated
+  useEffect(() => {
+    const userApiKey = getApiKey();
+    if (userApiKey) {
+      setApiKey(userApiKey);
+    } else {
+      setApiKey(''); // Show placeholder when not authenticated
+    }
+  }, [user]);
   const [featuredModels, setFeaturedModels] = useState<FeaturedModel[]>([
       { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' },
       { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/openai-logo.svg' },
@@ -305,7 +316,13 @@ export default function Home() {
   };
 
   const handleCopyApiKey = () => {
-    navigator.clipboard.writeText(apiKey);
+    if (apiKey) {
+      navigator.clipboard.writeText(apiKey);
+      toast({
+        title: "API Key Copied",
+        description: "Your API key has been copied to clipboard.",
+      });
+    }
   };
 
   const handleGenerateApiKey = () => {
@@ -552,19 +569,25 @@ export default function Home() {
           `}</style>
            <div className="w-full flex flex-row items-center gap-10 mt-8">
              <div className="relative flex-1">
-               <Input 
-                 placeholder="Enter your API key..." 
-                 className="h-12 pr-14" 
+               <Input
+                 placeholder={user ? "Your API key will appear here" : "Sign in to see your API key"}
+                 className="h-12 pr-14"
                  value={apiKey}
-                 type="password"
-                 onChange={(e) => setApiKey(e.target.value)}
-                 onKeyPress={handleCopyApiKey}
+                 type={apiKey ? "password" : "text"}
+                 readOnly
                />
-               <button 
+               <button
                  className="absolute right-2 top-1/2 -translate-y-1/2"
                  onClick={handleCopyApiKey}
+                 disabled={!apiKey}
                >
-                 <img src="/material-symbols_key.svg" alt="Copy" width="24" height="24" />
+                 <img
+                   src="/material-symbols_key.svg"
+                   alt="Copy"
+                   width="24"
+                   height="24"
+                   className={!apiKey ? "opacity-30" : ""}
+                 />
                </button>
              </div>
              <span className="flex-1">
