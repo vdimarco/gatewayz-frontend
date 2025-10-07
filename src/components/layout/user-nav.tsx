@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect } from "react";
+import { Copy, ExternalLink } from "lucide-react";
 
 interface UserNavProps {
   user: any; // Privy user object
@@ -51,6 +52,29 @@ export function UserNav({ user }: UserNavProps) {
     return "U";
   };
 
+  const getWalletAddress = (user: any) => {
+    // Get the first wallet address from linked accounts
+    const walletAccount = user?.linkedAccounts?.find((account: any) => account.type === 'wallet');
+    return walletAccount?.address || 'Invalid Wallet'; 
+  };
+
+  const formatAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: "Address copied to clipboard" });
+    } catch (error) {
+      toast({
+        title: "Failed to copy address",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -69,6 +93,22 @@ export function UserNav({ user }: UserNavProps) {
             <p className="text-xs leading-none text-muted-foreground">
               {user?.email?.address || user?.google?.email || user?.github?.email || user?.github?.username || ""}
             </p>
+            <div className="flex items-center gap-2 mt-2">
+              <p className="text-xs text-muted-foreground font-mono">
+                {formatAddress(getWalletAddress(user))}
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-4 w-4 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(getWalletAddress(user));
+                }}
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

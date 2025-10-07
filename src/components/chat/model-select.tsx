@@ -55,7 +55,7 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
             return;
           }
         } catch (e) {
-          console.error('Cache parse error:', e);
+          console.log('Cache parse error:', e);
         }
       }
 
@@ -88,7 +88,7 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
         }));
         console.log('Model options set:', modelOptions.length);
       } catch (error) {
-        console.error('Failed to fetch models:', error);
+        console.log('Failed to fetch models:', error);
       } finally {
         setLoading(false);
       }

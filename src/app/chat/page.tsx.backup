@@ -429,7 +429,7 @@ export default function ChatPage() {
                         });
                     }
                 })
-                .catch(err => console.error('Failed to fetch model:', err));
+                .catch(err => console.log('Failed to fetch model:', err));
         }
     }, [searchParams]);
 
@@ -470,7 +470,7 @@ export default function ChatPage() {
                     }
                 }
             } catch (error) {
-                console.error('Failed to load chat sessions:', error);
+                console.log('Failed to load chat sessions:', error);
                 // Fallback to creating a new chat
                 createNewChat();
             }

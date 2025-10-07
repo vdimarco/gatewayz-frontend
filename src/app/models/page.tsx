@@ -67,7 +67,7 @@ async function getModels(): Promise<Model[]> {
     
     return uniqueModels;
   } catch (error) {
-    console.error('Failed to fetch models:', error);
+    console.log('Failed to fetch models:', error);
     return [];
   }
 }

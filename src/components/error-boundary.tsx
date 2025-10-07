@@ -34,7 +34,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
         error.message.includes('HelpTextContainer')) {
       return; // Don't log these errors
     }
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.log('Error caught by boundary:', error, errorInfo);
   }
 
   render() {

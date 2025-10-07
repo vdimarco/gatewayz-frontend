@@ -49,6 +49,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
+import { usePrivy } from '@privy-io/react-auth';
 
 type Message = {
     role: 'user' | 'assistant';
@@ -578,6 +579,7 @@ const ChatSkeleton = () => (
 
 function ChatPageContent() {
     const searchParams = useSearchParams();
+    const { login } = usePrivy();
     const [message, setMessage] = useState('');
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -615,7 +617,7 @@ function ChatPageContent() {
                         });
                     }
                 })
-                .catch(err => console.error('Failed to fetch model:', err));
+                .catch(err => console.log('Failed to fetch model:', err));
         }
 
         // Set the message from URL parameter and flag for auto-send
@@ -716,8 +718,8 @@ function ChatPageContent() {
                     }
                 }
             } catch (error) {
-                console.error('Failed to load chat sessions:', error);
-                // Don't show error toast, just create a new chat
+                console.log('Failed to load chat sessions:', error);
+                // Fallback to creating a new chat
                 createNewChat();
             }
         };
@@ -949,7 +951,17 @@ function ChatPageContent() {
                 toast({
                     title: "Authentication required",
                     description: "Please log in to use the chat feature.",
-                    variant: 'destructive'
+                    variant: 'destructive',
+                    action: (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => login()}
+                            className="bg-white hover:bg-gray-100 text-destructive border-destructive/20"
+                        >
+                            Log In
+                        </Button>
+                    ),
                 });
                 setLoading(false);
                 return;
@@ -989,6 +1001,27 @@ function ChatPageContent() {
                 if (response.status === 429) {
                     const errorData = await response.json().catch(() => ({}));
                     throw new Error(errorData.detail || 'Rate limit exceeded. Please try again later.');
+                }
+                if (response.status === 403) {
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMessage = errorData.detail || 'Access denied. Your API key may be invalid or you may have insufficient credits.';
+
+                    // Clear the invalid API key and prompt user to re-authenticate
+
+                    toast({
+                        title: "Authentication Error",
+                        description: errorMessage + ' Please refresh the page and log in again.',
+                        variant: 'destructive',
+                        action: (
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="px-4 py-2 bg-white text-black rounded hover:bg-gray-100"
+                            >
+                                Refresh
+                            </button>
+                        )
+                    });
+                    throw new Error(errorMessage);
                 }
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.error?.message || errorData.detail || `Request failed with status ${response.status}`);

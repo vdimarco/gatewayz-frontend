@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       currency: 'usd',
       description: `${amount} credits for Gatewayz AI platform`,
       customer_email: userEmail,
-      success_url: `${frontendUrl}/settings/credits?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${frontendUrl}/settings/credits?session_id={{CHECKOUT_SESSION_ID}}`,
       cancel_url: `${frontendUrl}/settings/credits`,
     };
 
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[Checkout API] Backend checkout error (raw):', errorText);
+      console.log('[Checkout API] Backend checkout error (raw):', errorText);
 
       let error;
       try {
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
         error = { detail: errorText };
       }
 
-      console.error('[Checkout API] Backend checkout error (parsed):', error);
+      console.log('[Checkout API] Backend checkout error (parsed):', error);
       return NextResponse.json(
         { error: error.detail || error.message || 'Failed to create checkout session' },
         { status: response.status }
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ sessionId: session.session_id, url: session.url });
 
   } catch (error) {
-    console.error('Stripe checkout error:', error);
+    console.log('Stripe checkout error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to create checkout session';
     return NextResponse.json(
       { error: errorMessage, details: String(error) },

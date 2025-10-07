@@ -157,6 +157,7 @@ export default function ApiKeysPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authenticating, setAuthenticating] = useState(true);
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -176,11 +177,13 @@ export default function ApiKeysPage() {
     const apiKey = getApiKey();
     if (!apiKey) {
       setLoading(false);
+      setAuthenticating(true);
       return;
     }
 
     try {
       setLoading(true);
+      setAuthenticating(false);
       const response = await makeAuthenticatedRequest(
         `${API_BASE_URL}/user/api-keys`,
         { method: 'GET' }
@@ -198,7 +201,7 @@ export default function ApiKeysPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching API keys:', error);
+      console.log('Error fetching API keys:', error);
       toast({
         title: "Error",
         description: "Failed to load API keys. Please try again.",
@@ -238,6 +241,7 @@ export default function ApiKeysPage() {
       if (interval) clearInterval(interval);
       if (!hasStartedFetch) {
         setLoading(false);
+        setAuthenticating(false);
       }
     }, 5000);
 
@@ -302,7 +306,7 @@ export default function ApiKeysPage() {
         });
       }
     } catch (error) {
-      console.error('Error creating API key:', error);
+      console.log('Error creating API key:', error);
       toast({
         title: "Error",
         description: "Failed to create API key. Please try again.",
@@ -338,7 +342,7 @@ export default function ApiKeysPage() {
         });
       }
     } catch (error) {
-      console.error('Error deleting API key:', error);
+      console.log('Error deleting API key:', error);
       toast({
         title: "Error",
         description: "Failed to delete API key. Please try again.",
@@ -443,13 +447,40 @@ export default function ApiKeysPage() {
           </Dialog>
         </div>
 
-        {loading ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">Loading API keys...</p>
+        {authenticating ? (
+          <div className="text-center py-12 border border-gray-200 rounded-lg">
+            <div className="flex flex-col items-center gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="text-muted-foreground">Authenticating...</p>
+              <p className="text-xs text-muted-foreground">Please wait while we verify your account</p>
+            </div>
+          </div>
+        ) : loading ? (
+          <div className="text-center py-12 border border-gray-200 rounded-lg">
+            <div className="flex flex-col items-center gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="text-muted-foreground">Loading your API keys...</p>
+            </div>
           </div>
         ) : apiKeys.length === 0 ? (
-          <div className="text-center py-8 border border-gray-200 rounded-lg">
-            <p className="text-muted-foreground">No API keys found. Create one to get started!</p>
+          <div className="text-center py-12 border border-gray-200 rounded-lg bg-gray-50/50">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-medium text-foreground">No API keys yet</p>
+                <p className="text-sm text-muted-foreground mt-1">Create your first API key to get started</p>
+              </div>
+              <Button
+                className="mt-2 bg-black text-white"
+                onClick={() => setDialogOpen(true)}
+              >
+                Generate API Key
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="border border-gray-200 overflow-hidden border-x-0">

@@ -14,21 +14,57 @@ import { API_BASE_URL } from '@/lib/config';
 import { processAuthResponse, getApiKey, removeApiKey } from '@/lib/api';
 import { Separator } from "@/components/ui/separator";
 import { GetCreditsButton } from './get-credits-button';
+import { Copy, ExternalLink } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 export function AppHeader() {
-  const { user, login, logout, getAccessToken } = usePrivy();
+  const { user, ready, login, logout, getAccessToken, authenticated } = usePrivy();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { toast } = useToast();
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  const getWalletAddress = (user: any) => {
+    // Get the first wallet address from linked accounts
+    const walletAccount = user?.linkedAccounts?.find((account: any) => account.type === 'wallet');
+    return walletAccount?.address || '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6'; // Mock address for now
+  };
+
+  const formatAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: "Address copied to clipboard" });
+    } catch (error) {
+      toast({
+        title: "Failed to copy address",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     const authenticateUser = async () => {
+      // Wait for Privy to be ready before authenticating
+      if (!ready) {
+        return;
+      }
+
       if(user) {
         try {
           // Check if we already have an API key for this user
           const existingApiKey = getApiKey();
           if (existingApiKey) {
             console.log('User already authenticated with API key');
+            setIsAuthenticating(false);
             return;
           }
+
+          setIsAuthenticating(true);
+          console.log('Starting authentication flow for new user...');
 
           const token = await getAccessToken();
           console.log({user});
@@ -51,7 +87,9 @@ export function AppHeader() {
               has_accepted_terms: user.hasAcceptedTerms,
               is_guest: user.isGuest
             },
-            token: token || ''
+            token: token || '',
+            auto_create_api_key: true,
+            trial_credits: 10.00  // $10 in trial credits for new users
           };
 
           console.log('Sending auth request:', JSON.stringify(requestBody, null, 2));
@@ -67,29 +105,54 @@ export function AppHeader() {
           if (response.ok) {
             const result = await response.json();
             console.log('Authentication successful:', result);
-            
+
             // Process and save the API key and user data
             processAuthResponse(result);
+
+            setIsAuthenticating(false);
+
+            // Force a page refresh to update the UI
+            window.location.reload();
           } else {
             const errorText = await response.text();
             console.error('Authentication failed:', response.status, response.statusText);
             console.error('Error response:', errorText);
+
+            // If it's a duplicate user error (500 with duplicate key), try to handle it gracefully
+            if (response.status === 500 && errorText.includes('duplicate key')) {
+              console.warn('User already exists in database, attempting to re-authenticate...');
+              setIsAuthenticating(false);
+
+              // Remove the stored API key so next load will retry
+              removeApiKey();
+
+              // Refresh the page to retry authentication
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
+              return;
+            }
+
+            // For other errors, log out the user
             logout();
             removeApiKey();
+            setIsAuthenticating(false);
           }
         } catch (error) {
           console.error('Error during authentication:', error);
+          setIsAuthenticating(false);
           logout();
           removeApiKey();
         }
       } else {
         // User logged out, remove stored API key
         removeApiKey();
+        setIsAuthenticating(false);
       }
     }
-    
+
     authenticateUser();
-  }, [user, getAccessToken])
+  }, [user, ready, getAccessToken])
 
   return (
     <header className="sticky top-0 z-50 w-full h-[65px] border-b bg-header flex items-center">
@@ -114,7 +177,22 @@ export function AppHeader() {
           </nav>
           <div className="hidden md:flex items-center gap-2">
             {user ? (
-              <UserNav user={user} />
+              <>
+                <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg">
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {formatAddress(getWalletAddress(user))}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-4 w-4 p-0"
+                    onClick={() => copyToClipboard(getWalletAddress(user))}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+                <UserNav user={user} />
+              </>
             ) : (
               <Button variant="outline" onClick={() => login()}>Sign In</Button>
             )}
@@ -175,6 +253,22 @@ export function AppHeader() {
                       <Separator className="my-4" />
                       <div className="flex flex-col gap-2">
                         <p className="text-xs font-semibold text-muted-foreground uppercase px-2">
+                          Wallet Address
+                        </p>
+                        <div className="flex items-center gap-2 px-2 py-2 bg-muted/50 rounded-lg">
+                          <span className="text-xs text-muted-foreground font-mono flex-1">
+                            {formatAddress(getWalletAddress(user))}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-4 w-4 p-0"
+                            onClick={() => copyToClipboard(getWalletAddress(user))}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase px-2 mt-4">
                           Account
                         </p>
                         <Link

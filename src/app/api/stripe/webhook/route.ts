@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   try {
     // Check if Stripe is configured
     if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
-      console.error('Stripe is not fully configured');
+      console.log('Stripe is not fully configured');
       return NextResponse.json(
         { error: 'Stripe is not configured' },
         { status: 503 }
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     const signature = req.headers.get('stripe-signature');
 
     if (!signature) {
-      console.error('No Stripe signature found');
+      console.log('No Stripe signature found');
       return NextResponse.json(
         { error: 'No signature' },
         { status: 400 }
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         process.env.STRIPE_WEBHOOK_SECRET
       );
     } catch (err) {
-      console.error('Webhook signature verification failed:', err);
+      console.log('Webhook signature verification failed:', err);
       return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 400 }
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       const userEmail = session.metadata?.userEmail || session.customer_email || session.customer_details?.email;
 
       if (!credits) {
-        console.error('No credits found in session metadata');
+        console.log('No credits found in session metadata');
         return NextResponse.json(
           { error: 'No credits in metadata' },
           { status: 400 }
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (!userId && !userEmail) {
-        console.error('No user ID or email found in session');
+        console.log('No user ID or email found in session');
         return NextResponse.json(
           { error: 'No user identification' },
           { status: 400 }
@@ -101,14 +101,14 @@ export async function POST(req: NextRequest) {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Failed to credit user:', errorText);
+          console.log('Failed to credit user:', errorText);
           throw new Error('Failed to credit user');
         }
 
         const result = await response.json();
         console.log('Successfully processed payment and credited user:', result);
       } catch (error) {
-        console.error('Error crediting user:', error);
+        console.log('Error crediting user:', error);
         // Log the error but return success to Stripe to prevent retries
         // You can manually credit the user later by checking Stripe dashboard
       }
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.log('Webhook error:', error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }

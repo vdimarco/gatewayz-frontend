@@ -28,6 +28,8 @@ import { BookText, Bot, ChevronDown, ChevronUp, FileText, ImageIcon, LayoutGrid,
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { stringToColor } from '@/lib/utils';
+import ReactMarkdown from "react-markdown";
+
 
 interface Model {
   id: string;
@@ -64,7 +66,19 @@ const ModelCard = ({ model }: { model: Model }) => {
           </div>
           <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0 font-medium">{contextK > 0 ? `${contextK}K` : 'Pending'}</div>
         </div>
-        <p className="text-muted-foreground text-sm flex-grow line-clamp-2 mb-4">{model.description || 'No description available'}</p>
+        <div className="text-muted-foreground text-sm flex-grow line-clamp-2 mb-4">
+          <ReactMarkdown
+            components={{
+              a: ({ children, ...props }) => (
+                <span className="text-blue-600 underline cursor-pointer" {...props}>
+                  {children}
+                </span>
+              ),
+            }}
+          >
+            {model.description || 'No description available'}
+          </ReactMarkdown>
+        </div>
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-3 border-t">
           <span className="whitespace-nowrap">{contextK > 0 ? `${contextK}K context` : 'Pending sync'}</span>
           <span className="whitespace-nowrap">${inputCost}/M in</span>
@@ -445,8 +459,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
             }
             key={`models-${filteredModels.length}-${debouncedSearchTerm}`}
           >
-            {filteredModels.map((model) => (
-              <ModelCard key={model.id} model={model} />
+            {filteredModels.map((model, key) => (
+              <ModelCard key={key} model={model} />
             ))}
           </div>
           </div>
