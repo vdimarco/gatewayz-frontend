@@ -410,7 +410,20 @@ console.log(completion.choices[0].message);`,
             </div>
           </div>
 
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm z-10 mt-6">
+            {/* Connected to 1000+ AI Models - Moved here */}
+            <section className="mt-12 px-4">
+              <div className="mb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-center">Connected TO 1000+ AI Models</h2>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 md:gap-12 items-center justify-items-center max-w-4xl mx-auto">
+                <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-full max-w-[140px]" />
+                <img src="/Google_Logo-black.svg" alt="Google" className="w-full max-w-[140px]" />
+                <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" className="w-full max-w-[140px]" />
+                <img src="/Meta_Logo-black.svg" alt="Meta" className="w-full max-w-[140px]" />
+              </div>
+            </section>
+
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm z-10 mt-12">
               <div className=" px-6 py-[10px] flex flex-row items-center justify-between">
                 <div className="font-bold tracking-tight text-lg">Top Models This Month</div>
               <Link href="/rankings">
@@ -424,26 +437,6 @@ console.log(completion.choices[0].message);`,
               </Link>
               </div>
             </div>
-        </section>
-
-        {/* Stats Section */}
-        {/* <section className="grid grid-cols-2 md:grid-cols-4 gap-8 my-24">
-            <StatItem value="8.4T" label="Monthly Tokens" />
-            <StatItem value="2.5M+" label="Global Users" />
-            <StatItem value="60+" label="Active Providers" />
-            <StatItem value="400+" label="Models" />
-        </section> */}
-
-        <section className="mb-12 md:mb-24 px-4">
-          <div className="mb-8 md:mb-12">
-            <h2 className="text-xl sm:text-2xl font-bold text-center">Connected TO 1000+ AI Models</h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 md:gap-12 items-center justify-items-center max-w-4xl mx-auto">
-            <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-full max-w-[140px]" />
-            <img src="/Google_Logo-black.svg" alt="Google" className="w-full max-w-[140px]" />
-            <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" className="w-full max-w-[140px]" />
-            <img src="/Meta_Logo-black.svg" alt="Meta" className="w-full max-w-[140px]" />
-          </div>
         </section>
 
         {/* How It Works Section */}
