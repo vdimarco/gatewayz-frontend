@@ -85,6 +85,144 @@ export default function ClaudeCodePage() {
   );
 
   const npmInstall = "npm install -g @anthropic-ai/claude-code";
+
+  const macosSetupScript = `#!/usr/bin/env bash
+# Usage:  chmod +x setup-claude-openrouter.sh
+#         ./setup-claude-openrouter.sh
+
+set -euo pipefail
+
+# 0) Ask for OpenRouter key if not present
+if [[ -z "\${OPENROUTER_API_KEY:-}" ]]; then
+  read -r -p "Enter your OpenRouter API key (starts with or- ): " OPENROUTER_API_KEY
+  if [[ -z "$OPENROUTER_API_KEY" ]]; then echo "No key provided"; exit 1; fi
+  export OPENROUTER_API_KEY
+fi
+
+# 1) Install Node via NVM
+if [[ ! -d "$HOME/.nvm" ]]; then
+  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+fi
+export NVM_DIR="$HOME/.nvm"
+# shellcheck disable=SC1091
+source "$NVM_DIR/nvm.sh"
+nvm install --lts
+nvm use --lts
+
+# Ensure npm global bin is on PATH now and later
+NPM_BIN="$(npm bin -g)"
+case ":$PATH:" in
+  *":$NPM_BIN:"*) ;;
+  *) export PATH="$NPM_BIN:$PATH"; echo "export PATH=\\"$NPM_BIN:\\$PATH\\"" >> "$HOME/.zshrc" ;;
+esac
+
+# 2) Install Claude Code CLI
+npm install -g @anthropic-ai/claude-code
+
+# 3) Create a tiny OpenRouter proxy
+PROXY_DIR="$HOME/claude-openrouter-proxy"
+mkdir -p "$PROXY_DIR"
+cat > "$PROXY_DIR/proxy.mjs" <<"EOF"
+import http from 'node:http';
+
+const PORT = process.env.PORT || 3000;
+const OR_KEY = process.env.OPENROUTER_API_KEY;
+if (!OR_KEY) { console.error('OPENROUTER_API_KEY not set'); process.exit(1); }
+
+function textFromContent(block) {
+  if (!block) return '';
+  if (typeof block === 'string') return block;
+  if (Array.isArray(block)) return block.map(b => b?.text || '').join('\\n');
+  if (block.text) return block.text;
+  return '';
+}
+function mapMessages(anthropicMsgs = [], system) {
+  const msgs = [];
+  if (system) msgs.push({ role: 'system', content: typeof system === 'string' ? system : textFromContent(system) });
+  for (const m of anthropicMsgs) msgs.push({ role: m.role, content: textFromContent(m.content) });
+  return msgs;
+}
+
+async function handleMessages(req, res, body) {
+  const payload = JSON.parse(body || '{}');
+  const { model, messages, system, temperature = 0.2, max_tokens = 4096 } = payload || {};
+  const chosen = model || process.env.REASONING_MODEL || process.env.COMPLETION_MODEL || 'anthropic/claude-3.5-haiku';
+
+  const chatBody = { model: chosen, messages: mapMessages(messages, system), temperature, max_tokens };
+  const headers = {
+    'Authorization': \`Bearer \${process.env.OPENROUTER_API_KEY}\`,
+    'Content-Type': 'application/json'
+  };
+  if (process.env.HTTP_REFERER) headers['HTTP-Referer'] = process.env.HTTP_REFERER;
+  if (process.env.X_TITLE) headers['X-Title'] = process.env.X_TITLE;
+
+  const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST', headers, body: JSON.stringify(chatBody)
+  });
+  if (!resp.ok) {
+    const txt = await resp.text();
+    res.writeHead(resp.status, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: { message: txt } }));
+    return;
+  }
+  const data = await resp.json();
+  const content = data?.choices?.[0]?.message?.content ?? '';
+  const usage = data?.usage || {};
+
+  const out = {
+    id: \`msg_\${Date.now()}\`,
+    type: 'message',
+    role: 'assistant',
+    model: chosen,
+    content: [{ type: 'text', text: content }],
+    stop_reason: 'end_turn',
+    usage: {
+      input_tokens: usage.prompt_tokens,
+      output_tokens: usage.completion_tokens,
+      total_tokens: usage.total_tokens
+    }
+  };
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(out));
+}
+
+const server = http.createServer((req, res) => {
+  if (req.method === 'GET' && req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true }));
+  }
+  if (req.method === 'POST' && req.url === '/v1/messages') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => handleMessages(req, res, body).catch(err => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: { message: String(err) } }));
+    }));
+    return;
+  }
+  res.writeHead(404, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: { message: 'Not found' } }));
+});
+server.listen(PORT, () => console.log(\`OpenRouter proxy on http://127.0.0.1:\${PORT}\`));
+EOF
+
+# 4) Start proxy in background
+export HTTP_REFERER="https://yourapp.example"
+export X_TITLE="Vaughn-CLI"
+cd "$PROXY_DIR"
+nohup node proxy.mjs > proxy.log 2>&1 & echo $! > proxy.pid
+sleep 1
+
+# 5) Point Claude Code at the proxy and launch
+export ANTHROPIC_BASE_URL="http://127.0.0.1:3000"
+export ANTHROPIC_CUSTOM_HEADERS=$'HTTP-Referer: https://yourapp.example\\nX-Title: Vaughn-CLI'
+
+# Optional default model mapping
+export COMPLETION_MODEL="anthropic/claude-3.5-haiku"
+export REASONING_MODEL="anthropic/claude-sonnet-4.5"
+
+claude
+`;
   const curlCommand = `curl https://api.gatewayz.ai/v1/chat/completions\\
 -H "Content-Type: application/json" \\
 -H "Authorization: Bearer ${apiKey}" \\
@@ -180,12 +318,47 @@ if __name__ == "__main__":
         </CardContent>
       </Card>
 
-      {/* Step 2: Python Integration */}
+      {/* macOS Automated Setup */}
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">
               2
+            </div>
+            <Terminal className="h-6 w-6" />
+            macOS Automated Setup Script
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground">
+            This script automatically installs Node.js, Claude Code CLI, and sets up an OpenRouter proxy for macOS users.
+          </p>
+          <div className="bg-muted p-4 rounded-lg font-mono text-xs overflow-x-auto relative max-h-96 overflow-y-auto">
+            <div className="absolute top-2 right-2 z-10">
+              <CopyButton text={macosSetupScript} id="macos-setup" />
+            </div>
+            <pre>{macosSetupScript}</pre>
+          </div>
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+            <p className="text-sm text-amber-900 dark:text-amber-100">
+              <strong>📝 Instructions:</strong>
+            </p>
+            <ol className="text-sm text-amber-900 dark:text-amber-100 list-decimal ml-5 mt-2 space-y-1">
+              <li>Save the script as <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">setup-claude-openrouter.sh</code></li>
+              <li>Make it executable: <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">chmod +x setup-claude-openrouter.sh</code></li>
+              <li>Run it: <code className="bg-amber-100 dark:bg-amber-800 px-1 rounded">./setup-claude-openrouter.sh</code></li>
+              <li>Enter your OpenRouter API key when prompted</li>
+            </ol>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Step 3: Python Integration */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">
+              3
             </div>
             <Terminal className="h-6 w-6" />
             Claude Terminal Integration Python Code
@@ -201,12 +374,12 @@ if __name__ == "__main__":
         </CardContent>
       </Card>
 
-      {/* Step 3: Run and Code Faster */}
+      {/* Step 4: Run and Code Faster */}
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold">
-              3
+              4
             </div>
             <Play className="h-6 w-6" />
             Run the Python File and Code Faster with Claude
