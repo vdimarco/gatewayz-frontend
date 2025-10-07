@@ -18,9 +18,10 @@ import { Copy, ExternalLink } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 export function AppHeader() {
-  const { user, login, logout, getAccessToken } = usePrivy();
+  const { user, ready, login, logout, getAccessToken, authenticated } = usePrivy();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { toast } = useToast();
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const getWalletAddress = (user: any) => {
     // Get the first wallet address from linked accounts
@@ -47,14 +48,23 @@ export function AppHeader() {
 
   useEffect(() => {
     const authenticateUser = async () => {
+      // Wait for Privy to be ready before authenticating
+      if (!ready) {
+        return;
+      }
+
       if(user) {
         try {
           // Check if we already have an API key for this user
           const existingApiKey = getApiKey();
           if (existingApiKey) {
             console.log('User already authenticated with API key');
+            setIsAuthenticating(false);
             return;
           }
+
+          setIsAuthenticating(true);
+          console.log('Starting authentication flow for new user...');
 
           const token = await getAccessToken();
           console.log({user});
@@ -95,29 +105,54 @@ export function AppHeader() {
           if (response.ok) {
             const result = await response.json();
             console.log('Authentication successful:', result);
-            
+
             // Process and save the API key and user data
             processAuthResponse(result);
+
+            setIsAuthenticating(false);
+
+            // Force a page refresh to update the UI
+            window.location.reload();
           } else {
             const errorText = await response.text();
-            console.log('Authentication failed:', response.status, response.statusText);
-            console.log('Error response:', errorText);
-            // logout();
+            console.error('Authentication failed:', response.status, response.statusText);
+            console.error('Error response:', errorText);
+
+            // If it's a duplicate user error (500 with duplicate key), try to handle it gracefully
+            if (response.status === 500 && errorText.includes('duplicate key')) {
+              console.warn('User already exists in database, attempting to re-authenticate...');
+              setIsAuthenticating(false);
+
+              // Remove the stored API key so next load will retry
+              removeApiKey();
+
+              // Refresh the page to retry authentication
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
+              return;
+            }
+
+            // For other errors, log out the user
+            logout();
             removeApiKey();
+            setIsAuthenticating(false);
           }
         } catch (error) {
-          console.log('Error during authentication:', error);
-          // logout();
+          console.error('Error during authentication:', error);
+          setIsAuthenticating(false);
+          logout();
           removeApiKey();
         }
       } else {
         // User logged out, remove stored API key
         removeApiKey();
+        setIsAuthenticating(false);
       }
     }
-    
+
     authenticateUser();
-  }, [user, getAccessToken])
+  }, [user, ready, getAccessToken])
 
   return (
     <header className="sticky top-0 z-50 w-full h-[65px] border-b bg-header flex items-center">

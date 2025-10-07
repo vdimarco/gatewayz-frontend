@@ -41,7 +41,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
-import { getApiKey, getUserData } from '@/lib/api';
+import { getApiKey, getUserData, removeApiKey } from '@/lib/api';
 import { streamChat } from '@/lib/streaming-chat';
 import { StreamingMessage } from '@/components/chat/streaming-message';
 import ReactMarkdown from 'react-markdown';
@@ -732,6 +732,28 @@ function ChatPageContent() {
                 if (response.status === 429) {
                     const errorData = await response.json().catch(() => ({}));
                     throw new Error(errorData.detail || 'Rate limit exceeded. Please try again later.');
+                }
+                if (response.status === 403) {
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMessage = errorData.detail || 'Access denied. Your API key may be invalid or you may have insufficient credits.';
+
+                    // Clear the invalid API key and prompt user to re-authenticate
+                    removeApiKey();
+
+                    toast({
+                        title: "Authentication Error",
+                        description: errorMessage + ' Please refresh the page and log in again.',
+                        variant: 'destructive',
+                        action: (
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="px-4 py-2 bg-white text-black rounded hover:bg-gray-100"
+                            >
+                                Refresh
+                            </button>
+                        )
+                    });
+                    throw new Error(errorMessage);
                 }
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.error?.message || errorData.detail || `Request failed with status ${response.status}`);
