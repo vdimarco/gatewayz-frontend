@@ -3,19 +3,48 @@
 import { useState } from 'react';
 import { redirectToCheckout } from '@/lib/stripe';
 import { getUserData } from '@/lib/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function GetCreditsButton() {
   const [isLoading, setIsLoading] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [amount, setAmount] = useState('10');
 
-  const handleClick = async (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    setShowDialog(true);
+  };
+
+  const handleConfirm = async () => {
+    const amountNum = parseFloat(amount);
+
+    if (isNaN(amountNum) || amountNum <= 0) {
+      alert('Please enter a valid amount greater than 0');
+      return;
+    }
+
+    if (amountNum < 1) {
+      alert('Minimum purchase amount is $1');
+      return;
+    }
+
     setIsLoading(true);
+    setShowDialog(false);
+
     try {
       // Get user data for checkout
       const userData = getUserData();
-
-      // Default to $10 worth of credits
-      await redirectToCheckout(10, userData?.email, userData?.user_id);
+      await redirectToCheckout(amountNum, userData?.email, userData?.user_id);
     } catch (error) {
       console.log('Checkout error:', error);
       alert('Failed to start checkout. Please try again.');
@@ -70,6 +99,57 @@ export function GetCreditsButton() {
           animation: led-shimmer 4s ease-in-out infinite;
         }
       `}</style>
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Purchase Credits</DialogTitle>
+            <DialogDescription>
+              Enter the amount you would like to add to your account. Minimum purchase is $1.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amount" className="text-right">
+                Amount
+              </Label>
+              <div className="col-span-3 relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                <Input
+                  id="amount"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleConfirm();
+                    }
+                  }}
+                  className="pl-7"
+                  autoFocus
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirm}
+            >
+              Continue to Checkout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
