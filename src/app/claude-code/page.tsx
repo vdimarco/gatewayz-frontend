@@ -1,15 +1,57 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, Terminal, Key, Code, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { usePrivy } from "@privy-io/react-auth";
+import { getApiKey } from "@/lib/api";
 
 export default function ClaudeCodePage() {
   const { toast } = useToast();
   const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
+  const { ready, authenticated, login } = usePrivy();
+  const [apiKey, setApiKey] = useState('YOUR_API_KEY');
+
+  // Check authentication and redirect if needed
+  useEffect(() => {
+    if (!ready) return;
+
+    if (!authenticated) {
+      login();
+    }
+  }, [ready, authenticated, login]);
+
+  // Load API key when authenticated
+  useEffect(() => {
+    const loadApiKey = () => {
+      const userApiKey = getApiKey();
+      if (userApiKey) {
+        setApiKey(userApiKey);
+      }
+    };
+
+    loadApiKey();
+
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'gatewayz_api_key') {
+        loadApiKey();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also poll for changes every second
+    const interval = setInterval(loadApiKey, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [authenticated]);
 
   const copyToClipboard = async (text: string, id: string) => {
     try {
@@ -45,7 +87,7 @@ export default function ClaudeCodePage() {
   const npmInstall = "npm install -g @anthropic-ai/claude-code";
   const curlCommand = `curl https://api.gatewayz.ai/v1/chat/completions\\
 -H "Content-Type: application/json" \\
--H "Authorization: Bearer YOUR_API_KEY" \\
+-H "Authorization: Bearer ${apiKey}" \\
 -d '{
   "model": "anthropic/claude-sonnet-4",
   "messages": [
@@ -60,7 +102,7 @@ export default function ClaudeCodePage() {
 import json
 
 API_URL = "https://api.gatewayz.ai/v1/chat/completions"
-API_KEY = "YOUR_API_KEY"  # ⚠️ Don't share this publicly!
+API_KEY = "${apiKey}"  # ⚠️ Don't share this publicly!
 
 def chat(prompt):
     headers = {

@@ -51,7 +51,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} antialiased bg-background min-h-screen flex flex-col justify-start`} suppressHydrationWarning>
         <ThemeProvider
-          defaultTheme="light"
+          defaultTheme="system"
           storageKey="ui-theme"
         >
           <ErrorBoundary>

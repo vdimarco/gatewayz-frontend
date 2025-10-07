@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { getApiKey, makeAuthenticatedRequest } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
 import { useToast } from "@/hooks/use-toast";
+import { usePrivy } from "@privy-io/react-auth";
 
 // API Key data type from backend
 interface ApiKey {
@@ -162,11 +163,21 @@ export default function ApiKeysPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
+  const { ready, authenticated, login } = usePrivy();
 
   // Form state
   const [keyName, setKeyName] = useState("");
   const [creditLimit, setCreditLimit] = useState("");
   const [includeBYOK, setIncludeBYOK] = useState(false);
+
+  // Check authentication and redirect if needed
+  useEffect(() => {
+    if (!ready) return;
+
+    if (!authenticated) {
+      login();
+    }
+  }, [ready, authenticated, login]);
 
   useEffect(() => {
     setMounted(true);
