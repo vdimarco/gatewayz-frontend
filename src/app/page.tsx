@@ -612,8 +612,7 @@ console.log(completion.choices[0].message);`,
 
                {/* Button with elevation effect */}
                <Button
-                 className="relative bg-black hover:bg-gray-900 text-white h-12 px-12 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)]"
-                 variant="outline"
+                 className="relative bg-black hover:bg-gray-900 text-white hover:text-white h-12 px-12 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)]"
                  onClick={handleGenerateApiKey}
                >
                  {user ? 'Claim Trial Credits' : 'Generate API Key'}
