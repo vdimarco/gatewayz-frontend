@@ -364,8 +364,8 @@ const ModelSuggestionCard = ({ title, icon: Icon }: { title: string, icon: React
 );
 
 const ExamplePrompt = ({ title, subtitle, onClick }: { title: string, subtitle: string, onClick?: () => void }) => (
-    <Card 
-        className="hover:border-primary cursor-pointer p-4 text-left bg-white transition-colors rounded-xl"
+    <Card
+        className="hover:border-primary cursor-pointer p-4 text-left bg-card transition-colors rounded-xl border-border"
         onClick={onClick}
     >
         <p className="text-sm font-medium text-foreground">{title}</p>
@@ -523,9 +523,9 @@ const ChatMessage = ({ message, modelName }: { message: Message, modelName: stri
         <div className={`flex items-start gap-3 ${isUser ? 'justify-end' : ''}`}>
              {/* {!isUser && <Avatar className="w-8 h-8"><AvatarFallback><Bot/></AvatarFallback></Avatar>} */}
             <div className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
-                <div className={`rounded-lg p-3 ${isUser ? 'bg-primary text-primary-foreground' : 'bg-white border'}`}>
+                <div className={`rounded-lg p-3 ${isUser ? 'bg-primary text-primary-foreground' : 'bg-card border border-border'}`}>
                      {!isUser && <p className="text-xs font-semibold mb-1">{modelName}</p>}
-                    <div className={`text-sm prose prose-sm max-w-none ${isUser ? 'text-white prose-invert' : ''}`}>
+                    <div className={`text-sm prose prose-sm max-w-none ${isUser ? 'text-white prose-invert' : 'dark:prose-invert'}`}>
                         {isUser ? (
                             <div className="whitespace-pre-wrap text-white">{message.content}</div>
                         ) : (
@@ -558,7 +558,7 @@ const ChatMessage = ({ message, modelName }: { message: Message, modelName: stri
                         )}
                     </div>
                     {!isUser && (
-                        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-100">
+                        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-border">
                             <Button variant="ghost" size="icon" className="h-6 w-6">
                                 <Box className="h-4 w-4" />
                             </Button>
@@ -1165,7 +1165,12 @@ function ChatPageContent() {
       <img
         src="/logo_transparent.svg"
         alt="Stats"
-        className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[75vh] h-[75vh] pointer-events-none opacity-50 hidden lg:block"
+        className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[75vh] h-[75vh] pointer-events-none opacity-50 hidden lg:block dark:hidden"
+      />
+      <img
+        src="/logo_black.svg"
+        alt="Stats"
+        className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[75vh] h-[75vh] pointer-events-none opacity-50 hidden dark:lg:block"
       />
 
        
@@ -1258,11 +1263,11 @@ function ChatPageContent() {
                         <div className="text-sm whitespace-pre-wrap text-white">{msg.content}</div>
                       </div>
                     ) : (
-                      <div className="rounded-lg p-3 bg-white border">
+                      <div className="rounded-lg p-3 bg-card border border-border">
                         <div className="flex items-center justify-between mb-2">
                           {selectedModel?.label && <p className="text-xs font-semibold">{selectedModel.label}</p>}
                         </div>
-                        <div className="text-sm prose prose-sm max-w-none">
+                        <div className="text-sm prose prose-sm max-w-none dark:prose-invert">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm, remarkMath]}
                             rehypePlugins={[rehypeKatex]}
@@ -1271,15 +1276,15 @@ function ChatPageContent() {
                           </ReactMarkdown>
                         </div>
                         {/* Action Buttons - always visible in bottom right */}
-                        <div className="flex items-center justify-end gap-1 mt-3 pt-2 border-t border-gray-100">
-                          <Button variant="ghost" size="sm" onClick={() => navigator.clipboard.writeText(msg.content)} className="h-8 w-8 p-0 hover:bg-gray-100" title="Copy response">
+                        <div className="flex items-center justify-end gap-1 mt-3 pt-2 border-t border-border">
+                          <Button variant="ghost" size="sm" onClick={() => navigator.clipboard.writeText(msg.content)} className="h-8 w-8 p-0 hover:bg-muted" title="Copy response">
                             <Copy className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => navigator.share({ text: msg.content })} className="h-8 w-8 p-0 hover:bg-gray-100" title="Share response">
+                          <Button variant="ghost" size="sm" onClick={() => navigator.share({ text: msg.content })} className="h-8 w-8 p-0 hover:bg-muted" title="Share response">
                             <Share2 className="h-4 w-4" />
                           </Button>
                           {handleRegenerate && (
-                            <Button variant="ghost" size="sm" onClick={handleRegenerate} className="h-8 w-8 p-0 hover:bg-gray-100" title="Regenerate response">
+                            <Button variant="ghost" size="sm" onClick={handleRegenerate} className="h-8 w-8 p-0 hover:bg-muted" title="Regenerate response">
                               <RotateCcw className="h-4 w-4" />
                             </Button>
                           )}
@@ -1346,7 +1351,7 @@ function ChatPageContent() {
                     </Button>
                   </div>
                 )}
-                <div className="flex items-center gap-1 px-2 py-2 bg-white rounded-xl border">
+                <div className="flex items-center gap-1 px-2 py-2 bg-card rounded-xl border border-border">
                   <input
                     ref={fileInputRef}
                     type="file"

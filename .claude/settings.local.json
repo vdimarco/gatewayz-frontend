@@ -27,7 +27,9 @@
       "Bash(npm run dev:*)",
       "Bash(pnpm add:*)",
       "Bash(gh pr checkout:*)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Read(//c/Users/vaughn.v/Downloads/**)",
+      "Bash(npm i:*)"
     ],
     "deny": [],
     "ask": []
