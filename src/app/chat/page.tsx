@@ -865,6 +865,39 @@ function ChatPageContent() {
         }
     };
 
+    const handleRegenerate = async () => {
+        if (!activeSessionId || messages.length === 0) return;
+        
+        // Get the last user message
+        const lastUserMessage = messages.filter(msg => msg.role === 'user').pop();
+        if (!lastUserMessage) return;
+        
+        // Remove the last assistant message
+        const updatedMessages = messages.slice(0, -1);
+        const updatedSessions = sessions.map(session => {
+            if (session.id === activeSessionId) {
+                return {
+                    ...session,
+                    messages: updatedMessages,
+                    updatedAt: new Date()
+                };
+            }
+            return session;
+        });
+        setSessions(updatedSessions);
+        
+        // Set the message to the last user message and send it again
+        setMessage(lastUserMessage.content);
+        setLoading(true);
+        setStreamingContent('');
+        setStreamingReasoning('');
+        
+        // Trigger the send message after a short delay
+        setTimeout(() => {
+            handleSendMessage();
+        }, 100);
+    };
+
     const handleSendMessage = async () => {
         if (!message.trim() || !selectedModel || !activeSessionId) {
             toast({
@@ -938,33 +971,29 @@ function ChatPageContent() {
                 ];
             }
 
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
+            // Use streaming for better user experience
+            const { content } = await streamChat({
+                modelName: selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value,
+                prompt: userMessage,
+                apiKey,
+                onContent: (streamingContent) => {
+                    setStreamingContent(streamingContent);
                 },
-                body: JSON.stringify({
-                    model: selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value,
-                    messages: [{ role: 'user', content: messageContent }],
-                }),
-            });
-
-            console.log('Response status:', response.status);
-            console.log('Response ok:', response.ok);
-
-            if (!response.ok) {
-                if (response.status === 429) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.detail || 'Rate limit exceeded. Please try again later.');
+                onReasoning: (streamingReasoning) => {
+                    setStreamingReasoning(streamingReasoning);
+                },
+                onComplete: (fullContent, fullReasoning) => {
+                    setStreamingContent('');
+                    setStreamingReasoning('');
+                    console.log('Streaming completed:', { fullContent: fullContent.substring(0, 100), fullReasoning: fullReasoning?.substring(0, 100) });
+                },
+                onError: (error) => {
+                    console.error('Streaming error:', error);
+                    setStreamingContent('');
+                    setStreamingReasoning('');
+                    throw error;
                 }
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error?.message || errorData.detail || `Request failed with status ${response.status}`);
-            }
-
-            const data = await response.json();
-            // Parse OpenAI-compatible response format
-            const content = data.choices?.[0]?.message?.content || data.response || 'No response';
+            });
 
             const finalSessions = sessions.map(session => {
                 if (session.id === activeSessionId) {
@@ -998,6 +1027,20 @@ function ChatPageContent() {
                                 ? { ...session, apiSessionId }
                                 : session
                         ));
+                    }
+                    
+                    // Update session title in API if this is the first message
+                    if (isFirstMessage && activeSession?.apiSessionId) {
+                        try {
+                            const apiKey = getApiKey();
+                            if (apiKey) {
+                                const chatAPI = new ChatHistoryAPI(apiKey);
+                                await chatAPI.updateSession(activeSession.apiSessionId, userMessage);
+                                console.log('Updated session title in API:', userMessage);
+                            }
+                        } catch (error) {
+                            console.error('Failed to update session title in API:', error);
+                        }
                     }
                     
                     // Refresh the session to get updated messages from API
@@ -1134,6 +1177,7 @@ function ChatPageContent() {
                         reasoning={msg.reasoning}
                         modelName={selectedModel?.label}
                         isStreaming={false}
+                        onRegenerate={handleRegenerate}
                       />
                     )}
                   </div>
@@ -1147,6 +1191,7 @@ function ChatPageContent() {
                       reasoning={streamingReasoning}
                       modelName={selectedModel?.label}
                       isStreaming={true}
+                      onRegenerate={handleRegenerate}
                     />
                   </div>
                 </div>

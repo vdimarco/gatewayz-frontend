@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Share2, RotateCcw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -13,10 +15,52 @@ export type StreamingMessageProps = {
   reasoning?: string;
   modelName?: string;
   isStreaming?: boolean;
+  onRegenerate?: () => void;
 };
 
-export function StreamingMessage({ content, reasoning, modelName, isStreaming }: StreamingMessageProps) {
+export function StreamingMessage({ content, reasoning, modelName, isStreaming, onRegenerate }: StreamingMessageProps) {
   const [showReasoning, setShowReasoning] = useState(false);
+  const { toast } = useToast();
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast({
+        title: "Copied!",
+        description: "Response copied to clipboard",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "AI Response",
+          text: content,
+        });
+      } else {
+        // Fallback to copying to clipboard
+        await navigator.clipboard.writeText(content);
+        toast({
+          title: "Copied!",
+          description: "Response copied to clipboard (share not supported)",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to share response",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -58,8 +102,41 @@ export function StreamingMessage({ content, reasoning, modelName, isStreaming }:
 
       {/* Main Content */}
       {content && (
-        <div className="rounded-lg p-3 bg-white border">
-          {modelName && <p className="text-xs font-semibold mb-1">{modelName}</p>}
+        <div className="rounded-lg p-3 bg-white border group">
+          <div className="flex items-center justify-between mb-2">
+            {modelName && <p className="text-xs font-semibold">{modelName}</p>}
+            {/* Action Buttons - only show when not streaming */}
+            {!isStreaming && (
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopy}
+                  className="h-8 w-8 p-0"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  className="h-8 w-8 p-0"
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+                {onRegenerate && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onRegenerate}
+                    className="h-8 w-8 p-0"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
           <div className="text-sm prose prose-sm max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkMath]}

@@ -16,9 +16,16 @@ export async function streamChat({
   onError?: (error: Error) => void;
 }) {
   try {
-    const host = typeof window !== 'undefined' ? window.location.host : 'localhost:3000';
-    const protocol = host.includes('localhost') ? 'http' : 'https';
-    const apiUrl = `${protocol}://${host}/api/chat`;
+    // Get user data for privy_user_id
+    const userData = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('userData') || '{}') : {};
+    const privyUserId = userData.privy_user_id;
+    
+    if (!privyUserId) {
+      throw new Error('User not authenticated');
+    }
+
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
+    const apiUrl = `${apiBaseUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(privyUserId)}`;
 
     console.log('[StreamChat] Starting stream request:', { modelName, apiUrl });
 
@@ -26,11 +33,12 @@ export async function streamChat({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: modelName,
-        message: prompt,
-        apiKey,
+        messages: [{ role: 'user', content: prompt }],
+        stream: true, // Enable streaming
       }),
     });
 
@@ -76,7 +84,17 @@ export async function streamChat({
           try {
             const parsed = JSON.parse(data);
 
-            if (parsed.type === 'reasoning' && parsed.content) {
+            // Handle OpenAI-compatible streaming format
+            if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta) {
+              const delta = parsed.choices[0].delta;
+              if (delta.content) {
+                fullContent += delta.content;
+                console.log('[StreamChat] Content chunk:', delta.content);
+                onContent?.(fullContent);
+              }
+            }
+            // Handle custom format with type field
+            else if (parsed.type === 'reasoning' && parsed.content) {
               fullReasoning += parsed.content;
               console.log('[StreamChat] Reasoning chunk:', parsed.content);
               onReasoning?.(fullReasoning);
