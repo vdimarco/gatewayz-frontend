@@ -413,7 +413,7 @@ console.log(completion.choices[0].message);`,
             {/* Connected to 1000+ AI Models - Moved here */}
             <section className="mt-12 px-4">
               <div className="mb-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-center">Connected TO 1000+ AI Models</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-center">Connect To 1000+ AI Models</h2>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 md:gap-12 items-center justify-items-center max-w-4xl mx-auto">
                 <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-full max-w-[140px]" />
