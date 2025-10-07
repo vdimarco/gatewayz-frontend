@@ -24,10 +24,9 @@ export async function POST(req: NextRequest) {
     // Backend will create payment record and properly format metadata
     const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.gatewayz.ai';
 
-    // Get the frontend URL - prioritize NEXT_PUBLIC_BASE_URL, fallback to VERCEL_URL
-    const frontendUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-                        'https://beta.gatewayz.ai';
+    // Get the frontend URL - force beta.gatewayz.ai for Stripe redirects
+    // The VERCEL_URL changes with each deployment, so we use a fixed URL
+    const frontendUrl = 'https://beta.gatewayz.ai';
 
     const requestBody = {
       amount: amount * 100, // Convert dollars to cents
