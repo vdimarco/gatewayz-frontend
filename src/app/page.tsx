@@ -85,7 +85,7 @@ const FeaturedModelCard = ({
               )}
               {model.by === 'anthropic' && (
                 <div className="flex">
-                  <img src="/Meta_Logo-black.svg" alt="Anthropic" width="42" height="42" />
+                  <img src="/anthropic-logo.svg" alt="Anthropic" width="42" height="42" />
                 </div>
               )}
             </>
@@ -123,7 +123,7 @@ const FeaturedModelCard = ({
                   )}
                   {model.by === 'anthropic' && (
                     <div className="flex">
-                      <img src="/Meta_Logo-black.svg" alt="Anthropic" className="w-8 h-8 sm:w-10 sm:h-10" />
+                      <img src="/anthropic-logo.svg" alt="Anthropic" className="w-8 h-8 sm:w-10 sm:h-10" />
                     </div>
                   )}
                 </>
@@ -332,7 +332,7 @@ console.log(completion.choices[0].message);`,
             } else if (authorLower.includes('meta')) {
               logo_url = '/Meta_Logo-black.svg';
             } else if (authorLower.includes('deepseek')) {
-              logo_url = '/DeepSeek_Logo-black.svg';
+              logo_url = '/deepseek-icon.svg';
             } else if (authorLower.includes('x-ai') || authorLower.includes('xai')) {
               logo_url = '/xai-logo.svg';
             }

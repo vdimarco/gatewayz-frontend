@@ -41,9 +41,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
-import { getApiKey, getUserData, removeApiKey } from '@/lib/api';
-import { streamChat } from '@/lib/streaming-chat';
-import { StreamingMessage } from '@/components/chat/streaming-message';
+import { getApiKey, getUserData } from '@/lib/api';
+import { ChatHistoryAPI, ChatSession as ApiChatSession, ChatMessage as ApiChatMessage, handleApiError } from '@/lib/chat-history';
+import { Copy, Share2, RotateCcw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -66,6 +66,7 @@ type ChatSession = {
     userId?: string;
     createdAt: Date;
     updatedAt: Date;
+    apiSessionId?: number; // Link to API session ID
 };
 
 // Mock data for chat sessions
@@ -135,44 +136,217 @@ const mockChatSessions: ChatSession[] = [
     }
 ];
 
-// API helper functions (for future backend integration)
+// API helper functions for chat history integration
 const apiHelpers = {
     // Load chat sessions from API
     loadChatSessions: async (userId: string): Promise<ChatSession[]> => {
-        // Replace with actual API call
-        // const response = await fetch(`/api/chat-sessions?userId=${userId}`);
-        // return response.json();
-        return mockChatSessions;
+        try {
+            const apiKey = getApiKey();
+            console.log('Chat sessions - API Key found:', !!apiKey);
+            console.log('Chat sessions - API Key preview:', apiKey ? `${apiKey.substring(0, 10)}...` : 'None');
+            
+            if (!apiKey) {
+                console.warn('No API key found, returning empty sessions');
+                return [];
+            }
+
+            const chatAPI = new ChatHistoryAPI(apiKey);
+            console.log('Chat sessions - Making API request to getSessions');
+            const apiSessions = await chatAPI.getSessions(50, 0);
+            
+            // Load messages for each session
+            const sessionsWithMessages = await Promise.all(
+                apiSessions.map(async (apiSession) => {
+                    try {
+                        // Load the full session with messages
+                        const fullSession = await chatAPI.getSession(apiSession.id);
+                        return {
+                            id: `api-${apiSession.id}`,
+                            title: apiSession.title,
+                            startTime: new Date(apiSession.created_at),
+                            createdAt: new Date(apiSession.created_at),
+                            updatedAt: new Date(apiSession.updated_at),
+                            userId: userId,
+                            apiSessionId: apiSession.id,
+                            messages: fullSession.messages?.map(msg => ({
+                                role: msg.role,
+                                content: msg.content,
+                                reasoning: undefined,
+                                image: undefined
+                            })) || []
+                        };
+                    } catch (error) {
+                        console.error(`Failed to load messages for session ${apiSession.id}:`, error);
+                        // Return session without messages if loading fails
+                        return {
+                            id: `api-${apiSession.id}`,
+                            title: apiSession.title,
+                            startTime: new Date(apiSession.created_at),
+                            createdAt: new Date(apiSession.created_at),
+                            updatedAt: new Date(apiSession.updated_at),
+                            userId: userId,
+                            apiSessionId: apiSession.id,
+                            messages: []
+                        };
+                    }
+                })
+            );
+            
+            return sessionsWithMessages;
+        } catch (error) {
+            console.error('Failed to load chat sessions from API:', error);
+            // Return empty array instead of throwing error
+            return [];
+        }
     },
 
     // Save chat session to API
     saveChatSession: async (session: ChatSession): Promise<ChatSession> => {
-        // Replace with actual API call
-        // const response = await fetch('/api/chat-sessions', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(session)
-        // });
-        // return response.json();
-        return session;
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey || !session.apiSessionId) {
+                return session;
+            }
+
+            const chatAPI = new ChatHistoryAPI(apiKey);
+            await chatAPI.updateSession(session.apiSessionId, session.title);
+            return session;
+        } catch (error) {
+            console.error('Failed to save chat session to API:', error);
+            return session;
+        }
+    },
+
+    // Create new chat session in API
+    createChatSession: async (title: string, model?: string): Promise<ChatSession> => {
+        try {
+            const apiKey = getApiKey();
+            console.log('Create session - API Key found:', !!apiKey);
+            console.log('Create session - API Key preview:', apiKey ? `${apiKey.substring(0, 10)}...` : 'None');
+            
+            if (!apiKey) {
+                console.warn('No API key found, creating local session');
+                // Fallback to local session
+                const now = new Date();
+                return {
+                    id: `local-${Date.now()}`,
+                    title,
+                    startTime: now,
+                    createdAt: now,
+                    updatedAt: now,
+                    userId: 'user-1',
+                    messages: []
+                };
+            }
+
+            const chatAPI = new ChatHistoryAPI(apiKey);
+            console.log('Create session - Making API request to createSession');
+            const apiSession = await chatAPI.createSession(title, model);
+            
+            return {
+                id: `api-${apiSession.id}`,
+                title: apiSession.title,
+                startTime: new Date(apiSession.created_at),
+                createdAt: new Date(apiSession.created_at),
+                updatedAt: new Date(apiSession.updated_at),
+                userId: 'user-1',
+                apiSessionId: apiSession.id,
+                messages: []
+            };
+        } catch (error) {
+            console.error('Failed to create chat session in API:', error);
+            // Fallback to local session
+            const now = new Date();
+            return {
+                id: `local-${Date.now()}`,
+                title,
+                startTime: now,
+                createdAt: now,
+                updatedAt: now,
+                userId: 'user-1',
+                messages: []
+            };
+        }
     },
 
     // Update chat session in API
-    updateChatSession: async (sessionId: string, updates: Partial<ChatSession>): Promise<ChatSession> => {
-        // Replace with actual API call
-        // const response = await fetch(`/api/chat-sessions/${sessionId}`, {
-        //     method: 'PATCH',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(updates)
-        // });
-        // return response.json();
-        return { ...mockChatSessions[0], ...updates };
+    updateChatSession: async (sessionId: string, updates: Partial<ChatSession>, currentSessions: ChatSession[]): Promise<ChatSession> => {
+        try {
+            const apiKey = getApiKey();
+            const session = currentSessions.find(s => s.id === sessionId);
+            if (!apiKey || !session?.apiSessionId) {
+                return { ...session!, ...updates };
+            }
+
+            const chatAPI = new ChatHistoryAPI(apiKey);
+            await chatAPI.updateSession(session.apiSessionId, updates.title);
+            return { ...session, ...updates };
+        } catch (error) {
+            console.error('Failed to update chat session in API:', error);
+            const session = currentSessions.find(s => s.id === sessionId);
+            return { ...session!, ...updates };
+        }
     },
 
     // Delete chat session from API
-    deleteChatSession: async (sessionId: string): Promise<void> => {
-        // Replace with actual API call
-        // await fetch(`/api/chat-sessions/${sessionId}`, { method: 'DELETE' });
+    deleteChatSession: async (sessionId: string, currentSessions: ChatSession[]): Promise<void> => {
+        try {
+            const apiKey = getApiKey();
+            const session = currentSessions.find(s => s.id === sessionId);
+            if (!apiKey || !session?.apiSessionId) {
+                return;
+            }
+
+            const chatAPI = new ChatHistoryAPI(apiKey);
+            await chatAPI.deleteSession(session.apiSessionId);
+        } catch (error) {
+            console.error('Failed to delete chat session from API:', error);
+        }
+    },
+
+    // Save message to API session
+    saveMessage: async (sessionId: string, role: 'user' | 'assistant', content: string, model?: string, tokens?: number, currentSessions?: ChatSession[]): Promise<{ apiSessionId?: number } | null> => {
+        try {
+            const apiKey = getApiKey();
+            const session = currentSessions?.find(s => s.id === sessionId);
+            
+            console.log(`SaveMessage - Session ID: ${sessionId}`);
+            console.log(`SaveMessage - Session found:`, session);
+            console.log(`SaveMessage - API Key:`, apiKey ? `${apiKey.substring(0, 10)}...` : 'None');
+            console.log(`SaveMessage - Role: ${role}, Content: ${content.substring(0, 50)}...`);
+            
+            if (!apiKey || !session) {
+                console.warn('SaveMessage - Missing API key or session');
+                return null;
+            }
+
+            const chatAPI = new ChatHistoryAPI(apiKey);
+            
+            // If no API session exists, try to create one
+            if (!session.apiSessionId) {
+                console.log('SaveMessage - No API session ID, creating new session');
+                try {
+                    const apiSession = await chatAPI.createSession(session.title, model || 'openai/gpt-3.5-turbo');
+                    console.log('SaveMessage - Created new API session:', apiSession.id);
+                    // Save the message to the new API session
+                    await chatAPI.saveMessage(apiSession.id, role, content, model, tokens);
+                    console.log('SaveMessage - Message saved to new API session');
+                    return { apiSessionId: apiSession.id };
+                } catch (createError) {
+                    console.error('Failed to create API session for message saving:', createError);
+                    return null;
+                }
+            } else {
+                console.log(`SaveMessage - Using existing API session: ${session.apiSessionId}`);
+                // Save message to existing API session
+                await chatAPI.saveMessage(session.apiSessionId, role, content, model, tokens);
+                console.log('SaveMessage - Message saved to existing API session');
+                return { apiSessionId: session.apiSessionId };
+            }
+        } catch (error) {
+            console.error('Failed to save message to API:', error);
+            return null;
+        }
     }
 };
 
@@ -410,8 +584,6 @@ function ChatPageContent() {
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [streamingContent, setStreamingContent] = useState('');
-    const [streamingReasoning, setStreamingReasoning] = useState('');
     const [selectedModel, setSelectedModel] = useState<ModelOption | null>({
         value: 'switchpoint/router',
         label: 'Switchpoint Router',
@@ -461,6 +633,56 @@ function ChatPageContent() {
 
     const messages = activeSession?.messages || [];
 
+    // Load messages for active session when it changes
+    useEffect(() => {
+        const loadSessionMessages = async (retryCount = 0) => {
+            if (activeSessionId && activeSession?.apiSessionId) {
+                try {
+                    const apiKey = getApiKey();
+                    if (!apiKey) return;
+
+                    // Add a small delay to ensure the session is fully created on the backend
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    const chatAPI = new ChatHistoryAPI(apiKey);
+                    const fullSession = await chatAPI.getSession(activeSession.apiSessionId);
+                    
+                    // Update the session with loaded messages
+                    setSessions(prev => prev.map(session => 
+                        session.id === activeSessionId 
+                            ? {
+                                ...session,
+                                messages: fullSession.messages?.map(msg => ({
+                                    role: msg.role,
+                                    content: msg.content,
+                                    reasoning: undefined,
+                                    image: undefined
+                                })) || []
+                            }
+                            : session
+                    ));
+                } catch (error: unknown) {
+                    // Only log 404 errors as warnings, not errors, since new sessions might not be immediately available
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    if (errorMessage.includes('404')) {
+                        console.warn(`Session not yet available on backend (attempt ${retryCount + 1}), will retry later:`, errorMessage);
+                        
+                        // Retry up to 2 times with increasing delay
+                        if (retryCount < 2) {
+                            setTimeout(() => {
+                                loadSessionMessages(retryCount + 1);
+                            }, 1000 * (retryCount + 1)); // 1s, 2s delays
+                        }
+                    } else {
+                        console.error('Failed to load session messages:', error);
+                    }
+                }
+            }
+        };
+
+        loadSessionMessages();
+    }, [activeSessionId, activeSession?.apiSessionId]);
+
     // Auto-send message from URL parameter when session is ready
     useEffect(() => {
         if (shouldAutoSend && activeSessionId && message.trim() && selectedModel && !loading) {
@@ -470,13 +692,9 @@ function ChatPageContent() {
     }, [shouldAutoSend, activeSessionId, message, selectedModel, loading]);
 
     useEffect(() => {
-        // Load sessions from API (currently using mock data)
+        // Load sessions from API
         const loadSessions = async () => {
             try {
-                // Simulate API call delay
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                // Use API helper (currently returns mock data)
                 const sessionsData = await apiHelpers.loadChatSessions('user-1');
                 
                 setSessions(sessionsData);
@@ -523,7 +741,7 @@ function ChatPageContent() {
         }
     }, [messages]);
 
-    const createNewChat = () => {
+    const createNewChat = async () => {
         // Check if there's already a new/empty chat session
         const existingNewChat = sessions.find(session => 
             session.messages.length === 0 && 
@@ -536,19 +754,19 @@ function ChatPageContent() {
             return;
         }
 
-        // Only create a new chat if there isn't one already
-        const now = new Date();
-        const newSession: ChatSession = {
-            id: `chat-${Date.now()}`,
-            title: 'Untitled Chat',
-            startTime: now,
-            createdAt: now,
-            updatedAt: now,
-            userId: 'user-1', // In real app, get from auth context
-            messages: [],
-        };
-        setSessions(prev => [newSession, ...prev]);
-        setActiveSessionId(newSession.id);
+        try {
+            // Create new session using API helper
+            const newSession = await apiHelpers.createChatSession('Untitled Chat', selectedModel?.value);
+            setSessions(prev => [newSession, ...prev]);
+            setActiveSessionId(newSession.id);
+        } catch (error) {
+            console.error('Failed to create new chat session:', error);
+            toast({
+                title: "Error",
+                description: `Failed to create new chat session: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                variant: 'destructive'
+            });
+        }
     }
 
     const handleExamplePromptClick = (promptText: string) => {
@@ -560,27 +778,51 @@ function ChatPageContent() {
         }, 100);
     }
 
-    const handleDeleteSession = (sessionId: string) => {
-        setSessions(prev => {
-            const updatedSessions = prev.filter(session => session.id !== sessionId);
-            // If the deleted session was active, switch to the first available session or create a new one
-            if (activeSessionId === sessionId) {
-                if (updatedSessions.length > 0) {
-                    setActiveSessionId(updatedSessions[0].id);
-                } else {
-                    createNewChat();
+    const handleDeleteSession = async (sessionId: string) => {
+        try {
+            // Delete from API
+            await apiHelpers.deleteChatSession(sessionId, sessions);
+            
+            setSessions(prev => {
+                const updatedSessions = prev.filter(session => session.id !== sessionId);
+                // If the deleted session was active, switch to the first available session or create a new one
+                if (activeSessionId === sessionId) {
+                    if (updatedSessions.length > 0) {
+                        setActiveSessionId(updatedSessions[0].id);
+                    } else {
+                        createNewChat();
+                    }
                 }
-            }
-            return updatedSessions;
-        });
+                return updatedSessions;
+            });
+        } catch (error) {
+            console.error('Failed to delete chat session:', error);
+            toast({
+                title: "Error",
+                description: "Failed to delete chat session. Please try again.",
+                variant: 'destructive'
+            });
+        }
     }
 
-    const handleRenameSession = (sessionId: string, newTitle: string) => {
-        setSessions(prev => prev.map(session =>
-            session.id === sessionId
-                ? { ...session, title: newTitle, updatedAt: new Date() }
-                : session
-        ));
+    const handleRenameSession = async (sessionId: string, newTitle: string) => {
+        try {
+            // Update in API
+            await apiHelpers.updateChatSession(sessionId, { title: newTitle }, sessions);
+            
+            setSessions(prev => prev.map(session =>
+                session.id === sessionId
+                    ? { ...session, title: newTitle, updatedAt: new Date() }
+                    : session
+            ));
+        } catch (error) {
+            console.error('Failed to rename chat session:', error);
+            toast({
+                title: "Error",
+                description: "Failed to rename chat session. Please try again.",
+                variant: 'destructive'
+            });
+        }
     }
 
     const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -630,6 +872,37 @@ function ChatPageContent() {
         }
     };
 
+    const handleRegenerate = async () => {
+        if (!activeSessionId || messages.length === 0) return;
+        
+        // Get the last user message
+        const lastUserMessage = messages.filter(msg => msg.role === 'user').pop();
+        if (!lastUserMessage) return;
+        
+        // Remove the last assistant message
+        const updatedMessages = messages.slice(0, -1);
+        const updatedSessions = sessions.map(session => {
+            if (session.id === activeSessionId) {
+                return {
+                    ...session,
+                    messages: updatedMessages,
+                    updatedAt: new Date()
+                };
+            }
+            return session;
+        });
+        setSessions(updatedSessions);
+        
+        // Set the message to the last user message and send it again
+        setMessage(lastUserMessage.content);
+        setLoading(true);
+        
+        // Trigger the send message after a short delay
+        setTimeout(() => {
+            handleSendMessage();
+        }, 100);
+    };
+
     const handleSendMessage = async () => {
         if (!message.trim() || !selectedModel || !activeSessionId) {
             toast({
@@ -669,8 +942,6 @@ function ChatPageContent() {
             fileInputRef.current.value = '';
         }
         setLoading(true);
-        setStreamingContent('');
-        setStreamingReasoning('');
 
         try {
             const apiKey = getApiKey();
@@ -713,6 +984,7 @@ function ChatPageContent() {
                 ];
             }
 
+            // Make regular API call
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -725,9 +997,6 @@ function ChatPageContent() {
                 }),
             });
 
-            console.log('Response status:', response.status);
-            console.log('Response ok:', response.ok);
-
             if (!response.ok) {
                 if (response.status === 429) {
                     const errorData = await response.json().catch(() => ({}));
@@ -738,7 +1007,6 @@ function ChatPageContent() {
                     const errorMessage = errorData.detail || 'Access denied. Your API key may be invalid or you may have insufficient credits.';
 
                     // Clear the invalid API key and prompt user to re-authenticate
-                    removeApiKey();
 
                     toast({
                         title: "Authentication Error",
@@ -760,7 +1028,6 @@ function ChatPageContent() {
             }
 
             const data = await response.json();
-            // Parse OpenAI-compatible response format
             const content = data.choices?.[0]?.message?.content || data.response || 'No response';
 
             const finalSessions = sessions.map(session => {
@@ -778,6 +1045,72 @@ function ChatPageContent() {
                 return session;
             });
             setSessions(finalSessions);
+
+            // Save messages to API
+            try {
+                if (activeSessionId) {
+                    // Save user message
+                    const userResult = await apiHelpers.saveMessage(activeSessionId, 'user', userMessage, selectedModel?.value, undefined, finalSessions);
+                    // Save assistant message
+                    const assistantResult = await apiHelpers.saveMessage(activeSessionId, 'assistant', content, selectedModel?.value, undefined, finalSessions);
+                    
+                    // If an API session was created, update the session with the API session ID
+                    if (userResult?.apiSessionId || assistantResult?.apiSessionId) {
+                        const apiSessionId = userResult?.apiSessionId || assistantResult?.apiSessionId;
+                        setSessions(prev => prev.map(session => 
+                            session.id === activeSessionId 
+                                ? { ...session, apiSessionId }
+                                : session
+                        ));
+                    }
+                    
+                    // Update session title in API if this is the first message
+                    const currentSession = finalSessions.find(s => s.id === activeSessionId);
+                    if (isFirstMessage && currentSession?.apiSessionId) {
+                        try {
+                            const apiKey = getApiKey();
+                            if (apiKey) {
+                                const chatAPI = new ChatHistoryAPI(apiKey);
+                                await chatAPI.updateSession(currentSession.apiSessionId, userMessage);
+                                console.log('Updated session title in API:', userMessage);
+                            }
+                        } catch (error) {
+                            console.error('Failed to update session title in API:', error);
+                        }
+                    }
+                    
+                    // Refresh the session to get updated messages from API
+                    if (currentSession?.apiSessionId) {
+                        try {
+                            const apiKey = getApiKey();
+                            if (apiKey) {
+                                const chatAPI = new ChatHistoryAPI(apiKey);
+                                const updatedSession = await chatAPI.getSession(currentSession.apiSessionId);
+                                
+                                setSessions(prev => prev.map(session => 
+                                    session.id === activeSessionId 
+                                        ? {
+                                            ...session,
+                                            messages: updatedSession.messages?.map(msg => ({
+                                                role: msg.role,
+                                                content: msg.content,
+                                                reasoning: undefined,
+                                                image: undefined
+                                            })) || []
+                                        }
+                                        : session
+                                ));
+                            }
+                        } catch (refreshError) {
+                            console.error('Failed to refresh session messages:', refreshError);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to save messages to API:', error);
+                // Don't show error to user as the message was already sent successfully
+            }
+
             setLoading(false);
         } catch (error) {
             toast({
@@ -793,8 +1126,6 @@ function ChatPageContent() {
                 return session;
             });
             setSessions(revertedSessions);
-            setStreamingContent('');
-            setStreamingReasoning('');
             setLoading(false);
         }
     };
@@ -875,29 +1206,38 @@ function ChatPageContent() {
                         <div className="text-sm whitespace-pre-wrap text-white">{msg.content}</div>
                       </div>
                     ) : (
-                      <StreamingMessage
-                        content={msg.content}
-                        reasoning={msg.reasoning}
-                        modelName={selectedModel?.label}
-                        isStreaming={false}
-                      />
+                      <div className="rounded-lg p-3 bg-white border">
+                        <div className="flex items-center justify-between mb-2">
+                          {selectedModel?.label && <p className="text-xs font-semibold">{selectedModel.label}</p>}
+                        </div>
+                        <div className="text-sm prose prose-sm max-w-none">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkMath]}
+                            rehypePlugins={[rehypeKatex]}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
+                        {/* Action Buttons - always visible in bottom right */}
+                        <div className="flex items-center justify-end gap-1 mt-3 pt-2 border-t border-gray-100">
+                          <Button variant="ghost" size="sm" onClick={() => navigator.clipboard.writeText(msg.content)} className="h-8 w-8 p-0 hover:bg-gray-100" title="Copy response">
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => navigator.share({ text: msg.content })} className="h-8 w-8 p-0 hover:bg-gray-100" title="Share response">
+                            <Share2 className="h-4 w-4" />
+                          </Button>
+                          {handleRegenerate && (
+                            <Button variant="ghost" size="sm" onClick={handleRegenerate} className="h-8 w-8 p-0 hover:bg-gray-100" title="Regenerate response">
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
               ))}
-              {loading && streamingContent && (
-                <div className="flex items-start gap-3">
-                  <div className="flex flex-col gap-1 items-start">
-                    <StreamingMessage
-                      content={streamingContent}
-                      reasoning={streamingReasoning}
-                      modelName={selectedModel?.label}
-                      isStreaming={true}
-                    />
-                  </div>
-                </div>
-              )}
-              {loading && !streamingContent && <ChatSkeleton />}
+              {loading && <ChatSkeleton />}
             </div>
           )}
 

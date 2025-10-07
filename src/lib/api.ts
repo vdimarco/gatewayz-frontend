@@ -36,7 +36,8 @@ export const saveApiKey = (apiKey: string): void => {
 
 export const getApiKey = (): string | null => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem(API_KEY_STORAGE_KEY);
+    const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+    return apiKey;
   }
   return null;
 };
@@ -69,7 +70,7 @@ export const makeAuthenticatedRequest = async (
   options: RequestInit = {}
 ): Promise<Response> => {
   const apiKey = getApiKey();
-  
+
   if (!apiKey) {
     throw new Error('No API key found. User must be authenticated.');
   }
@@ -87,13 +88,31 @@ export const makeAuthenticatedRequest = async (
     },
   };
 
-  return fetch(endpoint, requestOptions);
+  const response = await fetch(endpoint, requestOptions);
+
+  // If we get a 401, the API key is invalid - clear it
+  if (response.status === 401) {
+    console.warn('API key is invalid (401), clearing stored credentials');
+    removeApiKey();
+  }
+
+  return response;
 };
 
 // Process authentication response
 export const processAuthResponse = (response: AuthResponse): void => {
+  console.log('Processing auth response:', {
+    success: response.success,
+    has_api_key: !!response.api_key,
+    api_key_preview: response.api_key ? `${response.api_key.substring(0, 10)}...` : 'None'
+  });
+  
   if (response.success && response.api_key) {
     saveApiKey(response.api_key);
+    console.log('API key saved to localStorage');
+    
+    // Convert credits to integer to match backend expectations
+    const creditsAsInteger = Math.floor(response.credits);
     
     const userData: UserData = {
       user_id: response.user_id,
@@ -102,16 +121,23 @@ export const processAuthResponse = (response: AuthResponse): void => {
       privy_user_id: response.privy_user_id,
       display_name: response.display_name,
       email: response.email,
-      credits: response.credits,
+      credits: creditsAsInteger,
     };
     
     saveUserData(userData);
+    console.log('User data saved to localStorage');
     
     console.log('User authenticated successfully:', {
       user_id: response.user_id,
       display_name: response.display_name,
-      credits: response.credits,
+      credits: creditsAsInteger,
+      original_credits: response.credits,
       is_new_user: response.is_new_user
+    });
+  } else {
+    console.warn('Authentication response invalid:', {
+      success: response.success,
+      has_api_key: !!response.api_key
     });
   }
 };
