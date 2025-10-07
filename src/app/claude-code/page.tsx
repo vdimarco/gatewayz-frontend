@@ -111,8 +111,9 @@ export default function ClaudeCodePage() {
 
 set -euo pipefail
 
-# 0) Ask for Gatewayz API key if not present
-if [[ -z "\${GATEWAYZ_API_KEY:-}" ]]; then
+# 0) Set Gatewayz API key
+export GATEWAYZ_API_KEY="${apiKey}"
+if [[ -z "$GATEWAYZ_API_KEY" || "$GATEWAYZ_API_KEY" == "YOUR_API_KEY" ]]; then
   read -r -p "Enter your Gatewayz API key (starts with gw_): " GATEWAYZ_API_KEY
   if [[ -z "$GATEWAYZ_API_KEY" ]]; then echo "No key provided"; exit 1; fi
   export GATEWAYZ_API_KEY
@@ -242,8 +243,16 @@ claude
   const windowsSetupScript = `@echo off
 REM Usage: setup-claude-gatewayz.bat
 
-REM 0) Ask for Gatewayz API key if not present
+REM 0) Set Gatewayz API key
+set GATEWAYZ_API_KEY=${apiKey}
 if "%GATEWAYZ_API_KEY%"=="" (
+  set /p GATEWAYZ_API_KEY="Enter your Gatewayz API key (starts with gw_): "
+  if "%GATEWAYZ_API_KEY%"=="" (
+    echo No key provided
+    exit /b 1
+  )
+)
+if "%GATEWAYZ_API_KEY%"=="YOUR_API_KEY" (
   set /p GATEWAYZ_API_KEY="Enter your Gatewayz API key (starts with gw_): "
   if "%GATEWAYZ_API_KEY%"=="" (
     echo No key provided
@@ -361,8 +370,9 @@ claude
 
 set -euo pipefail
 
-# 0) Ask for Gatewayz API key if not present
-if [[ -z "\${GATEWAYZ_API_KEY:-}" ]]; then
+# 0) Set Gatewayz API key
+export GATEWAYZ_API_KEY="${apiKey}"
+if [[ -z "$GATEWAYZ_API_KEY" || "$GATEWAYZ_API_KEY" == "YOUR_API_KEY" ]]; then
   read -r -p "Enter your Gatewayz API key (starts with gw_): " GATEWAYZ_API_KEY
   if [[ -z "$GATEWAYZ_API_KEY" ]]; then echo "No key provided"; exit 1; fi
   export GATEWAYZ_API_KEY
