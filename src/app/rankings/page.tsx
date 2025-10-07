@@ -115,7 +115,7 @@ export default function RankingsPage() {
   }, [selectedTimeRangeForApps, apps])
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <header className="text-center mb-8">
@@ -129,7 +129,7 @@ export default function RankingsPage() {
          <div className="mb-12">
            <Card className="p-4">
              <div className="mb-2">
-               <h3 className="text-base font-semibold text-gray-800">Top 10 Models - Tokens Generated</h3>
+               <h3 className="text-base font-semibold">Top 10 Models - Tokens Generated</h3>
              </div>
              <TokenStackedBarChart rankingData={models} />
            </Card>
@@ -178,14 +178,14 @@ export default function RankingsPage() {
 
           {/* Header Row - Hidden on mobile */}
           <Card className='hidden lg:flex flex-col'>
-            <div className="ranking-row bg-gray-50 rounded-lg">
-              <div className="col-span-2 font-semibold text-xs text-gray-600">Rank</div>
-              <div className="col-span-6 font-semibold text-xs text-gray-600">AI Model</div>
-              <div className="col-span-3 font-semibold text-xs text-gray-600">Model Org</div>
-              <div className="col-span-3 font-semibold text-xs text-gray-600">Category</div>
-              <div className="col-span-3 font-semibold text-xs text-gray-600">Top Provider</div>
-              <div className="col-span-3 font-semibold text-xs text-gray-600 text-right">Tokens Generated</div>
-              <div className="col-span-3 font-semibold text-xs text-gray-600 text-right">Change</div>
+            <div className="ranking-row bg-muted rounded-lg">
+              <div className="col-span-2 font-semibold text-xs text-muted-foreground">Rank</div>
+              <div className="col-span-6 font-semibold text-xs text-muted-foreground">AI Model</div>
+              <div className="col-span-3 font-semibold text-xs text-muted-foreground">Model Org</div>
+              <div className="col-span-3 font-semibold text-xs text-muted-foreground">Category</div>
+              <div className="col-span-3 font-semibold text-xs text-muted-foreground">Top Provider</div>
+              <div className="col-span-3 font-semibold text-xs text-muted-foreground text-right">Tokens Generated</div>
+              <div className="col-span-3 font-semibold text-xs text-muted-foreground text-right">Change</div>
             </div>
           </Card>
 
@@ -195,13 +195,13 @@ export default function RankingsPage() {
               Array.from({ length: 10 }).map((_, i) => (
                 <Card key={i} className="p-0 overflow-hidden">
                   <div className="grid grid-cols-24 gap-2 px-6 py-2">
-                    <div className="col-span-24 h-16 animate-pulse bg-gray-100 rounded"></div>
+                    <div className="col-span-24 h-16 animate-pulse bg-muted rounded"></div>
                   </div>
                 </Card>
               ))
             ) : filteredModels.length === 0 ? (
               <Card className="p-6">
-                <p className="text-center text-gray-500">No models found for the selected time period.</p>
+                <p className="text-center text-muted-foreground">No models found for the selected time period.</p>
               </Card>
             ) : (
               filteredModels.map((model, index) => (
@@ -236,7 +236,7 @@ export default function RankingsPage() {
                             />
                           </div>
                         ) : (
-                          <div className='w-8 h-8 flex-shrink-0 rounded bg-gray-100 flex items-center justify-center'>
+                          <div className='w-8 h-8 flex-shrink-0 rounded bg-muted flex items-center justify-center'>
                             <span className="text-sm font-medium">{model.author.charAt(0).toUpperCase()}</span>
                           </div>
                         )}
@@ -299,7 +299,7 @@ export default function RankingsPage() {
 
           {filteredApps.length === 0 ? (
             <Card className="p-6">
-              <p className="text-center text-gray-500">
+              <p className="text-center text-muted-foreground">
                 No apps found for the selected time period.
               </p>
             </Card>
@@ -316,7 +316,7 @@ export default function RankingsPage() {
                     />
                     <div className="min-h-[60px]">
                       <h3 className="font-semibold">{app.app_name}</h3>
-                      <p className="text-sm text-gray-600 line-clamp-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
                         {app.description}
                       </p>
                     </div>
@@ -328,7 +328,7 @@ export default function RankingsPage() {
                       <p className="text-2xl font-bold">
                         {app.tokens ? extractTokenValue(app.tokens) : '0'}
                       </p>
-                      <p className="text-xs text-gray-500">Tokens Generated</p>
+                      <p className="text-xs text-muted-foreground">Tokens Generated</p>
                     </div>
                   </div>
                 </Card>
