@@ -53,10 +53,16 @@ export function UserNav({ user }: UserNavProps) {
   };
 
   const getWalletAddress = (user: any) => {
-    // Get the first wallet address from linked accounts
-    const walletAccount = user?.linkedAccounts?.find((account: any) => account.type === 'wallet');
-    return walletAccount?.address || 'Invalid Wallet'; 
-  };
+    try {
+      if(!user) return '';
+      // Get the first wallet address from linked accounts
+      const walletAccount = user?.linkedAccounts?.find((account: any) => account.type === 'wallet');
+      return walletAccount?.address || '';
+    } catch (error) {
+      console.log('Error getting wallet address:', error);
+      return '';
+    }
+  }
 
   const formatAddress = (address: string) => {
     if (!address) return '';
