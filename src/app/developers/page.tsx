@@ -309,14 +309,7 @@ export default function DevelopersPage() {
 
                 <div className="flex justify-between items-center mb-8">
                     <div className="flex items-center gap-2">
-                        <Button 
-                            variant={activeTab === 'top' ? 'default' : 'ghost'} 
-                            onClick={() => setActiveTab('top')}
-                            className={activeTab === 'top' ? 'bg-gray-100 text-foreground' : ''}
-                        >
-                            Top Models
-                        </Button>
-                        <Button 
+                        <Button
                             variant={activeTab === 'trending' ? 'default' : 'ghost'}
                             onClick={() => setActiveTab('trending')}
                             className={activeTab === 'trending' ? 'bg-gray-100 text-foreground' : ''}
@@ -324,7 +317,7 @@ export default function DevelopersPage() {
                             Trending
                         </Button>
                     </div>
-                    
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="w-[160px] justify-between">
