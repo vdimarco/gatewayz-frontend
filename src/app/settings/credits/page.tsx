@@ -193,6 +193,8 @@ function CreditsPageContent() {
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [showEmojiExplosion, setShowEmojiExplosion] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [amount, setAmount] = useState('10');
 
   // Check for success message from Stripe redirect
   useEffect(() => {
@@ -268,10 +270,27 @@ function CreditsPageContent() {
     fetchData();
   }, []);
 
-  const handleBuyCredits = async () => {
+  const handleBuyCredits = () => {
+    setShowDialog(true);
+  };
+
+  const handleConfirmPurchase = async () => {
+    const amountNum = parseFloat(amount);
+
+    if (isNaN(amountNum) || amountNum <= 0) {
+      alert('Please enter a valid amount greater than 0');
+      return;
+    }
+
+    if (amountNum < 1) {
+      alert('Minimum purchase amount is $1');
+      return;
+    }
+
     setIsLoading(true);
+    setShowDialog(false);
+
     try {
-      // Get user data to pass to checkout
       const userData = getUserData();
 
       if (!userData || !userData.api_key) {
@@ -280,12 +299,10 @@ function CreditsPageContent() {
         return;
       }
 
-      // Default to $10 worth of credits - can be customized
-      await redirectToCheckout(10, userData.email, userData.user_id);
+      await redirectToCheckout(amountNum, userData.email, userData.user_id);
     } catch (error) {
       console.log('Checkout error:', error);
       alert('Failed to start checkout. Please try again.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -350,8 +367,51 @@ function CreditsPageContent() {
               {isLoading ? 'Loading...' : loadingCredits ? 'Authenticating...' : 'Buy Credits'}
             </Button>
           </div>
-        </div>  
+        </div>
       </div>
+
+      {/* Purchase Credits Dialog */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Purchase Credits</DialogTitle>
+            <DialogDescription>
+              Enter the amount you would like to add to your account. Minimum purchase is $1.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amount" className="text-right">Amount</Label>
+              <div className="col-span-3 relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                <Input
+                  id="amount"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleConfirmPurchase();
+                    }
+                  }}
+                  className="pl-7"
+                  autoFocus
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleConfirmPurchase}>
+              Continue to Checkout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl"> */}
         {/* <Card>

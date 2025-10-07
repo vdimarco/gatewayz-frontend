@@ -122,19 +122,21 @@ export function AppHeader() {
           if (response.ok) {
             const result = await response.json();
             console.log('Authentication successful:', result);
-            
+
             // Process and save the API key and user data
             processAuthResponse(result);
           } else {
             const errorText = await response.text();
             console.log('Authentication failed:', response.status, response.statusText);
             console.log('Error response:', errorText);
-            logout();
+            // Don't logout - let Privy handle session management
+            // Only clear the API key so it will retry on next page load
             removeApiKey();
           }
         } catch (error) {
           console.log('Error during authentication:', error);
-          logout();
+          // Don't logout - let Privy handle session management
+          // Only clear the API key so it will retry on next page load
           removeApiKey();
         }
       } else {
@@ -146,12 +148,6 @@ export function AppHeader() {
     
     authenticateUser();
   }, [user, getAccessToken])
-
-  useEffect(() => {
-    if(!walletAddress) {
-      logout();
-    }
-  }, [walletAddress])
 
   return (
     <header className="sticky top-0 z-50 w-full h-[65px] border-b bg-header flex items-center">

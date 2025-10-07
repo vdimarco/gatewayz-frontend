@@ -6,7 +6,6 @@ import { AppFooter } from '@/components/layout/app-footer';
 import { ThemeProvider } from '@/components/theme-provider';
 import { PrivyProviderWrapper } from '@/components/providers/privy-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
-import { AuthGuard } from '@/components/auth-guard';
 import { Inter } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -57,12 +56,10 @@ export default function RootLayout({
         >
           <ErrorBoundary>
             <PrivyProviderWrapper>
-              <AuthGuard>
-                <AppHeader />
-                {children}
-                <Toaster />
-                <AppFooter />
-              </AuthGuard>
+              <AppHeader />
+              {children}
+              <Toaster />
+              <AppFooter />
             </PrivyProviderWrapper>
           </ErrorBoundary>
         </ThemeProvider>
