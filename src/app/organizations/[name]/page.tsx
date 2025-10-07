@@ -143,22 +143,18 @@ export default function OrganizationPage() {
     return name ? decodeURIComponent(name) : '';
   }, [params.name]);
 
-  // Fetch models from API
+  // Fetch models from API using provider filter
   useEffect(() => {
     const fetchModels = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/models?gateway=all`);
+        // Use provider parameter to filter models directly from API
+        const response = await fetch(`${API_BASE_URL}/models?provider=${encodeURIComponent(organizationName)}`);
         const data = await response.json();
         const models = data.data || [];
 
-        // Filter models by provider_slug matching organization name
-        const filteredModels = models.filter((model: ApiModel) =>
-          model.provider_slug.toLowerCase() === organizationName.toLowerCase()
-        );
-
-        console.log(`Found ${filteredModels.length} models for ${organizationName}`);
-        setApiModels(filteredModels);
+        console.log(`Found ${models.length} models for ${organizationName} from provider endpoint`);
+        setApiModels(models);
       } catch (error) {
         console.error('Failed to fetch models:', error);
         setApiModels([]);
