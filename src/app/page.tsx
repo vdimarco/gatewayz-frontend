@@ -85,7 +85,7 @@ const FeaturedModelCard = ({
               )}
               {model.by === 'anthropic' && (
                 <div className="flex">
-                  <img src="/Meta_Logo-black.svg" alt="Anthropic" width="42" height="42" />
+                  <img src="/anthropic-logo.svg" alt="Anthropic" width="42" height="42" />
                 </div>
               )}
             </>
@@ -123,7 +123,7 @@ const FeaturedModelCard = ({
                   )}
                   {model.by === 'anthropic' && (
                     <div className="flex">
-                      <img src="/Meta_Logo-black.svg" alt="Anthropic" className="w-8 h-8 sm:w-10 sm:h-10" />
+                      <img src="/anthropic-logo.svg" alt="Anthropic" className="w-8 h-8 sm:w-10 sm:h-10" />
                     </div>
                   )}
                 </>
