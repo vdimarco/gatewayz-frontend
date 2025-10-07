@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
 import TokenStackedBarChart from '@/components/TokenStackedBarChart';
+import CategoryStackedAreaChart from '@/components/CategoryStackedAreaChart';
 import { API_BASE_URL } from '@/lib/config';
 import { extractTokenValue } from '@/lib/utils';
 
@@ -131,6 +132,13 @@ export default function RankingsPage() {
                <h3 className="text-base font-semibold text-gray-800">Top 10 Models - Tokens Generated</h3>
              </div>
              <TokenStackedBarChart rankingData={models} />
+           </Card>
+         </div>
+
+         {/* Category Stacked Area Chart */}
+         <div className="mb-12">
+           <Card className="p-6">
+             <CategoryStackedAreaChart rankingData={models} />
            </Card>
          </div>
 
