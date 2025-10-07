@@ -224,12 +224,11 @@ export default function AccountPage() {
           </div>
           <div className="w-1/3 flex items-center justify-end">
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => alert('Email options coming soon')}
+              variant="link"
+              className="text-blue-400 p-0 h-auto text-base"
+              onClick={() => alert('Email management coming soon')}
             >
-              <MoreHorizontal className="h-4 w-4" />
+              Manage
             </Button>
           </div>
         </div>
