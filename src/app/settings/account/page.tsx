@@ -35,6 +35,8 @@ export default function AccountPage() {
   const [stripeBillingAddress, setStripeBillingAddress] = useState<StripeBillingAddress | null>(null);
   const [loadingStripe, setLoadingStripe] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(null);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editedName, setEditedName] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -176,16 +178,47 @@ export default function AccountPage() {
         <div className="flex items-center py-4 border-y border-gray-200">
           <div className="w-1/3 text-base font-medium">Profile</div>
           <div className="w-1/3 flex items-center justify-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-card border border-gray-300">
-                {getInitials(userName)}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-base">{userName}</span>
+            {isEditingProfile ? (
+              <Input
+                type="text"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                onBlur={() => {
+                  // Save logic would go here
+                  setIsEditingProfile(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    // Save logic would go here
+                    setIsEditingProfile(false);
+                  } else if (e.key === 'Escape') {
+                    setIsEditingProfile(false);
+                  }
+                }}
+                autoFocus
+                className="max-w-[200px]"
+              />
+            ) : (
+              <>
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-card border border-gray-300">
+                    {getInitials(userName)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-base">{userName}</span>
+              </>
+            )}
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
-              Update Profile
+            <Button
+              variant="link"
+              className="text-blue-400 p-0 h-auto text-base"
+              onClick={() => {
+                setEditedName(userName);
+                setIsEditingProfile(true);
+              }}
+            >
+              {isEditingProfile ? 'Cancel' : 'Update Profile'}
             </Button>
           </div>
         </div>
@@ -195,12 +228,21 @@ export default function AccountPage() {
           <div className="w-1/3 text-base font-medium">Email Addresses</div>
           <div className="w-1/3 flex flex-col items-center justify-center gap-1">
             <span className="text-base">{userEmail}</span>
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
+            <Button
+              variant="link"
+              className="text-blue-400 p-0 h-auto text-base"
+              onClick={() => alert('Add email functionality coming soon')}
+            >
               Add Email Address
             </Button>
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => alert('Email options coming soon')}
+            >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </div>
@@ -223,12 +265,21 @@ export default function AccountPage() {
             ) : (
               <span className="text-base text-muted-foreground">No accounts connected</span>
             )}
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
+            <Button
+              variant="link"
+              className="text-blue-400 p-0 h-auto text-base"
+              onClick={() => alert('Connect account functionality coming soon')}
+            >
               Connect Account
             </Button>
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => alert('Account options coming soon')}
+            >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </div>
@@ -244,13 +295,16 @@ export default function AccountPage() {
               size="sm"
               className="h-4 w-4 p-0"
               onClick={() => setShowPassword(!showPassword)}
-              disabled
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
           </div>
           <div className="w-1/3 flex items-center justify-end">
-            <Button variant="link" className="text-blue-400 p-0 h-auto text-base" disabled>
+            <Button
+              variant="link"
+              className="text-blue-400 p-0 h-auto text-base"
+              onClick={() => alert('Password reset functionality coming soon')}
+            >
               Reset Password
             </Button>
           </div>
