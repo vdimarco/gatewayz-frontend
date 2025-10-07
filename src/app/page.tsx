@@ -179,53 +179,6 @@ const AnnouncementCard = ({ title, description, date, isNew }: { title: string, 
     </div>
 )
 
-const codeExamples = {
-  python: `from openai import OpenAI
-
-client = OpenAI(
-    base_url="https://api.gatewayz.ai/v1",
-    api_key="YOUR_API_KEY"
-)
-
-completion = client.chat.completions.create(
-    model="gpt-4",
-    messages=[
-        {"role": "user", "content": "Hello!"}
-    ]
-)
-
-print(completion.choices[0].message)`,
-
-  javascript: `import OpenAI from "openai";
-
-const openai = new OpenAI({
-  baseURL: "https://api.gatewayz.ai/v1",
-  apiKey: "YOUR_API_KEY",
-});
-
-const completion = await openai.chat.completions.create({
-  model: "gpt-4",
-  messages: [
-    { role: "user", content: "Hello!" }
-  ],
-});
-
-console.log(completion.choices[0].message);`,
-
-  curl: `curl https://api.gatewayz.ai/v1/chat/completions \\
-  -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -d '{
-    "model": "gpt-4",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Hello!"
-      }
-    ]
-  }'`
-};
-
 export default function Home() {
   const [activeModelIndex, setActiveModelIndex] = useState<number | null>(0);
   const [message, setMessage] = useState('');
@@ -236,6 +189,7 @@ export default function Home() {
   const [carouselOffset, setCarouselOffset] = useState(0);
   const [activeCodeTab, setActiveCodeTab] = useState<'python' | 'javascript' | 'curl'>('python');
   const [codeCopied, setCodeCopied] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(true);
   const { toast } = useToast();
 
   // Load the actual API key when user is authenticated
@@ -247,6 +201,54 @@ export default function Home() {
       setApiKey(''); // Show placeholder when not authenticated
     }
   }, [user]);
+
+  // Dynamic code examples with actual API key
+  const codeExamples = {
+    python: `from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.gatewayz.ai/v1",
+    api_key="${apiKey || 'YOUR_API_KEY'}"
+)
+
+completion = client.chat.completions.create(
+    model="gpt-4",
+    messages=[
+        {"role": "user", "content": "Hello!"}
+    ]
+)
+
+print(completion.choices[0].message)`,
+
+    javascript: `import OpenAI from "openai";
+
+const openai = new OpenAI({
+  baseURL: "https://api.gatewayz.ai/v1",
+  apiKey: "${apiKey || 'YOUR_API_KEY'}",
+});
+
+const completion = await openai.chat.completions.create({
+  model: "gpt-4",
+  messages: [
+    { role: "user", content: "Hello!" }
+  ],
+});
+
+console.log(completion.choices[0].message);`,
+
+    curl: `curl https://api.gatewayz.ai/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${apiKey || 'YOUR_API_KEY'}" \\
+  -d '{
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello!"
+      }
+    ]
+  }'`
+  };
   const [featuredModels, setFeaturedModels] = useState<FeaturedModel[]>([
       { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' },
       { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/openai-logo.svg' },
@@ -571,24 +573,36 @@ export default function Home() {
              <div className="relative flex-1">
                <Input
                  placeholder={user ? "Your API key will appear here" : "Sign in to see your API key"}
-                 className="h-12 pr-14"
+                 className="h-12 pr-28 font-mono text-sm"
                  value={apiKey}
-                 type={apiKey ? "password" : "text"}
+                 type={showApiKey ? "text" : "password"}
                  readOnly
                />
-               <button
-                 className="absolute right-2 top-1/2 -translate-y-1/2"
-                 onClick={handleCopyApiKey}
-                 disabled={!apiKey}
-               >
-                 <img
-                   src="/material-symbols_key.svg"
-                   alt="Copy"
-                   width="24"
-                   height="24"
-                   className={!apiKey ? "opacity-30" : ""}
-                 />
-               </button>
+               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
+                 <button
+                   onClick={() => setShowApiKey(!showApiKey)}
+                   disabled={!apiKey}
+                   className={`p-1 hover:bg-gray-100 rounded ${!apiKey ? 'opacity-30' : ''}`}
+                 >
+                   {showApiKey ? (
+                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                     </svg>
+                   ) : (
+                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                     </svg>
+                   )}
+                 </button>
+                 <button
+                   onClick={handleCopyApiKey}
+                   disabled={!apiKey}
+                   className={`p-1 hover:bg-gray-100 rounded ${!apiKey ? 'opacity-30' : ''}`}
+                 >
+                   <Copy className="w-5 h-5" />
+                 </button>
+               </div>
              </div>
              <span className="flex-1">
              <Button
