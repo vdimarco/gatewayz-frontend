@@ -50,12 +50,15 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { usePrivy } from '@privy-io/react-auth';
+import { streamChatResponse } from '@/lib/streaming';
+import { ReasoningDisplay } from '@/components/chat/reasoning-display';
 
 type Message = {
     role: 'user' | 'assistant';
     content: string;
     reasoning?: string;
     image?: string; // Base64 image data
+    isStreaming?: boolean; // Track if message is currently streaming
 };
 
 type ChatSession = {
@@ -522,8 +525,11 @@ const ChatMessage = ({ message, modelName }: { message: Message, modelName: stri
     return (
         <div className={`flex items-start gap-3 ${isUser ? 'justify-end' : ''}`}>
              {/* {!isUser && <Avatar className="w-8 h-8"><AvatarFallback><Bot/></AvatarFallback></Avatar>} */}
-            <div className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
-                <div className={`rounded-lg p-3 ${isUser ? 'bg-primary text-primary-foreground' : 'bg-card border border-border'}`}>
+            <div className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'} max-w-[85%]`}>
+                {!isUser && message.reasoning && (
+                    <ReasoningDisplay reasoning={message.reasoning} className="w-full" />
+                )}
+                <div className={`rounded-lg p-3 ${isUser ? 'bg-primary text-primary-foreground' : 'bg-card border border-border'} ${message.isStreaming ? 'streaming-message' : ''}`}>
                      {!isUser && <p className="text-xs font-semibold mb-1">{modelName}</p>}
                     <div className={`text-sm prose prose-sm max-w-none ${isUser ? 'text-white prose-invert' : 'dark:prose-invert'}`}>
                         {isUser ? (
@@ -1000,148 +1006,141 @@ function ChatPageContent() {
                 ];
             }
 
-            // Make regular API call
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                },
-                body: JSON.stringify({
-                    model: selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value,
-                    messages: [{ role: 'user', content: messageContent }],
-                }),
-            });
+            // Initialize assistant message with streaming flag
+            const assistantMessage: Message = {
+                role: 'assistant',
+                content: '',
+                reasoning: '',
+                isStreaming: true
+            };
 
-            if (!response.ok) {
-                if (response.status === 429) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.detail || 'Rate limit exceeded. Please try again later.');
-                }
-                if (response.status === 403) {
-                    const errorData = await response.json().catch(() => ({}));
-                    const errorMessage = errorData.detail || 'Access denied. Your API key may be invalid or you may have insufficient credits.';
-
-                    // Clear the invalid API key and prompt user to re-authenticate
-
-                    toast({
-                        title: "Authentication Error",
-                        description: errorMessage + ' Please refresh the page and log in again.',
-                        variant: 'destructive',
-                        action: (
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="px-4 py-2 bg-white text-black rounded hover:bg-gray-100"
-                            >
-                                Refresh
-                            </button>
-                        )
-                    });
-                    throw new Error(errorMessage);
-                }
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error?.message || errorData.detail || `Request failed with status ${response.status}`);
-            }
-
-            const data = await response.json();
-            const content = data.choices?.[0]?.message?.content || data.response || 'No response';
-
-            const finalSessions = sessions.map(session => {
+            // Add streaming message to UI
+            const streamingSessions = sessions.map(session => {
                 if (session.id === activeSessionId) {
                     return {
                         ...session,
-                        title: isFirstMessage ? userMessage : session.title,
-                        messages: [...updatedMessages, {
-                            role: 'assistant' as const,
-                            content,
-                        }],
+                        messages: [...updatedMessages, assistantMessage],
                         updatedAt: new Date()
                     };
                 }
                 return session;
             });
-            setSessions(finalSessions);
+            setSessions(streamingSessions);
+            setLoading(false); // Stop loading spinner, but message is still streaming
 
-            // Save messages to API
             try {
-                if (activeSessionId) {
-                    // Save user message
-                    const userResult = await apiHelpers.saveMessage(activeSessionId, 'user', userMessage, selectedModel?.value, undefined, finalSessions);
-                    // Save assistant message
-                    const assistantResult = await apiHelpers.saveMessage(activeSessionId, 'assistant', content, selectedModel?.value, undefined, finalSessions);
-                    
-                    // If an API session was created, update the session with the API session ID
-                    if (userResult?.apiSessionId || assistantResult?.apiSessionId) {
-                        const apiSessionId = userResult?.apiSessionId || assistantResult?.apiSessionId;
-                        setSessions(prev => prev.map(session => 
-                            session.id === activeSessionId 
-                                ? { ...session, apiSessionId }
-                                : session
-                        ));
-                    }
-                    
-                    // Update session title in API if this is the first message
-                    const currentSession = finalSessions.find(s => s.id === activeSessionId);
-                    if (isFirstMessage && currentSession?.apiSessionId) {
-                        try {
-                            const apiKey = getApiKey();
-                            if (apiKey) {
-                                const chatAPI = new ChatHistoryAPI(apiKey);
-                                await chatAPI.updateSession(currentSession.apiSessionId, userMessage);
-                                console.log('Updated session title in API:', userMessage);
-                            }
-                        } catch (error) {
-                            console.error('Failed to update session title in API:', error);
-                        }
-                    }
-                    
-                    // Refresh the session to get updated messages from API
-                    if (currentSession?.apiSessionId) {
-                        try {
-                            const apiKey = getApiKey();
-                            if (apiKey) {
-                                const chatAPI = new ChatHistoryAPI(apiKey);
-                                const updatedSession = await chatAPI.getSession(currentSession.apiSessionId);
-                                
-                                setSessions(prev => prev.map(session => 
-                                    session.id === activeSessionId 
-                                        ? {
-                                            ...session,
-                                            messages: updatedSession.messages?.map(msg => ({
-                                                role: msg.role,
-                                                content: msg.content,
-                                                reasoning: undefined,
-                                                image: undefined
-                                            })) || []
-                                        }
-                                        : session
-                                ));
-                            }
-                        } catch (refreshError) {
-                            console.error('Failed to refresh session messages:', refreshError);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to save messages to API:', error);
-                // Don't show error to user as the message was already sent successfully
-            }
+                // Use streaming API
+                const modelValue = selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value;
 
-            setLoading(false);
+                for await (const chunk of streamChatResponse(
+                    url,
+                    apiKey,
+                    modelValue,
+                    [{ role: 'user', content: messageContent }]
+                )) {
+                    // Update the assistant message with streamed content
+                    setSessions(prev => prev.map(session => {
+                        if (session.id === activeSessionId) {
+                            const messages = [...session.messages];
+                            const lastMessage = messages[messages.length - 1];
+
+                            if (lastMessage.role === 'assistant') {
+                                lastMessage.content += chunk.content || '';
+                                lastMessage.reasoning = (lastMessage.reasoning || '') + (chunk.reasoning || '');
+                                lastMessage.isStreaming = !chunk.done;
+                            }
+
+                            return {
+                                ...session,
+                                messages,
+                                updatedAt: new Date()
+                            };
+                        }
+                        return session;
+                    }));
+                }
+
+                // Get the final message content
+                const finalSession = sessions.find(s => s.id === activeSessionId);
+                const finalMessage = finalSession?.messages[finalSession.messages.length - 1];
+                const finalContent = finalMessage?.content || '';
+
+                // Save messages to API
+                try {
+                    if (activeSessionId) {
+                        // Save user message
+                        const userResult = await apiHelpers.saveMessage(activeSessionId, 'user', userMessage, selectedModel?.value, undefined, sessions);
+                        // Save assistant message
+                        const assistantResult = await apiHelpers.saveMessage(activeSessionId, 'assistant', finalContent, selectedModel?.value, undefined, sessions);
+
+                        // If an API session was created, update the session with the API session ID
+                        if (userResult?.apiSessionId || assistantResult?.apiSessionId) {
+                            const apiSessionId = userResult?.apiSessionId || assistantResult?.apiSessionId;
+                            setSessions(prev => prev.map(session =>
+                                session.id === activeSessionId
+                                    ? { ...session, apiSessionId }
+                                    : session
+                            ));
+                        }
+
+                        // Update session title in API if this is the first message
+                        const currentSession = sessions.find(s => s.id === activeSessionId);
+                        if (isFirstMessage && currentSession?.apiSessionId) {
+                            try {
+                                const apiKey = getApiKey();
+                                if (apiKey) {
+                                    const chatAPI = new ChatHistoryAPI(apiKey);
+                                    await chatAPI.updateSession(currentSession.apiSessionId, userMessage);
+                                }
+                            } catch (error) {
+                                console.error('Failed to update session title in API:', error);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to save messages to API:', error);
+                }
+
+            } catch (streamError) {
+                console.error('Streaming error:', streamError);
+
+                // Remove streaming message and show error
+                setSessions(prev => prev.map(session => {
+                    if (session.id === activeSessionId) {
+                        return {
+                            ...session,
+                            messages: [...updatedMessages, {
+                                role: 'assistant' as const,
+                                content: 'Sorry, there was an error processing your request. Please try again.',
+                            }],
+                            updatedAt: new Date()
+                        };
+                    }
+                    return session;
+                }));
+
+                toast({
+                    title: "Error",
+                    description: streamError instanceof Error ? streamError.message : 'Failed to get response',
+                    variant: 'destructive'
+                });
+            }
         } catch (error) {
+            console.error('Send message error:', error);
+
             toast({
                 title: "Error",
                 description: `An error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
                 variant: 'destructive'
             });
+
             // Revert message update on error
-            const revertedSessions = sessions.map(session => {
+            setSessions(prev => prev.map(session => {
                 if (session.id === activeSessionId) {
                     return { ...session, messages };
                 }
                 return session;
-            });
-            setSessions(revertedSessions);
+            }));
             setLoading(false);
         }
     };
