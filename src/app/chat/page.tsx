@@ -971,29 +971,63 @@ function ChatPageContent() {
                 ];
             }
 
-            // Use streaming for better user experience
-            const { content } = await streamChat({
-                modelName: selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value,
-                prompt: userMessage,
-                apiKey,
-                onContent: (streamingContent) => {
-                    setStreamingContent(streamingContent);
-                },
-                onReasoning: (streamingReasoning) => {
-                    setStreamingReasoning(streamingReasoning);
-                },
-                onComplete: (fullContent, fullReasoning) => {
-                    setStreamingContent('');
-                    setStreamingReasoning('');
-                    console.log('Streaming completed:', { fullContent: fullContent.substring(0, 100), fullReasoning: fullReasoning?.substring(0, 100) });
-                },
-                onError: (error) => {
-                    console.error('Streaming error:', error);
-                    setStreamingContent('');
-                    setStreamingReasoning('');
-                    throw error;
+            // Try streaming first, fallback to regular API if streaming fails
+            let content: string;
+            
+            try {
+                const streamResult = await streamChat({
+                    modelName: selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value,
+                    prompt: userMessage,
+                    apiKey,
+                    onContent: (streamingContent) => {
+                        setStreamingContent(streamingContent);
+                    },
+                    onReasoning: (streamingReasoning) => {
+                        setStreamingReasoning(streamingReasoning);
+                    },
+                    onComplete: (fullContent, fullReasoning) => {
+                        setStreamingContent('');
+                        setStreamingReasoning('');
+                        console.log('Streaming completed:', { fullContent: fullContent.substring(0, 100), fullReasoning: fullReasoning?.substring(0, 100) });
+                    },
+                    onError: (error) => {
+                        console.error('Streaming error:', error);
+                        setStreamingContent('');
+                        setStreamingReasoning('');
+                        throw error;
+                    }
+                });
+                content = streamResult.content;
+            } catch (streamError) {
+                console.warn('Streaming failed, falling back to regular API:', streamError);
+                setStreamingContent('');
+                setStreamingReasoning('');
+                
+                // Fallback to regular API call
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                    },
+                    body: JSON.stringify({
+                        model: selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value,
+                        messages: [{ role: 'user', content: messageContent }],
+                    }),
+                });
+
+                if (!response.ok) {
+                    if (response.status === 429) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.detail || 'Rate limit exceeded. Please try again later.');
+                    }
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error?.message || errorData.detail || `Request failed with status ${response.status}`);
                 }
-            });
+
+                const data = await response.json();
+                content = data.choices?.[0]?.message?.content || data.response || 'No response';
+            }
 
             const finalSessions = sessions.map(session => {
                 if (session.id === activeSessionId) {

@@ -1,3 +1,5 @@
+import { getApiKey, getUserData } from '@/lib/api';
+
 export async function streamChat({
   modelName,
   prompt,
@@ -16,16 +18,16 @@ export async function streamChat({
   onError?: (error: Error) => void;
 }) {
   try {
-    // Get user data for privy_user_id
-    const userData = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('userData') || '{}') : {};
-    const privyUserId = userData.privy_user_id;
+    // Get user data for privy_user_id using the same method as the main chat
+    const userData = getUserData();
     
-    if (!privyUserId) {
-      throw new Error('User not authenticated');
+    if (!userData?.privy_user_id) {
+      console.error('StreamChat - No privy_user_id found in userData:', userData);
+      throw new Error('User not authenticated - please refresh the page and try again');
     }
 
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
-    const apiUrl = `${apiBaseUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(privyUserId)}`;
+    const apiUrl = `${apiBaseUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(userData.privy_user_id)}`;
 
     console.log('[StreamChat] Starting stream request:', { modelName, apiUrl });
 
