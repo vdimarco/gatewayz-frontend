@@ -475,52 +475,28 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Interactive Code Block */}
-          <div className="rounded-lg border bg-card overflow-hidden">
-            {/* Tabs */}
-            <div className="flex items-center justify-between border-b bg-muted/30">
-              <div className="flex">
-                <button
-                  onClick={() => setActiveCodeTab('python')}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    activeCodeTab === 'python'
-                      ? 'bg-background text-foreground border-b-2 border-primary'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  Python
-                </button>
-                <button
-                  onClick={() => setActiveCodeTab('javascript')}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    activeCodeTab === 'javascript'
-                      ? 'bg-background text-foreground border-b-2 border-primary'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  JavaScript
-                </button>
-                <button
-                  onClick={() => setActiveCodeTab('curl')}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    activeCodeTab === 'curl'
-                      ? 'bg-background text-foreground border-b-2 border-primary'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  cURL
-                </button>
+          {/* Interactive Code Block - Sexier Version */}
+          <div className="rounded-xl overflow-hidden shadow-2xl border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+            {/* Terminal-style Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/80 hover:bg-red-500 transition-colors"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/80 hover:bg-yellow-500 transition-colors"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500/80 hover:bg-green-500 transition-colors"></div>
+                </div>
+                <span className="text-xs text-slate-400 ml-3 font-mono">integration.{activeCodeTab === 'python' ? 'py' : activeCodeTab === 'javascript' ? 'js' : 'sh'}</span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleCopyCode}
-                className="mr-2"
+                className="text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all"
               >
                 {codeCopied ? (
                   <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Copied!
+                    <Check className="h-4 w-4 mr-2 text-green-400" />
+                    <span className="text-green-400">Copied!</span>
                   </>
                 ) : (
                   <>
@@ -531,13 +507,49 @@ export default function Home() {
               </Button>
             </div>
 
-            {/* Code Display */}
-            <div className="p-4 bg-slate-950 text-slate-50 overflow-x-auto">
-              <pre className="text-sm leading-relaxed">
-                <code>{codeExamples[activeCodeTab]}</code>
-              </pre>
+            {/* Language Tabs */}
+            <div className="flex gap-1 px-4 pt-3 bg-slate-950/30">
+              {(['python', 'javascript', 'curl'] as const).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setActiveCodeTab(lang)}
+                  className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all ${
+                    activeCodeTab === lang
+                      ? 'bg-slate-950/80 text-cyan-400 shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
+                  }`}
+                >
+                  {lang === 'python' ? '🐍 Python' : lang === 'javascript' ? '⚡ JavaScript' : '🔧 cURL'}
+                </button>
+              ))}
             </div>
+
+            {/* Code Display with animated transition */}
+            <div className="relative bg-slate-950/80 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-purple-500/5 to-pink-500/5 opacity-50"></div>
+              <div className="relative p-6 overflow-x-auto">
+                <pre className="text-sm leading-relaxed font-mono">
+                  <code className="text-slate-200">
+                    {codeExamples[activeCodeTab].split('\n').map((line, i) => (
+                      <div key={i} className="hover:bg-slate-800/30 px-2 -mx-2 rounded transition-colors">
+                        <span className="inline-block w-8 text-slate-600 select-none">{i + 1}</span>
+                        <span className="syntax-highlight">{line}</span>
+                      </div>
+                    ))}
+                  </code>
+                </pre>
+              </div>
+            </div>
+
+            {/* Bottom gradient accent */}
+            <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
           </div>
+
+          <style jsx>{`
+            .syntax-highlight {
+              color: #e2e8f0;
+            }
+          `}</style>
            <div className="w-full flex flex-row items-center gap-10 mt-8">
              <div className="relative flex-1">
                <Input 
