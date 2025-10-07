@@ -602,14 +602,35 @@ console.log(completion.choices[0].message);`,
            )}
 
            <div className="w-full flex justify-center mt-8">
-             <Button
-               className="bg-black text-white h-12 px-12"
-               variant="outline"
-               onClick={handleGenerateApiKey}
-             >
-               {user ? 'Claim Trial Credits' : 'Generate API Key'}
-             </Button>
+             <div className="relative group">
+               {/* Glowing effect */}
+               <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-lg opacity-75 group-hover:opacity-100 blur group-hover:blur-md transition-all duration-300 animate-pulse-glow"></div>
+
+               {/* Button */}
+               <Button
+                 className="relative bg-black hover:bg-gray-900 text-white h-12 px-12 transition-all duration-200 active:scale-95 shadow-lg"
+                 variant="outline"
+                 onClick={handleGenerateApiKey}
+               >
+                 {user ? 'Claim Trial Credits' : 'Generate API Key'}
+               </Button>
+             </div>
            </div>
+
+           <style jsx>{`
+             @keyframes pulse-glow {
+               0%, 100% {
+                 opacity: 0.75;
+               }
+               50% {
+                 opacity: 1;
+               }
+             }
+
+             .animate-pulse-glow {
+               animation: pulse-glow 2s ease-in-out infinite;
+             }
+           `}</style>
         </section>
 
         {/* Features Section */}
