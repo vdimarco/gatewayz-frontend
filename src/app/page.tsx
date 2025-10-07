@@ -194,17 +194,39 @@ export default function Home() {
 
   // Load the actual API key when user is authenticated
   useEffect(() => {
-    if (user) {
-      const userApiKey = getApiKey();
-      if (userApiKey) {
-        setApiKey(userApiKey);
+    const loadApiKey = () => {
+      if (user) {
+        const userApiKey = getApiKey();
+        if (userApiKey) {
+          setApiKey(userApiKey);
+        } else {
+          // User is authenticated but no API key yet - show placeholder
+          setApiKey('');
+        }
       } else {
-        // User is authenticated but no API key yet - show placeholder
-        setApiKey('');
+        setApiKey(''); // Show placeholder when not authenticated
       }
-    } else {
-      setApiKey(''); // Show placeholder when not authenticated
-    }
+    };
+
+    // Load initially
+    loadApiKey();
+
+    // Listen for storage changes (in case API key is set in another component)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'gatewayz_api_key') {
+        loadApiKey();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also poll for changes every second to catch same-tab updates
+    const interval = setInterval(loadApiKey, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, [user]);
 
   // Dynamic code examples with actual API key
@@ -570,11 +592,9 @@ console.log(completion.choices[0].message);`,
 
            <div className="w-full flex items-center gap-4 mt-8">
              {user && apiKey && (
-               <div className="flex-1">
-                 <div className="mb-2">
-                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Your Default API Key</label>
-                 </div>
-                 <div className="relative">
+               <div className="flex-1 flex items-center gap-3">
+                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Your API Key</label>
+                 <div className="relative flex-1">
                    <Input
                      className="h-12 pr-28 font-mono text-sm bg-background text-foreground"
                      value={apiKey}
