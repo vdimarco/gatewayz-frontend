@@ -602,13 +602,17 @@ console.log(completion.choices[0].message);`,
            )}
 
            <div className="w-full flex justify-center mt-8">
-             <div className="relative group">
-               {/* Glowing effect */}
-               <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-lg opacity-75 group-hover:opacity-100 blur group-hover:blur-md transition-all duration-300 animate-pulse-glow"></div>
+             <div className="relative group inline-block">
+               {/* Multi-layered LED-style glow with color shifting */}
+               <div className="absolute -inset-[3px] rounded-lg opacity-90 blur-md animate-led-shimmer"></div>
+               <div className="absolute -inset-[2px] rounded-lg opacity-80 blur-sm animate-led-shimmer" style={{ animationDelay: '0.5s' }}></div>
 
-               {/* Button */}
+               {/* Elevated neon border - visible underneath */}
+               <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 opacity-100 animate-led-shimmer" style={{ top: '2px' }}></div>
+
+               {/* Button with elevation effect */}
                <Button
-                 className="relative bg-black hover:bg-gray-900 text-white h-12 px-12 transition-all duration-200 active:scale-95 shadow-lg"
+                 className="relative bg-black hover:bg-gray-900 text-white h-12 px-12 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)]"
                  variant="outline"
                  onClick={handleGenerateApiKey}
                >
@@ -618,17 +622,32 @@ console.log(completion.choices[0].message);`,
            </div>
 
            <style jsx>{`
-             @keyframes pulse-glow {
-               0%, 100% {
-                 opacity: 0.75;
+             @keyframes led-shimmer {
+               0% {
+                 background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899);
+                 opacity: 1;
+               }
+               25% {
+                 background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #06b6d4);
+                 opacity: 0.9;
                }
                50% {
+                 background: linear-gradient(90deg, #8b5cf6, #ec4899, #06b6d4, #3b82f6);
+                 opacity: 1;
+               }
+               75% {
+                 background: linear-gradient(90deg, #ec4899, #06b6d4, #3b82f6, #8b5cf6);
+                 opacity: 0.9;
+               }
+               100% {
+                 background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899);
                  opacity: 1;
                }
              }
 
-             .animate-pulse-glow {
-               animation: pulse-glow 2s ease-in-out infinite;
+             .animate-led-shimmer {
+               background-size: 300% 300%;
+               animation: led-shimmer 3s ease-in-out infinite;
              }
            `}</style>
         </section>
