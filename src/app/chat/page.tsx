@@ -1,7 +1,8 @@
 
 "use client"
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,14 +13,14 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Plus, 
-  Search, 
-  Pencil, 
-  MessageSquare, 
-  Settings, 
-  Paperclip, 
-  Globe, 
+import {
+  Plus,
+  Search,
+  Pencil,
+  MessageSquare,
+  Settings,
+  Paperclip,
+  Globe,
   Send,
   Menu,
   Bot,
@@ -30,19 +31,31 @@ import {
   User,
   MoreHorizontal,
   Trash2,
-  Edit
+  Edit,
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
-import { ModelSelect, type ModelOption, allModels } from '@/components/chat/model-select';
+import { ModelSelect, type ModelOption } from '@/components/chat/model-select';
 import './chat.css';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { chat } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
+import { getApiKey, getUserData, removeApiKey } from '@/lib/api';
+import { streamChat } from '@/lib/streaming-chat';
+import { StreamingMessage } from '@/components/chat/streaming-message';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+import { usePrivy } from '@privy-io/react-auth';
 
 type Message = {
     role: 'user' | 'assistant';
     content: string;
+    reasoning?: string;
+    image?: string; // Base64 image data
 };
 
 type ChatSession = {
@@ -324,7 +337,38 @@ const ChatMessage = ({ message, modelName }: { message: Message, modelName: stri
             <div className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
                 <div className={`rounded-lg p-3 ${isUser ? 'bg-primary text-primary-foreground' : 'bg-white border'}`}>
                      {!isUser && <p className="text-xs font-semibold mb-1">{modelName}</p>}
-                    <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+                    <div className={`text-sm prose prose-sm max-w-none ${isUser ? 'text-white prose-invert' : ''}`}>
+                        {isUser ? (
+                            <div className="whitespace-pre-wrap text-white">{message.content}</div>
+                        ) : (
+                            <ReactMarkdown
+                                remarkPlugins={[remarkGfm, remarkMath]}
+                                rehypePlugins={[rehypeKatex]}
+                                components={{
+                                    code: ({ node, inline, className, children, ...props }: any) => {
+                                        const match = /language-(\w+)/.exec(className || '');
+                                        return !inline ? (
+                                            <pre className="bg-muted p-3 rounded-md overflow-x-auto">
+                                                <code className={className} {...props}>
+                                                    {children}
+                                                </code>
+                                            </pre>
+                                        ) : (
+                                            <code className="bg-muted px-1.5 py-0.5 rounded text-sm" {...props}>
+                                                {children}
+                                            </code>
+                                        );
+                                    },
+                                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                    ul: ({ children }) => <ul className="list-disc list-inside mb-2">{children}</ul>,
+                                    ol: ({ children }) => <ol className="list-decimal list-inside mb-2">{children}</ol>,
+                                    li: ({ children }) => <li className="mb-1">{children}</li>,
+                                }}
+                            >
+                                {message.content}
+                            </ReactMarkdown>
+                        )}
+                    </div>
                     {!isUser && (
                         <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-100">
                             <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -359,23 +403,71 @@ const ChatSkeleton = () => (
   </div>
 );
 
-export default function ChatPage() {
+function ChatPageContent() {
+    const searchParams = useSearchParams();
+    const { login } = usePrivy();
     const [message, setMessage] = useState('');
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [selectedModel, setSelectedModel] = useState<ModelOption | null>(
-        allModels.find(m => m.value === 'gpt-4o mini') || null
-    );
+    const [streamingContent, setStreamingContent] = useState('');
+    const [streamingReasoning, setStreamingReasoning] = useState('');
+    const [selectedModel, setSelectedModel] = useState<ModelOption | null>({
+        value: 'switchpoint/router',
+        label: 'Switchpoint Router',
+        category: 'Free'
+    });
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const { toast } = useToast();
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const messageInputRef = useRef<HTMLInputElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Track if we should auto-send the message from URL
+    const [shouldAutoSend, setShouldAutoSend] = useState(false);
+
+    // Handle model and message from URL parameters
+    useEffect(() => {
+        const modelParam = searchParams.get('model');
+        const messageParam = searchParams.get('message');
+
+        if (modelParam) {
+            // Fetch the model details from API to get the label
+            fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai'}/models?gateway=all`)
+                .then(res => res.json())
+                .then(data => {
+                    const foundModel = data.data?.find((m: any) => m.id === modelParam);
+                    if (foundModel) {
+                        setSelectedModel({
+                            value: foundModel.id,
+                            label: foundModel.name,
+                            category: foundModel.pricing?.prompt ? 'Paid' : 'Free'
+                        });
+                    }
+                })
+                .catch(err => console.error('Failed to fetch model:', err));
+        }
+
+        // Set the message from URL parameter and flag for auto-send
+        if (messageParam) {
+            setMessage(decodeURIComponent(messageParam));
+            setShouldAutoSend(true);
+        }
+    }, [searchParams]);
 
      const activeSession = useMemo(() => {
         return sessions.find(s => s.id === activeSessionId) || null;
     }, [sessions, activeSessionId]);
-    
+
     const messages = activeSession?.messages || [];
+
+    // Auto-send message from URL parameter when session is ready
+    useEffect(() => {
+        if (shouldAutoSend && activeSessionId && message.trim() && selectedModel && !loading) {
+            setShouldAutoSend(false); // Reset flag to prevent re-sending
+            handleSendMessage();
+        }
+    }, [shouldAutoSend, activeSessionId, message, selectedModel, loading]);
 
     useEffect(() => {
         // Load sessions from API (currently using mock data)
@@ -484,12 +576,59 @@ export default function ChatPage() {
     }
 
     const handleRenameSession = (sessionId: string, newTitle: string) => {
-        setSessions(prev => prev.map(session => 
-            session.id === sessionId 
+        setSessions(prev => prev.map(session =>
+            session.id === sessionId
                 ? { ...session, title: newTitle, updatedAt: new Date() }
                 : session
         ));
     }
+
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast({
+                title: "Invalid file type",
+                description: "Please select an image file.",
+                variant: 'destructive'
+            });
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast({
+                title: "File too large",
+                description: "Please select an image smaller than 5MB.",
+                variant: 'destructive'
+            });
+            return;
+        }
+
+        // Convert to base64
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const base64 = event.target?.result as string;
+            setSelectedImage(base64);
+        };
+        reader.onerror = () => {
+            toast({
+                title: "Error reading file",
+                description: "Failed to read the image file.",
+                variant: 'destructive'
+            });
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleRemoveImage = () => {
+        setSelectedImage(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
 
     const handleSendMessage = async () => {
         if (!message.trim() || !selectedModel || !activeSessionId) {
@@ -500,16 +639,22 @@ export default function ChatPage() {
             });
             return;
         }
-        
-        const isFirstMessage = messages.length === 0;
 
-        const updatedMessages: Message[] = [...messages, { role: 'user' as const, content: message }];
-        
+        const isFirstMessage = messages.length === 0;
+        const userMessage = message;
+        const userImage = selectedImage;
+
+        const updatedMessages: Message[] = [...messages, {
+            role: 'user' as const,
+            content: userMessage,
+            image: userImage || undefined
+        }];
+
         const updatedSessions = sessions.map(session => {
             if (session.id === activeSessionId) {
-                return { 
+                return {
                     ...session,
-                    title: isFirstMessage ? message : session.title,
+                    title: isFirstMessage ? userMessage : session.title,
                     messages: updatedMessages,
                     updatedAt: new Date()
                 };
@@ -517,42 +662,139 @@ export default function ChatPage() {
             return session;
         });
         setSessions(updatedSessions);
-        
+
         setMessage('');
+        setSelectedImage(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
         setLoading(true);
+        setStreamingContent('');
+        setStreamingReasoning('');
 
         try {
-            const response = await chat({
-                modelName: selectedModel.value,
-                prompt: message,
+            const apiKey = getApiKey();
+            const userData = getUserData();
+
+            if (!apiKey || !userData?.privy_user_id) {
+                toast({
+                    title: "Authentication required",
+                    description: "Please log in to use the chat feature.",
+                    variant: 'destructive',
+                    action: (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => login()}
+                            className="bg-white hover:bg-gray-100 text-destructive border-destructive/20"
+                        >
+                            Log In
+                        </Button>
+                    ),
+                });
+                setLoading(false);
+                return;
+            }
+
+            // Call backend API directly with privy_user_id query parameter
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
+            const url = `${apiBaseUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(userData.privy_user_id)}`;
+
+            console.log('Sending chat request to:', url);
+            console.log('API Key:', apiKey.substring(0, 10) + '...');
+            console.log('Model:', selectedModel.value);
+
+            // Prepare message content with image if present
+            let messageContent: any = userMessage;
+            if (userImage) {
+                messageContent = [
+                    { type: 'text', text: userMessage },
+                    { type: 'image_url', image_url: { url: userImage } }
+                ];
+            }
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                },
+                body: JSON.stringify({
+                    model: selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value,
+                    messages: [{ role: 'user', content: messageContent }],
+                }),
             });
-             const finalSessions = sessions.map(session => {
+
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+
+            if (!response.ok) {
+                if (response.status === 429) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || 'Rate limit exceeded. Please try again later.');
+                }
+                if (response.status === 403) {
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMessage = errorData.detail || 'Access denied. Your API key may be invalid or you may have insufficient credits.';
+
+                    // Clear the invalid API key and prompt user to re-authenticate
+                    removeApiKey();
+
+                    toast({
+                        title: "Authentication Error",
+                        description: errorMessage + ' Please refresh the page and log in again.',
+                        variant: 'destructive',
+                        action: (
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="px-4 py-2 bg-white text-black rounded hover:bg-gray-100"
+                            >
+                                Refresh
+                            </button>
+                        )
+                    });
+                    throw new Error(errorMessage);
+                }
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error?.message || errorData.detail || `Request failed with status ${response.status}`);
+            }
+
+            const data = await response.json();
+            // Parse OpenAI-compatible response format
+            const content = data.choices?.[0]?.message?.content || data.response || 'No response';
+
+            const finalSessions = sessions.map(session => {
                 if (session.id === activeSessionId) {
-                    return { 
+                    return {
                         ...session,
-                        title: isFirstMessage ? message : session.title,
-                        messages: [...updatedMessages, { role: 'assistant' as const, content: response }],
+                        title: isFirstMessage ? userMessage : session.title,
+                        messages: [...updatedMessages, {
+                            role: 'assistant' as const,
+                            content,
+                        }],
                         updatedAt: new Date()
                     };
                 }
                 return session;
             });
-             setSessions(finalSessions);
+            setSessions(finalSessions);
+            setLoading(false);
         } catch (error) {
             toast({
                 title: "Error",
                 description: `An error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
                 variant: 'destructive'
             });
-             // Revert message update on error
-             const revertedSessions = sessions.map(session => {
+            // Revert message update on error
+            const revertedSessions = sessions.map(session => {
                 if (session.id === activeSessionId) {
                     return { ...session, messages };
                 }
                 return session;
             });
-             setSessions(revertedSessions);
-        } finally {
+            setSessions(revertedSessions);
+            setStreamingContent('');
+            setStreamingReasoning('');
             setLoading(false);
         }
     };
@@ -572,28 +814,28 @@ export default function ChatPage() {
         </div>
       
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative">
-      <img 
-        src="/logo_transparent.svg" 
-        alt="Stats" 
-        className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[75vh] h-[75vh]" 
+      <main className="flex-1 flex flex-col relative overflow-hidden">
+      <img
+        src="/logo_transparent.svg"
+        alt="Stats"
+        className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[75vh] h-[75vh] pointer-events-none opacity-50 hidden lg:block"
       />
 
        
         
         {/* Header with title and model selector */}
-        <header className="relative z-10 w-[80%] flex items-center justify-between p-6 pl-24 pr-0">
-          <div className="flex items-center gap-2">
-            <div className="lg:hidden">
+        <header className="relative z-10 w-full flex items-center justify-between gap-2 lg:gap-4 p-4 lg:p-6 max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="lg:hidden flex-shrink-0">
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon"><Menu/></Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[300px] p-0">
-                  <ChatSidebar 
-                    sessions={sessions} 
-                    activeSessionId={activeSessionId} 
-                    setActiveSessionId={setActiveSessionId} 
+                  <ChatSidebar
+                    sessions={sessions}
+                    activeSessionId={activeSessionId}
+                    setActiveSessionId={setActiveSessionId}
                     createNewChat={createNewChat}
                     onDeleteSession={handleDeleteSession}
                     onRenameSession={handleRenameSession}
@@ -601,37 +843,71 @@ export default function ChatPage() {
                 </SheetContent>
               </Sheet>
             </div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold">{activeSession?.title || 'Untitled Chat'}</h1>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <h1 className="text-lg lg:text-2xl font-semibold truncate">{activeSession?.title || 'Untitled Chat'}</h1>
+              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0 hidden sm:flex">
                 <Pencil className="h-4 w-4" />
               </Button>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-card">
+          <div className="flex items-center gap-2 bg-card flex-shrink-0">
             <ModelSelect selectedModel={selectedModel} onSelectModel={setSelectedModel} />
           </div>
         </header>
 
         {/* Main content area */}
-        <div className="relative z-10 w-[80%] flex-1 flex flex-col overflow-hidden">
+        <div className="relative z-10 w-full flex-1 flex flex-col overflow-hidden">
           {/* Chat messages area */}
           {messages.length > 0 && (
-            <div ref={chatContainerRef} className="flex-1   ml-20 flex flex-col gap-6 overflow-y-auto p-6 bg-card">
+            <div ref={chatContainerRef} className="flex-1 flex flex-col gap-4 lg:gap-6 overflow-y-auto p-4 lg:p-6 bg-card max-w-4xl mx-auto w-full">
               {messages.map((msg, index) => (
-                <ChatMessage key={index} message={msg} modelName={selectedModel?.label} />
+                <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                  <div className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                    {msg.role === 'user' ? (
+                      <div className="rounded-lg p-3 bg-primary text-primary-foreground">
+                        {msg.image && (
+                          <img
+                            src={msg.image}
+                            alt="Uploaded image"
+                            className="max-w-[200px] lg:max-w-xs rounded-lg mb-2"
+                          />
+                        )}
+                        <div className="text-sm whitespace-pre-wrap text-white">{msg.content}</div>
+                      </div>
+                    ) : (
+                      <StreamingMessage
+                        content={msg.content}
+                        reasoning={msg.reasoning}
+                        modelName={selectedModel?.label}
+                        isStreaming={false}
+                      />
+                    )}
+                  </div>
+                </div>
               ))}
-              {loading && <ChatSkeleton />}
+              {loading && streamingContent && (
+                <div className="flex items-start gap-3">
+                  <div className="flex flex-col gap-1 items-start">
+                    <StreamingMessage
+                      content={streamingContent}
+                      reasoning={streamingReasoning}
+                      modelName={selectedModel?.label}
+                      isStreaming={true}
+                    />
+                  </div>
+                </div>
+              )}
+              {loading && !streamingContent && <ChatSkeleton />}
             </div>
           )}
 
           {/* Welcome screen when no messages */}
           {messages.length === 0 && !loading && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-              <h1 className="text-4xl font-bold mb-8">What's On Your Mind?</h1>
-              
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 lg:p-6 w-full">
+              <h1 className="text-2xl lg:text-4xl font-bold mb-6 lg:mb-8">What's On Your Mind?</h1>
+
               {/* Suggested prompts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full max-w-2xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full max-w-4xl">
                 <ExamplePrompt 
                   title="What model is better for coding?" 
                   subtitle="Compare different AI models for programming tasks"
@@ -657,14 +933,44 @@ export default function ChatPage() {
           )}
 
           {/* Message input area - fixed at bottom */}
-          <div className="w-full p-6">
-            <div className="w-full max-w-4xl mx-auto">
+          <div className="w-full p-4 lg:p-6 max-w-4xl mx-auto">
+            <div className="w-full">
               <div className="relative">
+                {/* Image preview */}
+                {selectedImage && (
+                  <div className="mb-2 relative inline-block">
+                    <img
+                      src={selectedImage}
+                      alt="Selected image"
+                      className="max-w-[200px] lg:max-w-xs max-h-24 lg:max-h-32 rounded-lg border"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                      onClick={handleRemoveImage}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
                 <div className="flex items-center gap-1 px-2 py-2 bg-white rounded-xl border">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
-                    <img src="/ic_outline-plus.svg" alt="Plus" width={24} height={24} />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-lg"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImageIcon className="h-5 w-5" />
                   </Button>
-                  <Input 
+                  <Input
                     ref={messageInputRef}
                     placeholder="Start A Message"
                     value={message}
@@ -677,10 +983,10 @@ export default function ChatPage() {
                     }}
                     className="border-0 bg-transparent focus-visible:ring-0 text-base flex-1"
                   />
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    onClick={handleSendMessage} 
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleSendMessage}
                     disabled={loading || !message.trim()}
                     className="h-8 w-8"
                   >
@@ -693,5 +999,13 @@ export default function ChatPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="flex h-[calc(100svh-130px)] items-center justify-center">Loading...</div>}>
+      <ChatPageContent />
+    </Suspense>
   );
 }

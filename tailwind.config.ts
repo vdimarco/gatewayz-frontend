@@ -9,6 +9,9 @@ export default {
   ],
   theme: {
     extend: {
+      gridTemplateColumns: {
+        '24': 'repeat(24, minmax(0, 1fr))',
+      },
       fontFamily: {
         sans: ['var(--font-inter)'],
         body: ['Inter', 'sans-serif'],
@@ -121,11 +124,21 @@ searchBar: 'hsl(var(--search-bar))',
           '0%': { '--gradient-angle': '0deg' },
           '100%': { '--gradient-angle': '360deg' },
         },
+        'shimmer': {
+          '0%': { backgroundPosition: '-1000px 0' },
+          '100%': { backgroundPosition: '1000px 0' },
+        },
+        'pulse-glow': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.5' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'gradient-spin': 'gradient-spin 2.5s linear infinite',
+        'shimmer': 'shimmer 2s infinite',
+        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
       },
       // This is needed to register the custom property
       // @ts-ignore
@@ -136,5 +149,8 @@ searchBar: 'hsl(var(--search-bar))',
       }
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    require('@tailwindcss/typography'),
+  ],
 } satisfies Config;
