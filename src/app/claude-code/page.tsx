@@ -650,30 +650,57 @@ if __name__ == "__main__":
           </div>
 
           {/* Script Display */}
-          <div className="bg-muted p-4 rounded-lg font-mono text-xs overflow-x-auto relative max-h-96 overflow-y-auto">
-            <div className="absolute top-2 right-2 z-10 flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => {
-                  const script = selectedOS === 'macos' ? macosSetupScript : selectedOS === 'windows' ? windowsSetupScript : linuxSetupScript;
-                  const filename = selectedOS === 'windows' ? 'setup-claude-gatewayz.bat' : 'setup-claude-gatewayz.sh';
-                  downloadScript(script, filename);
-                }}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-              <CopyButton
-                text={selectedOS === 'macos' ? macosSetupScript : selectedOS === 'windows' ? windowsSetupScript : linuxSetupScript}
-                id="setup-script"
-              />
+          <div className="border rounded-lg overflow-hidden">
+            {/* Sticky header with buttons */}
+            <div className="bg-muted/50 backdrop-blur-sm border-b px-4 py-2 flex items-center justify-between sticky top-0 z-10">
+              <span className="text-sm font-medium text-muted-foreground">
+                {selectedOS === 'windows' ? 'setup-claude-gatewayz.bat' : 'setup-claude-gatewayz.sh'}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3"
+                  onClick={() => {
+                    const script = selectedOS === 'macos' ? macosSetupScript : selectedOS === 'windows' ? windowsSetupScript : linuxSetupScript;
+                    const filename = selectedOS === 'windows' ? 'setup-claude-gatewayz.bat' : 'setup-claude-gatewayz.sh';
+                    downloadScript(script, filename);
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3"
+                  onClick={() => copyToClipboard(
+                    selectedOS === 'macos' ? macosSetupScript : selectedOS === 'windows' ? windowsSetupScript : linuxSetupScript,
+                    'setup-script'
+                  )}
+                >
+                  {copiedStates['setup-script'] ? (
+                    <>
+                      <Check className="h-4 w-4 mr-2 text-green-600" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-            <pre>
-              {selectedOS === 'macos' && macosSetupScript}
-              {selectedOS === 'windows' && windowsSetupScript}
-              {selectedOS === 'linux' && linuxSetupScript}
-            </pre>
+            {/* Script content */}
+            <div className="bg-muted p-4 font-mono text-xs overflow-x-auto max-h-96 overflow-y-auto">
+              <pre>
+                {selectedOS === 'macos' && macosSetupScript}
+                {selectedOS === 'windows' && windowsSetupScript}
+                {selectedOS === 'linux' && linuxSetupScript}
+              </pre>
+            </div>
           </div>
 
           {/* Instructions */}
