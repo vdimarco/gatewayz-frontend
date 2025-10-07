@@ -91,8 +91,26 @@ export function AppHeader() {
             const errorText = await response.text();
             console.error('Authentication failed:', response.status, response.statusText);
             console.error('Error response:', errorText);
+
+            // If it's a duplicate user error (500 with duplicate key), try to handle it gracefully
+            if (response.status === 500 && errorText.includes('duplicate key')) {
+              console.warn('User already exists in database, attempting to re-authenticate...');
+              setIsAuthenticating(false);
+
+              // Remove the stored API key so next load will retry
+              removeApiKey();
+
+              // Refresh the page to retry authentication
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
+              return;
+            }
+
+            // For other errors, log out the user
             logout();
             removeApiKey();
+            setIsAuthenticating(false);
           }
         } catch (error) {
           console.error('Error during authentication:', error);
