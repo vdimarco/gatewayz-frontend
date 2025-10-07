@@ -1064,12 +1064,13 @@ function ChatPageContent() {
                     }
                     
                     // Update session title in API if this is the first message
-                    if (isFirstMessage && activeSession?.apiSessionId) {
+                    const currentSession = finalSessions.find(s => s.id === activeSessionId);
+                    if (isFirstMessage && currentSession?.apiSessionId) {
                         try {
                             const apiKey = getApiKey();
                             if (apiKey) {
                                 const chatAPI = new ChatHistoryAPI(apiKey);
-                                await chatAPI.updateSession(activeSession.apiSessionId, userMessage);
+                                await chatAPI.updateSession(currentSession.apiSessionId, userMessage);
                                 console.log('Updated session title in API:', userMessage);
                             }
                         } catch (error) {
@@ -1078,12 +1079,12 @@ function ChatPageContent() {
                     }
                     
                     // Refresh the session to get updated messages from API
-                    if (activeSession?.apiSessionId) {
+                    if (currentSession?.apiSessionId) {
                         try {
                             const apiKey = getApiKey();
                             if (apiKey) {
                                 const chatAPI = new ChatHistoryAPI(apiKey);
-                                const updatedSession = await chatAPI.getSession(activeSession.apiSessionId);
+                                const updatedSession = await chatAPI.getSession(currentSession.apiSessionId);
                                 
                                 setSessions(prev => prev.map(session => 
                                     session.id === activeSessionId 

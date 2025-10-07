@@ -95,6 +95,9 @@ export const processAuthResponse = (response: AuthResponse): void => {
   if (response.success && response.api_key) {
     saveApiKey(response.api_key);
     
+    // Convert credits to integer to match backend expectations
+    const creditsAsInteger = Math.floor(response.credits);
+    
     const userData: UserData = {
       user_id: response.user_id,
       api_key: response.api_key,
@@ -102,7 +105,7 @@ export const processAuthResponse = (response: AuthResponse): void => {
       privy_user_id: response.privy_user_id,
       display_name: response.display_name,
       email: response.email,
-      credits: response.credits,
+      credits: creditsAsInteger,
     };
     
     saveUserData(userData);
@@ -110,7 +113,8 @@ export const processAuthResponse = (response: AuthResponse): void => {
     console.log('User authenticated successfully:', {
       user_id: response.user_id,
       display_name: response.display_name,
-      credits: response.credits,
+      credits: creditsAsInteger,
+      original_credits: response.credits,
       is_new_user: response.is_new_user
     });
   }
