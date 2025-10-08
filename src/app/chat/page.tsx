@@ -514,7 +514,7 @@ const ChatMessage = ({ message, modelName }: { message: Message, modelName: stri
                 {!isUser && message.reasoning && (
                     <ReasoningDisplay reasoning={message.reasoning} className="w-full" />
                 )}
-                <div className={`rounded-lg p-3 ${isUser ? 'bg-primary text-primary-foreground' : 'bg-card border border-border'} ${message.isStreaming ? 'streaming-message' : ''}`}>
+                <div className={`rounded-lg p-3 ${isUser ? 'bg-primary dark:bg-blue-600 text-primary-foreground dark:text-white' : 'bg-card border border-border'} ${message.isStreaming ? 'streaming-message' : ''}`}>
                      {!isUser && <p className="text-xs font-semibold mb-1">{modelName}</p>}
                     <div className={`text-sm prose prose-sm max-w-none ${isUser ? 'text-white prose-invert' : 'dark:prose-invert'}`}>
                         {isUser ? (
@@ -1380,7 +1380,7 @@ function ChatPageContent() {
                     </Button>
                   </div>
                 )}
-                <div className="flex items-center gap-1 px-2 py-2 bg-card rounded-xl border border-border">
+                <div className="flex items-center gap-1 px-2 py-2 bg-muted/20 dark:bg-muted/40 rounded-xl border border-border">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1407,7 +1407,7 @@ function ChatPageContent() {
                         handleSendMessage();
                       }
                     }}
-                    className="border-0 bg-transparent focus-visible:ring-0 text-base flex-1"
+                    className="border-0 bg-transparent focus-visible:ring-0 text-base text-foreground flex-1"
                   />
                   <Button
                     size="icon"
