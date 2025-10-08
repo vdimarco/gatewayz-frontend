@@ -587,7 +587,7 @@ const ChatMessage = ({ message, modelName }: { message: Message, modelName: stri
                 {!isUser && message.reasoning && (
                     <ReasoningDisplay reasoning={message.reasoning} className="w-full" />
                 )}
-                <div className={`rounded-lg p-3 ${isUser ? 'bg-primary dark:bg-blue-600 text-primary-foreground dark:text-white' : 'bg-card border border-border'} ${message.isStreaming ? 'streaming-message' : ''}`}>
+                <div className={`rounded-lg p-3 ${isUser ? 'bg-blue-600 text-white' : 'bg-muted/30 dark:bg-muted/20 border border-border'} ${message.isStreaming ? 'streaming-message' : ''}`}>
                      {!isUser && <p className="text-xs font-semibold mb-1">{modelName}</p>}
                     <div className={`text-sm prose prose-sm max-w-none ${isUser ? 'text-white prose-invert' : 'dark:prose-invert'}`}>
                         {isUser ? (
@@ -1433,7 +1433,7 @@ function ChatPageContent() {
                         <div className="text-sm whitespace-pre-wrap text-white">{msg.content}</div>
                       </div>
                     ) : (
-                      <div className="rounded-lg p-3 bg-card border border-border">
+                      <div className="rounded-lg p-3 bg-muted/30 dark:bg-muted/20 border border-border">
                         <div className="flex items-center justify-between mb-2">
                           {selectedModel?.label && <p className="text-xs font-semibold">{selectedModel.label}</p>}
                         </div>
