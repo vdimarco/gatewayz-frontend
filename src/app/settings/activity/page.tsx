@@ -140,7 +140,7 @@ export default function ActivityPage() {
 
       // Fetch activity stats for charts
       const statsResponse = await makeAuthenticatedRequest(
-        `${API_BASE_URL}/user/activity/stats?from=${fromDate}&to=${toDate}`
+        `/api/user/activity/stats?from=${fromDate}&to=${toDate}`
       );
 
       if (statsResponse.ok) {
@@ -153,7 +153,7 @@ export default function ActivityPage() {
 
       // Fetch activity log
       const logResponse = await makeAuthenticatedRequest(
-        `${API_BASE_URL}/user/activity/log?from=${fromDate}&to=${toDate}&page=${currentPage}&limit=10`
+        `/api/user/activity/log?from=${fromDate}&to=${toDate}&page=${currentPage}&limit=10`
       );
 
       if (logResponse.ok) {
