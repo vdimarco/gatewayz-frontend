@@ -510,13 +510,17 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
 // Preprocess LaTeX to fix common formatting issues
 const fixLatexSyntax = (content: string): string => {
     // Fix display math: [ ... ] -> \[ ... \]
-    // Match standalone brackets that look like display math (on their own line or with whitespace)
-    content = content.replace(/(?:^|\n)\s*\[\s*([^\]]+?)\s*\]\s*(?:\n|$)/g, (match, formula) => {
+    // Match any brackets that contain LaTeX syntax
+    content = content.replace(/\[\s*([^\]]+?)\s*\]/g, (match, formula) => {
         // Check if it contains LaTeX-like syntax (backslashes, frac, text, etc.)
-        if (/\\[a-zA-Z]+|\\frac|\\text|\\sqrt|\\sum|\\int|\\approx|\\times/.test(formula)) {
-            return `\n\\[\n${formula}\n\\]\n`;
+        if (/\\[a-zA-Z]+|\\frac|\\text|\\sqrt|\\sum|\\int|\\approx|\\times|\\div/.test(formula)) {
+            // Check if it's already escaped
+            if (match.startsWith('\\[')) {
+                return match; // Already properly formatted
+            }
+            return `\\[ ${formula} \\]`;
         }
-        return match; // Not LaTeX, keep original
+        return match; // Not LaTeX, keep original (could be array notation, etc.)
     });
 
     return content;
