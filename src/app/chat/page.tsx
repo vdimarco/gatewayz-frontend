@@ -523,7 +523,7 @@ const fixLatexSyntax = (content: string): string => {
 
 const ChatMessage = ({ message, modelName }: { message: Message, modelName: string | undefined}) => {
     const isUser = message.role === 'user';
-    const processedContent = isUser ? message.content : fixLatexSyntax(message.content);
+    const processedContent = fixLatexSyntax(message.content);
 
     return (
         <div className={`flex items-start gap-3 ${isUser ? 'justify-end' : ''}`}>
