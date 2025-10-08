@@ -1100,7 +1100,8 @@ function ChatPageContent() {
             };
 
             // Add streaming message to UI
-            const streamingSessions = sessions.map(session => {
+            // Use updatedSessions to preserve the title update from line 1051
+            const streamingSessions = updatedSessions.map(session => {
                 if (session.id === activeSessionId) {
                     return {
                         ...session,
