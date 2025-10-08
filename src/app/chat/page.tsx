@@ -1394,7 +1394,7 @@ function ChatPageContent() {
                             remarkPlugins={[remarkGfm, remarkMath]}
                             rehypePlugins={[rehypeKatex]}
                           >
-                            {msg.content}
+                            {fixLatexSyntax(msg.content)}
                           </ReactMarkdown>
                         </div>
                         {/* Action Buttons - always visible in bottom right */}

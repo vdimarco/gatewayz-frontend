@@ -154,7 +154,8 @@ export function AppHeader() {
       <div className="container flex h-14 max-w-screen-2xl items-center px-4 sm:px-6 lg:px-8 mx-auto">
         <div className="flex items-center mr-auto">
           <Link href="/" className="flex items-center space-x-2 w-[45px] h-[45px] shrink-0">
-            <img src="/logo_black.svg" alt="Gatewayz" className="w-[45px] h-[45px] object-contain" />
+            <img src="/logo_black.svg" alt="Gatewayz" className="w-[45px] h-[45px] object-contain dark:hidden" />
+            <img src="/logo_transparent.svg" alt="Gatewayz" className="w-[45px] h-[45px] object-contain hidden dark:block" />
           </Link>
            <div className="relative hidden sm:block w-full max-w-sm pl-6">
              <SearchBar />
