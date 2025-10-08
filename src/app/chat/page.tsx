@@ -760,11 +760,23 @@ function ChatPageContent() {
 
     useEffect(() => {
         // Load sessions from API when authenticated
-        if (!ready) return; // Wait for Privy to initialize
+        if (!ready) {
+            console.log('Session loading - Privy not ready yet');
+            return;
+        }
+
+        if (!authenticated) {
+            console.log('Session loading - User not authenticated');
+            return;
+        }
+
+        console.log('Session loading - Starting to load sessions...');
 
         const loadSessions = async () => {
             try {
                 const sessionsData = await apiHelpers.loadChatSessions('user-1');
+                console.log('Session loading - Loaded sessions:', sessionsData.length);
+                console.log('Session loading - Sessions data:', sessionsData);
 
                 setSessions(sessionsData);
 
@@ -774,7 +786,10 @@ function ChatPageContent() {
                     session.title === 'Untitled Chat'
                 );
 
+                console.log('Session loading - Has new chat:', hasNewChat);
+
                 if (!hasNewChat) {
+                    console.log('Session loading - Creating new chat');
                     createNewChat();
                 } else {
                     // Set the first new chat as active
@@ -783,11 +798,12 @@ function ChatPageContent() {
                         session.title === 'Untitled Chat'
                     );
                     if (firstNewChat) {
+                        console.log('Session loading - Setting active session:', firstNewChat.id);
                         setActiveSessionId(firstNewChat.id);
                     }
                 }
             } catch (error) {
-                console.log('Failed to load chat sessions:', error);
+                console.error('Session loading - Failed to load chat sessions:', error);
                 // Fallback to creating a new chat
                 createNewChat();
             }
