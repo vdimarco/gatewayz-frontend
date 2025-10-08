@@ -33,7 +33,8 @@ import {
   Trash2,
   RefreshCw,
   Image as ImageIcon,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 import { ModelSelect, type ModelOption } from '@/components/chat/model-select';
 import './chat.css';
@@ -521,9 +522,41 @@ const fixLatexSyntax = (content: string): string => {
     return content;
 };
 
+// Exciting loading component for when AI is thinking
+const ThinkingLoader = ({ modelName }: { modelName: string | undefined }) => {
+    return (
+        <div className="flex items-start gap-3 animate-in fade-in duration-500">
+            <div className="flex flex-col gap-1 items-start max-w-[85%]">
+                <div className="rounded-lg p-4 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 border border-purple-500/20 relative overflow-hidden">
+                    {/* Animated shimmer effect */}
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                    <div className="relative">
+                        <p className="text-xs font-semibold mb-3 text-muted-foreground">{modelName}</p>
+                        <div className="flex items-center gap-3">
+                            <Sparkles className="h-5 w-5 text-purple-500 animate-pulse" />
+                            <div className="flex gap-1">
+                                <div className="w-2 h-2 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <div className="w-2 h-2 rounded-full bg-pink-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                            <span className="text-sm text-muted-foreground animate-pulse">Thinking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const ChatMessage = ({ message, modelName }: { message: Message, modelName: string | undefined}) => {
     const isUser = message.role === 'user';
     const processedContent = fixLatexSyntax(message.content);
+
+    // Show exciting loader when AI is thinking (streaming but no content yet)
+    if (!isUser && message.isStreaming && !message.content) {
+        return <ThinkingLoader modelName={modelName} />;
+    }
 
     return (
         <div className={`flex items-start gap-3 ${isUser ? 'justify-end' : ''}`}>

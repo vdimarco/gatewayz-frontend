@@ -40,6 +40,16 @@
     }
 }
 
+/* Shimmer animation for thinking loader */
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
 @media (max-width: 1024px) {
     .chat-sidebar {
         display: none;
