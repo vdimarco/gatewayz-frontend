@@ -334,17 +334,17 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
         <SidebarInset className="flex-1 overflow-auto">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           <div className="flex flex-col gap-3 mb-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
+              <div className="flex items-baseline gap-3 flex-1">
                   <SidebarTrigger className="lg:hidden" />
                   <h1 className="text-2xl font-bold">Models</h1>
+                  <span className="text-sm text-muted-foreground">
+                    {debouncedSearchTerm && filteredModels.length !== searchFilteredModels.length
+                      ? `${filteredModels.length} of ${searchFilteredModels.length} models`
+                      : `${filteredModels.length} models`}
+                  </span>
               </div>
-              <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                <span className="text-sm text-muted-foreground">
-                  {debouncedSearchTerm && filteredModels.length !== searchFilteredModels.length
-                    ? `${filteredModels.length} of ${searchFilteredModels.length} models`
-                    : `${filteredModels.length} models`}
-                </span>
+              <div className="flex items-center gap-4">
                 {hasActiveFilters && (
                   <Button variant="ghost" size="sm" onClick={resetFilters}>Clear All Filters</Button>
                 )}

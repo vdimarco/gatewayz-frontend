@@ -21,15 +21,29 @@ interface Model {
 
 async function getModels(): Promise<Model[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/models?gateway=all`, {
-      next: { revalidate: 0 } // Always fetch fresh data
-    });
-    const data = await response.json();
-    const models = data.data || [];
-    
+    // Fetch from both OpenRouter and Portkey separately to get all models
+    const [openrouterRes, portkeyRes] = await Promise.all([
+      fetch(`${API_BASE_URL}/models?gateway=openrouter`, {
+        next: { revalidate: 0 }
+      }),
+      fetch(`${API_BASE_URL}/models?gateway=portkey`, {
+        next: { revalidate: 0 }
+      })
+    ]);
+
+    const [openrouterData, portkeyData] = await Promise.all([
+      openrouterRes.json(),
+      portkeyRes.json()
+    ]);
+
+    const models = [
+      ...(openrouterData.data || []),
+      ...(portkeyData.data || [])
+    ];
+
     // Log total models before deduplication
-    console.log(`Fetched ${models.length} models from API`);
-    
+    console.log(`Fetched ${models.length} models from API (OpenRouter: ${openrouterData.data?.length || 0}, Portkey: ${portkeyData.data?.length || 0})`);
+
     // Remove duplicates based on model ID
     const uniqueModels = models.reduce((acc: Model[], current: Model) => {
       // Skip models without valid IDs
