@@ -1232,15 +1232,50 @@ function ChatPageContent() {
             setLoading(false);
         }
     };
-    
+
+  // Show login screen if not authenticated
+  if (!ready) {
+    return (
+      <div className="flex h-[calc(100svh-130px)] bg-background items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Initializing...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    return (
+      <div className="flex h-[calc(100svh-130px)] bg-background items-center justify-center">
+        <div className="flex flex-col items-center gap-6 max-w-md text-center p-6">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <MessageSquare className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold mb-2">Welcome to Gatewayz Chat</h2>
+            <p className="text-muted-foreground">Please log in to start chatting with AI models</p>
+          </div>
+          <Button
+            onClick={() => login()}
+            size="lg"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            Log In to Continue
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-[calc(100svh-130px)] bg-background">
       {/* Left Sidebar */}
         <div className="hidden lg:flex w-56 xl:w-72 bg-muted/20 border-r justify-end">
-          <ChatSidebar 
-            sessions={sessions} 
-            activeSessionId={activeSessionId} 
-            setActiveSessionId={setActiveSessionId} 
+          <ChatSidebar
+            sessions={sessions}
+            activeSessionId={activeSessionId}
+            setActiveSessionId={setActiveSessionId}
             createNewChat={createNewChat}
             onDeleteSession={handleDeleteSession}
             onRenameSession={handleRenameSession}
