@@ -146,15 +146,17 @@ const apiHelpers = {
     loadChatSessions: async (userId: string): Promise<ChatSession[]> => {
         try {
             const apiKey = getApiKey();
+            const userData = getUserData();
             console.log('Chat sessions - API Key found:', !!apiKey);
             console.log('Chat sessions - API Key preview:', apiKey ? `${apiKey.substring(0, 10)}...` : 'None');
-            
+            console.log('Chat sessions - Privy User ID:', userData?.privy_user_id);
+
             if (!apiKey) {
                 console.warn('No API key found, returning empty sessions');
                 return [];
             }
 
-            const chatAPI = new ChatHistoryAPI(apiKey);
+            const chatAPI = new ChatHistoryAPI(apiKey, undefined, userData?.privy_user_id);
             console.log('Chat sessions - Making API request to getSessions');
             const apiSessions = await chatAPI.getSessions(50, 0);
             
@@ -212,7 +214,7 @@ const apiHelpers = {
                 return session;
             }
 
-            const chatAPI = new ChatHistoryAPI(apiKey);
+            const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
             await chatAPI.updateSession(session.apiSessionId, session.title);
             return session;
         } catch (error) {
@@ -243,7 +245,7 @@ const apiHelpers = {
                 };
             }
 
-            const chatAPI = new ChatHistoryAPI(apiKey);
+            const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
             console.log('Create session - Making API request to createSession');
             const apiSession = await chatAPI.createSession(title, model);
             
@@ -282,7 +284,7 @@ const apiHelpers = {
                 return { ...session!, ...updates };
             }
 
-            const chatAPI = new ChatHistoryAPI(apiKey);
+            const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
             await chatAPI.updateSession(session.apiSessionId, updates.title);
             return { ...session, ...updates };
         } catch (error) {
@@ -301,7 +303,7 @@ const apiHelpers = {
                 return;
             }
 
-            const chatAPI = new ChatHistoryAPI(apiKey);
+            const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
             await chatAPI.deleteSession(session.apiSessionId);
         } catch (error) {
             console.error('Failed to delete chat session from API:', error);
@@ -324,7 +326,7 @@ const apiHelpers = {
                 return null;
             }
 
-            const chatAPI = new ChatHistoryAPI(apiKey);
+            const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
             
             // If no API session exists, try to create one
             if (!session.apiSessionId) {
@@ -703,7 +705,7 @@ function ChatPageContent() {
                     // Add a small delay to ensure the session is fully created on the backend
                     await new Promise(resolve => setTimeout(resolve, 500));
 
-                    const chatAPI = new ChatHistoryAPI(apiKey);
+                    const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
                     const fullSession = await chatAPI.getSession(activeSession.apiSessionId);
                     
                     // Update the session with loaded messages
@@ -1161,7 +1163,7 @@ function ChatPageContent() {
                             try {
                                 const apiKey = getApiKey();
                                 if (apiKey) {
-                                    const chatAPI = new ChatHistoryAPI(apiKey);
+                                    const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
                                     // Truncate title if too long (max 100 chars)
                                     const newTitle = userMessage.length > 100 ? userMessage.substring(0, 100) + '...' : userMessage;
                                     await chatAPI.updateSession(sessionForTitle.apiSessionId, newTitle);

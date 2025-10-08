@@ -67,10 +67,12 @@ export interface SaveMessageRequest {
 export class ChatHistoryAPI {
   private apiKey: string;
   private baseUrl: string;
+  private privyUserId?: string;
 
-  constructor(apiKey: string, baseUrl: string = 'https://api.gatewayz.ai/v1/chat') {
+  constructor(apiKey: string, baseUrl: string = 'https://api.gatewayz.ai/v1/chat', privyUserId?: string) {
     this.apiKey = apiKey;
     this.baseUrl = baseUrl;
+    this.privyUserId = privyUserId;
   }
 
   /**
@@ -94,7 +96,14 @@ export class ChatHistoryAPI {
       config.body = JSON.stringify(body);
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, config);
+    // Add privy_user_id to query string if available
+    let url = `${this.baseUrl}${endpoint}`;
+    if (this.privyUserId) {
+      const separator = endpoint.includes('?') ? '&' : '?';
+      url += `${separator}privy_user_id=${encodeURIComponent(this.privyUserId)}`;
+    }
+
+    const response = await fetch(url, config);
     
     if (!response.ok) {
       const error = await response.json();
