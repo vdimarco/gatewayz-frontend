@@ -34,7 +34,7 @@ interface ModelSelectProps {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
 
-const CACHE_KEY = 'gatewayz_models_cache_v2_all';
+const CACHE_KEY = 'gatewayz_models_cache_v3_dual_gateway';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) {
@@ -50,13 +50,17 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
         try {
           const { data, timestamp } = JSON.parse(cached);
           if (Date.now() - timestamp < CACHE_DURATION) {
-            console.log('Models loaded from cache:', data.length);
+            console.log('Models loaded from cache (v3):', data.length);
             setModels(data);
             return;
+          } else {
+            console.log('Cache expired, fetching fresh data');
           }
         } catch (e) {
           console.log('Cache parse error:', e);
         }
+      } else {
+        console.log('No cache found, fetching from API');
       }
 
       // Fetch from both gateways to get all models

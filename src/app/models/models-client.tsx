@@ -95,8 +95,9 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
   // Additional deduplication as a safety measure
   const deduplicatedModels = useMemo(() => {
+    console.log(`Initial models received: ${initialModels.length}`);
     const seen = new Set<string>();
-    return initialModels.filter(model => {
+    const deduplicated = initialModels.filter(model => {
       if (seen.has(model.id)) {
         console.warn(`Duplicate model ID found: ${model.id}`);
         return false;
@@ -104,6 +105,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
       seen.add(model.id);
       return true;
     });
+    console.log(`After client-side deduplication: ${deduplicated.length} unique models`);
+    return deduplicated;
   }, [initialModels]);
 
   const [layout, setLayout] = useState("list");
