@@ -584,7 +584,7 @@ const ChatSkeleton = () => (
 
 function ChatPageContent() {
     const searchParams = useSearchParams();
-    const { login } = usePrivy();
+    const { login, authenticated, ready } = usePrivy();
     const [message, setMessage] = useState('');
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -699,25 +699,27 @@ function ChatPageContent() {
     }, [shouldAutoSend, activeSessionId, message, selectedModel, loading]);
 
     useEffect(() => {
-        // Load sessions from API
+        // Load sessions from API when authenticated
+        if (!ready) return; // Wait for Privy to initialize
+
         const loadSessions = async () => {
             try {
                 const sessionsData = await apiHelpers.loadChatSessions('user-1');
-                
+
                 setSessions(sessionsData);
-                
+
                 // Check if there's already a new/empty chat, if not create one
-                const hasNewChat = sessionsData.some(session => 
-                    session.messages.length === 0 && 
+                const hasNewChat = sessionsData.some(session =>
+                    session.messages.length === 0 &&
                     session.title === 'Untitled Chat'
                 );
-                
+
                 if (!hasNewChat) {
                     createNewChat();
                 } else {
                     // Set the first new chat as active
-                    const firstNewChat = sessionsData.find(session => 
-                        session.messages.length === 0 && 
+                    const firstNewChat = sessionsData.find(session =>
+                        session.messages.length === 0 &&
                         session.title === 'Untitled Chat'
                     );
                     if (firstNewChat) {
@@ -730,9 +732,9 @@ function ChatPageContent() {
                 createNewChat();
             }
         };
-        
+
         loadSessions();
-    }, []);
+    }, [ready, authenticated]);
 
     // Note: In a real app, you would save sessions to backend API here
     // useEffect(() => {
