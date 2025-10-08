@@ -1416,12 +1416,13 @@ function ChatPageContent() {
                     size="icon"
                     className="h-8 w-8 rounded-lg"
                     onClick={() => fileInputRef.current?.click()}
+                    disabled={!ready || !authenticated}
                   >
                     <ImageIcon className="h-5 w-5" />
                   </Button>
                   <Input
                     ref={messageInputRef}
-                    placeholder="Start A Message"
+                    placeholder={!ready ? "Authenticating..." : !authenticated ? "Please log in..." : "Start A Message"}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={(e) => {
@@ -1430,8 +1431,12 @@ function ChatPageContent() {
                         handleSendMessage();
                       }
                     }}
+                    disabled={!ready || !authenticated}
                     className="border-0 bg-transparent focus-visible:ring-0 text-base text-foreground flex-1"
                   />
+                  {(!ready || !authenticated) && (
+                    <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
                   <Button
                     size="icon"
                     variant="ghost"
