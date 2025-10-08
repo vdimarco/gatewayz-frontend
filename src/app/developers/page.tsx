@@ -289,7 +289,7 @@ export default function DevelopersPage() {
                         <Button
                             variant={activeTab === 'trending' ? 'default' : 'ghost'}
                             onClick={() => setActiveTab('trending')}
-                            className={activeTab === 'trending' ? 'bg-gray-100 text-foreground' : ''}
+                            className={activeTab === 'trending' ? 'bg-muted text-foreground' : ''}
                         >
                             Trending
                         </Button>

@@ -68,7 +68,7 @@ export class ChatHistoryAPI {
   private apiKey: string;
   private baseUrl: string;
 
-  constructor(apiKey: string, baseUrl: string = '/api/chat') {
+  constructor(apiKey: string, baseUrl: string = 'https://api.gatewayz.ai/v1/chat') {
     this.apiKey = apiKey;
     this.baseUrl = baseUrl;
   }

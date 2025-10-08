@@ -56,7 +56,7 @@ const FeaturedModelCard = ({
       className={`h-[144px] bg-card border rounded-lg shadow-sm hover:shadow-md cursor-pointer overflow-hidden relative ${
         isActive
           ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-auto min-w-[280px] sm:min-w-[350px] md:min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)]'
-          : 'border-gray-200 hover:border-gray-300 w-20 sm:w-24 min-w-[80px] sm:min-w-[96px] flex-shrink-0'
+          : 'border-border hover:border-border/80 w-20 sm:w-24 min-w-[80px] sm:min-w-[96px] flex-shrink-0'
       }`}
       style={{
         transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -69,7 +69,7 @@ const FeaturedModelCard = ({
           isActive ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
       >
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 flex-shrink-0">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-muted flex-shrink-0">
           {model.logo_url ? (
             <img src={model.logo_url} alt={model.by} width="42" height="42" />
           ) : (
@@ -107,7 +107,7 @@ const FeaturedModelCard = ({
         }`}
       >
         <div className="flex gap-2 sm:gap-3 mb-2 sm:mb-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-gray-100 flex-shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-muted flex-shrink-0">
               {model.logo_url ? (
                 <img src={model.logo_url} alt={model.by} className="w-8 h-8 sm:w-10 sm:h-10" />
               ) : (
@@ -728,7 +728,7 @@ console.log(completion.choices[0].message);`,
                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
                      <button
                        onClick={() => setShowApiKey(!showApiKey)}
-                       className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                       className="p-1 hover:bg-muted dark:hover:bg-muted/30 rounded"
                      >
                        {showApiKey ? (
                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -743,7 +743,7 @@ console.log(completion.choices[0].message);`,
                      </button>
                      <button
                        onClick={handleCopyApiKey}
-                       className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                       className="p-1 hover:bg-muted dark:hover:bg-muted/30 rounded"
                      >
                        <Copy className="w-5 h-5" />
                      </button>

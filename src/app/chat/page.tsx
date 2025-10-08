@@ -979,7 +979,7 @@ function ChatPageContent() {
                             variant="outline"
                             size="sm"
                             onClick={() => login()}
-                            className="bg-white hover:bg-gray-100 text-destructive border-destructive/20"
+                            className="bg-card hover:bg-muted/50 text-destructive border-destructive/20"
                         >
                             Log In
                         </Button>
@@ -1212,8 +1212,8 @@ function ChatPageContent() {
        
         
         {/* Header with title and model selector */}
-        <header className="relative z-10 w-full flex items-center justify-between gap-2 lg:gap-4 p-4 lg:p-6 max-w-7xl mx-auto">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
+        <header className="relative z-10 w-full flex items-center justify-between gap-3 lg:gap-6 p-4 lg:p-6 max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="lg:hidden flex-shrink-0">
               <Sheet>
                 <SheetTrigger asChild>
@@ -1231,7 +1231,7 @@ function ChatPageContent() {
                 </SheetContent>
               </Sheet>
             </div>
-            <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               {isEditingTitle ? (
                 <Input
                   type="text"
@@ -1274,7 +1274,7 @@ function ChatPageContent() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-card flex-shrink-0">
+          <div className="flex items-center gap-3 bg-card flex-shrink-0">
             <ModelSelect selectedModel={selectedModel} onSelectModel={setSelectedModel} />
           </div>
         </header>

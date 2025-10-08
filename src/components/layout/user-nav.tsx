@@ -84,9 +84,9 @@ export function UserNav({ user }: UserNavProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="relative h-10 w-10 rounded-lg bg-white border-gray-200 hover:bg-white p-0">
-          <div className="h-7 w-7 rounded-full bg-card flex items-center justify-center border border-gray-300">
-            <span className="text-black text-lg">{getInitials(user)}</span>
+        <Button variant="outline" className="relative h-10 w-10 rounded-lg bg-card border-border hover:bg-muted/50 p-0">
+          <div className="h-7 w-7 rounded-full bg-card flex items-center justify-center border border-border">
+            <span className="text-foreground text-lg">{getInitials(user)}</span>
           </div>
         </Button>
       </DropdownMenuTrigger>

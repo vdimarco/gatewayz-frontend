@@ -149,7 +149,7 @@ const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
   };
 
   return (
-    <div className="px-4 py-3 hover:bg-gray-50">
+    <div className="px-4 py-3 hover:bg-muted/50">
       <div className="grid grid-cols-5 gap-4 items-center text-sm">
         <div className="font-medium">
           {getTransactionType(transaction.transaction_type)}
@@ -346,7 +346,7 @@ function CreditsPageContent() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 mr-16">
               <Card
-                className="w-96 h-14 text-xl md:text-2xl font-semibold bg-gray-50 border-gray-200 px-12"
+                className="w-96 h-14 text-xl md:text-2xl font-semibold bg-muted/50 border-border px-12"
               >
                 <CardContent className="py-[13px] flex items-center justify-center">
                   {loadingCredits ? (
@@ -485,8 +485,8 @@ function CreditsPageContent() {
       {/* </div> */}
 
       <div className="space-y-4">
-        <div className="border border-gray-200 overflow-hidden border-x-0">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div className="border border-border overflow-hidden border-x-0">
+          <div className="bg-muted/50 px-4 py-3 border-b border-border">
             <div className="grid grid-cols-5 gap-4 text-sm font-medium">
               <div>Recent Transactions</div>
               <div>Amount</div>

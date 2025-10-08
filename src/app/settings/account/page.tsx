@@ -161,7 +161,7 @@ export default function AccountPage() {
         <h2 className="text-lg mb-6 font-bold">Account Details</h2>
         
         {/* Profile */}
-        <div className="flex items-center py-4 border-y border-gray-200">
+        <div className="flex items-center py-4 border-y border-border">
           <div className="w-1/3 text-base font-medium">Profile</div>
           <div className="w-1/3 flex items-center justify-center gap-3">
             {isEditingProfile ? (
@@ -210,7 +210,7 @@ export default function AccountPage() {
         </div>
 
         {/* Email Addresses */}
-        <div className="flex items-center py-4 border-b border-gray-200">
+        <div className="flex items-center py-4 border-b border-border">
           <div className="w-1/3 text-base font-medium">Email Addresses</div>
           <div className="w-1/3 flex flex-col items-center justify-center gap-1">
             <span className="text-base">{userEmail}</span>
@@ -234,7 +234,7 @@ export default function AccountPage() {
         </div>
 
         {/* Connected Accounts */}
-        <div className="flex items-center py-4 border-b border-gray-200">
+        <div className="flex items-center py-4 border-b border-border">
           <div className="w-1/3 text-base font-medium">Connected Accounts</div>
           <div className="w-1/3 flex flex-col items-center justify-center gap-1">
             {connectedAccounts.length > 0 ? (
@@ -284,7 +284,7 @@ export default function AccountPage() {
         <h2 className="text-lg font-bold mb-6">Billing Details</h2>
         
         {/* Full Name */}
-        <div className="flex items-center py-4 border-y border-gray-200">
+        <div className="flex items-center py-4 border-y border-border">
           <div className="w-1/3 text-base font-medium">Full Name</div>
           <div className="w-1/3 flex justify-center">
             <span className="text-base">{customerName || userName}</span>
@@ -302,7 +302,7 @@ export default function AccountPage() {
         </div>
 
         {/* Payment Method */}
-        <div className="flex items-center py-4 border-b border-gray-200">
+        <div className="flex items-center py-4 border-b border-border">
           <div className="w-1/3 text-base font-medium">Payment Method</div>
           <div className="w-1/3 flex flex-col items-center justify-center gap-2">
             {loadingStripe ? (
@@ -316,7 +316,7 @@ export default function AccountPage() {
                     </div>
                     <span className="text-base">**** {pm.last4}</span>
                     {index === 0 && (
-                      <span className="text-xs bg-gray-100 px-1 py-1 rounded border border-gray-300">Primary</span>
+                      <span className="text-xs bg-muted px-1 py-1 rounded border border-border">Primary</span>
                     )}
                   </div>
                 ))}
@@ -360,7 +360,7 @@ export default function AccountPage() {
         <h2 className="text-lg font-bold mb-6">Account Termination</h2>
         
         {/* Delete Account */}
-        <div className="flex items-center py-4 border-y border-gray-200">
+        <div className="flex items-center py-4 border-y border-border">
           <div className="w-1/3 text-base font-medium">Delete Account</div>
           <div className="w-1/3"></div>
           <div className="w-1/3 flex items-center justify-end">

@@ -230,7 +230,7 @@ export default function RankingsPage() {
                                 target.style.display = 'none';
                                 const parent = target.parentElement;
                                 if (parent) {
-                                  parent.innerHTML = `<div class='w-8 h-8 flex-shrink-0 rounded bg-gray-100 flex items-center justify-center'><span class="text-sm font-medium">${model.author.charAt(0).toUpperCase()}</span></div>`;
+                                  parent.innerHTML = `<div class='w-8 h-8 flex-shrink-0 rounded bg-muted flex items-center justify-center'><span class="text-sm font-medium">${model.author.charAt(0).toUpperCase()}</span></div>`;
                                 }
                               }}
                             />
