@@ -1158,6 +1158,7 @@ function ChatPageContent() {
 
                 // Update session title in API if this is the first message
                 // Note: Messages are automatically saved by the backend when session_id is passed
+                // The title was already updated locally in updatedSessions (line 1051)
                 if (isFirstMessage && currentSession?.apiSessionId) {
                     try {
                         const apiKey = getApiKey();
@@ -1165,16 +1166,8 @@ function ChatPageContent() {
                             const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
                             // Truncate title if too long (max 100 chars)
                             const newTitle = userMessage.length > 100 ? userMessage.substring(0, 100) + '...' : userMessage;
+                            console.log('Updating session title in API:', { oldTitle: 'Untitled Chat', newTitle, sessionId: currentSession.apiSessionId });
                             await chatAPI.updateSession(currentSession.apiSessionId, newTitle);
-
-                            // Update local session state with new title
-                            setSessions(prev => prev.map(session => {
-                                if (session.id === activeSessionId) {
-                                    console.log('Updating session title:', { oldTitle: session.title, newTitle });
-                                    return { ...session, title: newTitle };
-                                }
-                                return session;
-                            }));
                         }
                     } catch (error) {
                         console.error('Failed to update session title in API:', error);
