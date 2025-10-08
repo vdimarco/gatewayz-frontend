@@ -371,7 +371,7 @@ const ModelSuggestionCard = ({ title, icon: Icon }: { title: string, icon: React
 
 const ExamplePrompt = ({ title, subtitle, onClick }: { title: string, subtitle: string, onClick?: () => void }) => (
     <Card
-        className="hover:border-primary cursor-pointer p-4 text-left bg-card transition-colors rounded-xl border-border"
+        className="hover:border-primary cursor-pointer p-4 text-left bg-muted/30 dark:bg-muted/20 transition-colors rounded-xl border-border"
         onClick={onClick}
     >
         <p className="text-sm font-medium text-foreground">{title}</p>
@@ -379,21 +379,21 @@ const ExamplePrompt = ({ title, subtitle, onClick }: { title: string, subtitle: 
     </Card>
 )
 
-const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewChat, onDeleteSession, onRenameSession }: { 
-    sessions: ChatSession[], 
-    activeSessionId: string | null, 
-    setActiveSessionId: (id: string) => void, 
+const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewChat, onDeleteSession, onRenameSession }: {
+    sessions: ChatSession[],
+    activeSessionId: string | null,
+    setActiveSessionId: (id: string) => void,
     createNewChat: () => void,
     onDeleteSession: (sessionId: string) => void,
     onRenameSession: (sessionId: string, newTitle: string) => void
 }) => {
-    
+
     const groupChatsByDate = (chatSessions: ChatSession[]) => {
         // Filter out untitled chats that haven't been started yet
-        const startedChats = chatSessions.filter(session => 
+        const startedChats = chatSessions.filter(session =>
             session.messages.length > 0 || session.title !== 'Untitled Chat'
         );
-        
+
         return startedChats.reduce((groups, session) => {
             const date = session.startTime;
             let groupName = format(date, 'MMMM d, yyyy');
@@ -412,7 +412,7 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
     const groupedSessions = groupChatsByDate(sessions);
 
     return (
-    <aside className="flex flex-col gap-6 p-6 h-full">
+    <aside className="flex flex-col gap-6 p-6 h-full w-full overflow-hidden">
         <div className="flex items-center gap-2">
             <h2 className="text-3xl font-bold">Chat</h2>
         </div>
@@ -431,7 +431,7 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
 
         </div>
         
-        <ScrollArea className="flex-grow">
+        <ScrollArea className="flex-grow overflow-hidden">
             {Object.keys(groupedSessions).length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-32 text-center">
                     <p className="text-sm text-muted-foreground">No conversations yet</p>
@@ -441,18 +441,18 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
                 Object.entries(groupedSessions).map(([groupName, chatSessions]) => (
                     <div key={groupName}>
                         <h3 className="text-xs font-semibold text-muted-foreground uppercase my-2 px-3">{groupName}</h3>
-                        <ul>
+                        <ul className="overflow-hidden">
                             {chatSessions.map(session => (
-                                <li key={session.id} className="group relative">
+                                <li key={session.id} className="group relative overflow-hidden">
                                     <Button
                                         variant={activeSessionId === session.id ? "secondary" : "ghost"}
-                                        className="w-full justify-start items-start text-left flex flex-col h-auto py-2 rounded-lg pr-16"
+                                        className="w-full justify-start items-start text-left flex flex-col h-auto py-2 rounded-lg pr-16 overflow-hidden"
                                         onClick={() => setActiveSessionId(session.id)}
                                     >
-                                        <span className="font-medium truncate w-full">
+                                        <span className="font-medium truncate w-full block">
                                             {session.title}
                                         </span>
-                                        <span className="text-xs text-muted-foreground">
+                                        <span className="text-xs text-muted-foreground truncate w-full block">
                                             {formatDistanceToNow(session.startTime, { addSuffix: true })}
                                         </span>
                                     </Button>
@@ -1069,13 +1069,18 @@ function ChatPageContent() {
             const apiKey = getApiKey();
             const userData = getUserData();
 
-            // Call backend API directly with privy_user_id query parameter
+            // Call backend API directly with privy_user_id and session_id query parameters
             const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
-            const url = `${apiBaseUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(userData.privy_user_id)}`;
+
+            // Get current session to find API session ID
+            const currentSession = sessions.find(s => s.id === activeSessionId);
+            const sessionIdParam = currentSession?.apiSessionId ? `&session_id=${currentSession.apiSessionId}` : '';
+            const url = `${apiBaseUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(userData.privy_user_id)}${sessionIdParam}`;
 
             console.log('Sending chat request to:', url);
             console.log('API Key:', apiKey.substring(0, 10) + '...');
             console.log('Model:', selectedModel.value);
+            console.log('Session ID:', currentSession?.apiSessionId || 'none');
 
             // Prepare message content with image if present
             let messageContent: any = userMessage;
@@ -1151,74 +1156,29 @@ function ChatPageContent() {
                 // Use the accumulated content instead of reading from stale state
                 const finalContent = accumulatedContent;
 
-                // Save messages to API
-                try {
-                    if (activeSessionId) {
-                        // Get the current session from the React state
-                        const currentSession = sessions.find(s => s.id === activeSessionId);
+                // Update session title in API if this is the first message
+                // Note: Messages are automatically saved by the backend when session_id is passed
+                if (isFirstMessage && currentSession?.apiSessionId) {
+                    try {
+                        const apiKey = getApiKey();
+                        if (apiKey) {
+                            const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
+                            // Truncate title if too long (max 100 chars)
+                            const newTitle = userMessage.length > 100 ? userMessage.substring(0, 100) + '...' : userMessage;
+                            await chatAPI.updateSession(currentSession.apiSessionId, newTitle);
 
-                        // Save user message - this may create a new API session
-                        const userResult = await apiHelpers.saveMessage(
-                            activeSessionId,
-                            'user',
-                            userMessage,
-                            selectedModel?.value,
-                            undefined,
-                            sessions
-                        );
-
-                        // Create updated sessions with the API session ID if one was created
-                        let updatedSessions = sessions;
-                        if (userResult?.apiSessionId && userResult.apiSessionId !== currentSession?.apiSessionId) {
-                            console.log(`Updating session ${activeSessionId} with API session ID: ${userResult.apiSessionId}`);
-                            // Use functional setState to avoid overwriting streamed content
-                            setSessions(prev => {
-                                updatedSessions = prev.map(session =>
-                                    session.id === activeSessionId
-                                        ? { ...session, apiSessionId: userResult.apiSessionId }
-                                        : session
-                                );
-                                return updatedSessions;
-                            });
-                        }
-
-                        // Save assistant message - use the updated sessions that include the API session ID
-                        const assistantResult = await apiHelpers.saveMessage(
-                            activeSessionId,
-                            'assistant',
-                            finalContent,
-                            selectedModel?.value,
-                            undefined,
-                            updatedSessions
-                        );
-
-                        // Update session title in API if this is the first message
-                        const sessionForTitle = updatedSessions.find(s => s.id === activeSessionId);
-                        if (isFirstMessage && sessionForTitle?.apiSessionId) {
-                            try {
-                                const apiKey = getApiKey();
-                                if (apiKey) {
-                                    const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
-                                    // Truncate title if too long (max 100 chars)
-                                    const newTitle = userMessage.length > 100 ? userMessage.substring(0, 100) + '...' : userMessage;
-                                    await chatAPI.updateSession(sessionForTitle.apiSessionId, newTitle);
-
-                                    // Update local session state with new title
-                                    setSessions(prev => prev.map(session => {
-                                        if (session.id === activeSessionId) {
-                                            console.log('Updating session title:', { oldTitle: session.title, newTitle });
-                                            return { ...session, title: newTitle };
-                                        }
-                                        return session;
-                                    }));
+                            // Update local session state with new title
+                            setSessions(prev => prev.map(session => {
+                                if (session.id === activeSessionId) {
+                                    console.log('Updating session title:', { oldTitle: session.title, newTitle });
+                                    return { ...session, title: newTitle };
                                 }
-                            } catch (error) {
-                                console.error('Failed to update session title in API:', error);
-                            }
+                                return session;
+                            }));
                         }
+                    } catch (error) {
+                        console.error('Failed to update session title in API:', error);
                     }
-                } catch (error) {
-                    console.error('Failed to save messages to API:', error);
                 }
 
             } catch (streamError) {
@@ -1284,7 +1244,7 @@ function ChatPageContent() {
   // Show login screen if not authenticated
   if (!ready) {
     return (
-      <div className="flex h-[calc(100svh-130px)] bg-background items-center justify-center">
+      <div className="flex h-[calc(100dvh-130px)] bg-background items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           <p className="text-muted-foreground">Initializing...</p>
@@ -1295,7 +1255,7 @@ function ChatPageContent() {
 
   if (!authenticated) {
     return (
-      <div className="flex h-[calc(100svh-130px)] bg-background items-center justify-center">
+      <div className="flex h-[calc(100dvh-130px)] bg-background items-center justify-center">
         <div className="flex flex-col items-center gap-6 max-w-md text-center p-6">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
             <MessageSquare className="h-8 w-8 text-primary" />
@@ -1317,9 +1277,9 @@ function ChatPageContent() {
   }
 
   return (
-    <div className="flex h-[calc(100svh-130px)] bg-background">
+    <div className="flex h-[calc(100dvh-130px)] bg-background overflow-hidden">
       {/* Left Sidebar */}
-        <div className="hidden lg:flex w-56 xl:w-72 bg-muted/20 border-r justify-end">
+        <div className="hidden lg:flex w-56 xl:w-72 border-r flex-shrink-0 overflow-hidden">
           <ChatSidebar
             sessions={sessions}
             activeSessionId={activeSessionId}
@@ -1329,9 +1289,9 @@ function ChatPageContent() {
             onRenameSession={handleRenameSession}
           />
         </div>
-      
+
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative overflow-hidden">
+      <main className="flex-1 flex flex-col relative overflow-hidden min-w-0">
       <img
         src="/logo_transparent.svg"
         alt="Stats"
@@ -1346,8 +1306,8 @@ function ChatPageContent() {
        
         
         {/* Header with title and model selector */}
-        <header className="relative z-10 w-full flex items-center justify-between gap-2 lg:gap-4 p-4 lg:p-6 max-w-7xl mx-auto">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
+        <header className="relative z-10 w-full flex items-center justify-between gap-2 lg:gap-4 p-4 lg:p-6 max-w-7xl mx-auto overflow-hidden">
+          <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
             <div className="lg:hidden flex-shrink-0">
               <Sheet>
                 <SheetTrigger asChild>
@@ -1365,7 +1325,7 @@ function ChatPageContent() {
                 </SheetContent>
               </Sheet>
             </div>
-            <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
               {isEditingTitle ? (
                 <Input
                   type="text"
@@ -1388,11 +1348,11 @@ function ChatPageContent() {
                     }
                   }}
                   autoFocus
-                  className="text-lg lg:text-2xl font-semibold h-auto px-2 py-1"
+                  className="text-lg lg:text-2xl font-semibold h-auto px-2 py-1 min-w-0 flex-1"
                 />
               ) : (
                 <>
-                  <h1 className="text-lg lg:text-2xl font-semibold truncate">{activeSession?.title || 'Untitled Chat'}</h1>
+                  <h1 className="text-lg lg:text-2xl font-semibold truncate min-w-0 flex-1 max-w-full">{activeSession?.title || 'Untitled Chat'}</h1>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -1584,7 +1544,7 @@ function ChatPageContent() {
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={<div className="flex h-[calc(100svh-130px)] items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="flex h-[calc(100dvh-130px)] items-center justify-center">Loading...</div>}>
       <ChatPageContent />
     </Suspense>
   );
