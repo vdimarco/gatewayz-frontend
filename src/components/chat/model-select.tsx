@@ -59,13 +59,33 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
         }
       }
 
-      // Fetch from API
+      // Fetch from both gateways to get all models
       setLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/models?gateway=all`);
-        const data = await response.json();
-        console.log('Models fetched from API:', data.data?.length || 0);
-        const modelOptions: ModelOption[] = (data.data || []).map((model: any) => {
+        // Fetch from both OpenRouter and Portkey separately
+        const [openrouterRes, portkeyRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/models?gateway=openrouter`),
+          fetch(`${API_BASE_URL}/models?gateway=portkey`)
+        ]);
+
+        const [openrouterData, portkeyData] = await Promise.all([
+          openrouterRes.json(),
+          portkeyRes.json()
+        ]);
+
+        // Combine models from both gateways
+        const allModels = [
+          ...(openrouterData.data || []),
+          ...(portkeyData.data || [])
+        ];
+
+        console.log('Models fetched from API:', {
+          openrouter: openrouterData.data?.length || 0,
+          portkey: portkeyData.data?.length || 0,
+          total: allModels.length
+        });
+
+        const modelOptions: ModelOption[] = allModels.map((model: any) => {
           const sourceGateway = model.source_gateway || 'openrouter';
           const promptPrice = Number(model.pricing?.prompt ?? 0);
           const completionPrice = Number(model.pricing?.completion ?? 0);
