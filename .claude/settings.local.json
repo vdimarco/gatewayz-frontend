@@ -29,7 +29,8 @@
       "Bash(gh pr checkout:*)",
       "Bash(gh pr:*)",
       "Read(//c/Users/vaughn.v/Downloads/**)",
-      "Bash(npm i:*)"
+      "Bash(npm i:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

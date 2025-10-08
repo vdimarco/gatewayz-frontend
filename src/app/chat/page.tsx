@@ -509,16 +509,13 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
 
 // Preprocess LaTeX to fix common formatting issues
 const fixLatexSyntax = (content: string): string => {
-    // Fix display math: [ ... ] -> \[ ... \]
+    // Fix display math: [ ... ] -> $$ ... $$
     // Match any brackets that contain LaTeX syntax
     content = content.replace(/\[\s*([^\]]+?)\s*\]/g, (match, formula) => {
         // Check if it contains LaTeX-like syntax (backslashes, frac, text, etc.)
         if (/\\[a-zA-Z]+|\\frac|\\text|\\sqrt|\\sum|\\int|\\approx|\\times|\\div/.test(formula)) {
-            // Check if it's already escaped
-            if (match.startsWith('\\[')) {
-                return match; // Already properly formatted
-            }
-            return `\\[ ${formula} \\]`;
+            // Use $$ for display math which is more reliable
+            return `$$${formula}$$`;
         }
         return match; // Not LaTeX, keep original (could be array notation, etc.)
     });
@@ -982,7 +979,7 @@ function ChatPageContent() {
                         variant="outline"
                         size="sm"
                         onClick={() => login()}
-                        className="bg-white hover:bg-gray-100 text-destructive border-destructive/20"
+                        className="bg-card hover:bg-muted/50 text-destructive border-destructive/20"
                     >
                         Log In
                     </Button>

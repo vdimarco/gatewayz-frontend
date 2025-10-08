@@ -8,14 +8,24 @@ interface GatewayzLogoProps {
 
 export function GatewayzLogo({ className = "", size = 24 }: GatewayzLogoProps) {
   return (
-    <Image
-      src="/logo.png"
-      alt="Gatewayz Logo"
-      width={size}
-      height={size}
-      className={className}
-      priority
-    />
+    <>
+      <Image
+        src="/logo.png"
+        alt="Gatewayz Logo"
+        width={size}
+        height={size}
+        className={`${className} dark:hidden`}
+        priority
+      />
+      <Image
+        src="/logo_transparent.svg"
+        alt="Gatewayz Logo"
+        width={size}
+        height={size}
+        className={`${className} hidden dark:block`}
+        priority
+      />
+    </>
   );
 }
 
