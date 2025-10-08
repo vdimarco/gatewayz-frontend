@@ -18,7 +18,7 @@ export function GatewayzLogo({ className = "", size = 24 }: GatewayzLogoProps) {
         priority
       />
       <Image
-        src="/logo_transparent.svg"
+        src="/logo_white.png"
         alt="Gatewayz Logo"
         width={size}
         height={size}
