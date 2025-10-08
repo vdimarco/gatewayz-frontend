@@ -74,7 +74,7 @@ const ApiKeyRow = ({
 
   return (
     <div className="px-4 py-3 hover:bg-gray-50">
-      <div className="grid grid-cols-5 gap-4 items-center text-sm">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 items-center text-sm">
         <div className="font-medium">
           {apiKey.key_name}
           {apiKey.is_primary && (
@@ -85,7 +85,7 @@ const ApiKeyRow = ({
           )}
         </div>
         <div className="font-medium flex items-center gap-2 min-w-0">
-          <span className="font-mono text-xs truncate">{maskedKey}</span>
+          <span className="font-mono text-xs truncate flex-shrink min-w-0">{maskedKey}</span>
           <TooltipProvider delayDuration={0}>
             <Tooltip open={showFullKey}>
               <TooltipTrigger asChild>
@@ -134,10 +134,10 @@ const ApiKeyRow = ({
             <Copy className="h-3 w-3" />
           </Button>
         </div>
-        <div className="font-medium">{limit}</div>
-        <div className="font-medium">{usage}</div>
+        <div className="font-medium hidden lg:block">{limit}</div>
+        <div className="font-medium hidden lg:block">{usage}</div>
 
-        <div className="flex justify-end gap-2">
+        <div className="hidden lg:flex justify-end gap-2">
           {!apiKey.is_primary && (
             <Button
               variant="ghost"
@@ -496,12 +496,12 @@ export default function ApiKeysPage() {
         ) : (
           <div className="border border-gray-200 overflow-hidden border-x-0">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-              <div className="grid grid-cols-5 gap-4 text-sm font-medium">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 text-sm font-medium">
                 <div>Name</div>
-                <div>Key</div>
-                <div>Limit</div>
-                <div>Usage</div>
-                <div></div>
+                <div className="col-span-1">Key</div>
+                <div className="hidden lg:block">Limit</div>
+                <div className="hidden lg:block">Usage</div>
+                <div className="hidden lg:block"></div>
               </div>
             </div>
             <div className="divide-y divide-gray-200">

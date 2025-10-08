@@ -31,7 +31,6 @@ import {
   User,
   MoreHorizontal,
   Trash2,
-  Edit,
   Image as ImageIcon,
   X
 } from 'lucide-react';
@@ -446,22 +445,8 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
                                         className="w-full justify-start items-start text-left flex flex-col h-auto py-2 rounded-lg pr-16"
                                         onClick={() => setActiveSessionId(session.id)}
                                     >
-                                        <span className="font-medium truncate w-full flex items-center gap-2">
+                                        <span className="font-medium truncate w-full">
                                             {session.title}
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const newTitle = prompt('Rename chat:', session.title);
-                                                    if (newTitle && newTitle.trim() && newTitle !== session.title) {
-                                                        onRenameSession(session.id, newTitle.trim());
-                                                    }
-                                                }}
-                                            >
-                                                <Pencil className="h-3 w-3" />
-                                            </Button>
                                         </span>
                                         <span className="text-xs text-muted-foreground">
                                             {formatDistanceToNow(session.startTime, { addSuffix: true })}
@@ -482,7 +467,7 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-48">
-                                                <DropdownMenuItem 
+                                                <DropdownMenuItem
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         const newTitle = prompt('Rename chat:', session.title);
@@ -491,7 +476,7 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
                                                         }
                                                     }}
                                                 >
-                                                    <Edit className="h-4 w-4 mr-2" />
+                                                    <Pencil className="h-4 w-4 mr-2" />
                                                     Rename
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem 
@@ -1032,12 +1017,20 @@ function ChatPageContent() {
                 // Use streaming API
                 const modelValue = selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value;
 
+                // Accumulate content locally to avoid state closure issues
+                let accumulatedContent = '';
+                let accumulatedReasoning = '';
+
                 for await (const chunk of streamChatResponse(
                     url,
                     apiKey,
                     modelValue,
                     [{ role: 'user', content: messageContent }]
                 )) {
+                    // Accumulate content locally
+                    accumulatedContent += chunk.content || '';
+                    accumulatedReasoning += chunk.reasoning || '';
+
                     // Update the assistant message with streamed content
                     setSessions(prev => prev.map(session => {
                         if (session.id === activeSessionId) {
@@ -1045,8 +1038,8 @@ function ChatPageContent() {
                             const lastMessage = messages[messages.length - 1];
 
                             if (lastMessage.role === 'assistant') {
-                                lastMessage.content += chunk.content || '';
-                                lastMessage.reasoning = (lastMessage.reasoning || '') + (chunk.reasoning || '');
+                                lastMessage.content = accumulatedContent;
+                                lastMessage.reasoning = accumulatedReasoning;
                                 lastMessage.isStreaming = !chunk.done;
                             }
 
@@ -1060,10 +1053,8 @@ function ChatPageContent() {
                     }));
                 }
 
-                // Get the final message content
-                const finalSession = sessions.find(s => s.id === activeSessionId);
-                const finalMessage = finalSession?.messages[finalSession.messages.length - 1];
-                const finalContent = finalMessage?.content || '';
+                // Use the accumulated content instead of reading from stale state
+                const finalContent = accumulatedContent;
 
                 // Save messages to API
                 try {
@@ -1085,13 +1076,15 @@ function ChatPageContent() {
                         let updatedSessions = sessions;
                         if (userResult?.apiSessionId && userResult.apiSessionId !== currentSession?.apiSessionId) {
                             console.log(`Updating session ${activeSessionId} with API session ID: ${userResult.apiSessionId}`);
-                            updatedSessions = sessions.map(session =>
-                                session.id === activeSessionId
-                                    ? { ...session, apiSessionId: userResult.apiSessionId }
-                                    : session
-                            );
-                            // Update React state
-                            setSessions(updatedSessions);
+                            // Use functional setState to avoid overwriting streamed content
+                            setSessions(prev => {
+                                updatedSessions = prev.map(session =>
+                                    session.id === activeSessionId
+                                        ? { ...session, apiSessionId: userResult.apiSessionId }
+                                        : session
+                                );
+                                return updatedSessions;
+                            });
                         }
 
                         // Save assistant message - use the updated sessions that include the API session ID
@@ -1185,7 +1178,7 @@ function ChatPageContent() {
   return (
     <div className="flex h-[calc(100svh-130px)] bg-background">
       {/* Left Sidebar */}
-        <div className="hidden lg:flex w-[32rem] bg-muted/20 border-r justify-end">
+        <div className="hidden lg:flex w-56 xl:w-72 bg-muted/20 border-r justify-end">
           <ChatSidebar 
             sessions={sessions} 
             activeSessionId={activeSessionId} 

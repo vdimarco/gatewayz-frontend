@@ -491,7 +491,7 @@ console.log(completion.choices[0].message);`,
             <Link href="/claude-code">
               <Button
                 variant="secondary"
-                className="bg-white text-purple-600 hover:bg-white/90 whitespace-nowrap"
+                className="bg-background text-purple-600 dark:text-purple-400 hover:bg-muted whitespace-nowrap"
               >
                 Get Started →
               </Button>
@@ -830,17 +830,17 @@ console.log(completion.choices[0].message);`,
                 <div className="p-6 border rounded-lg bg-card">
                     <h2 className="text-3xl font-bold mb-2">Explore Models</h2>
                     <p className="text-1xl mb-4">Discover AI Models Across Our Collection, From All Major Labs And Providers.</p>
-                    <Link href="/models"><Button variant="outline" className="bg-white text-bold">View Models <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
+                    <Link href="/models"><Button variant="outline" className="bg-background hover:bg-muted text-bold">View Models <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
                 </div>
                  <div className="p-6 border rounded-lg bg-card">
                     <h2 className="text-3xl font-bold mb-2">Model & App Rankings</h2>
                     <p className="text-1xl mb-4">Explore Token Usage Across Models, Labs, And Public Applications.</p>
-                    <Link href="/rankings"><Button variant="outline" className="bg-white text-bold">View Rankings <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
+                    <Link href="/rankings"><Button variant="outline" className="bg-background hover:bg-muted text-bold">View Rankings <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
                 </div>
                 <div className="p-6 border rounded-lg bg-card">
                     <h2 className="text-3xl font-bold mb-2">Chat With Any LLM</h2>
                     <p className="text-1xl mb-4">Select Between 1000+ Models To Help With Any Query You Have At Hand Or Integrate Into Your Systems.</p>
-                    <Link href="/chat"><Button variant="outline" className="bg-white text-bold">Chat With LLM <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
+                    <Link href="/chat"><Button variant="outline" className="bg-background hover:bg-muted text-bold">Chat With LLM <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
                 </div>
             </div>
             {/* <div>
