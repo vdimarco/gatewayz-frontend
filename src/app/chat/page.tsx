@@ -31,6 +31,7 @@ import {
   User,
   MoreHorizontal,
   Trash2,
+  RefreshCw,
   Image as ImageIcon,
   X
 } from 'lucide-react';
