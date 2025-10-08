@@ -31,9 +31,10 @@ import {
   User,
   MoreHorizontal,
   Trash2,
-  Edit,
+  RefreshCw,
   Image as ImageIcon,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 import { ModelSelect, type ModelOption } from '@/components/chat/model-select';
 import './chat.css';
@@ -446,22 +447,8 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
                                         className="w-full justify-start items-start text-left flex flex-col h-auto py-2 rounded-lg pr-16"
                                         onClick={() => setActiveSessionId(session.id)}
                                     >
-                                        <span className="font-medium truncate w-full flex items-center gap-2">
+                                        <span className="font-medium truncate w-full">
                                             {session.title}
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const newTitle = prompt('Rename chat:', session.title);
-                                                    if (newTitle && newTitle.trim() && newTitle !== session.title) {
-                                                        onRenameSession(session.id, newTitle.trim());
-                                                    }
-                                                }}
-                                            >
-                                                <Pencil className="h-3 w-3" />
-                                            </Button>
                                         </span>
                                         <span className="text-xs text-muted-foreground">
                                             {formatDistanceToNow(session.startTime, { addSuffix: true })}
@@ -482,7 +469,7 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="w-48">
-                                                <DropdownMenuItem 
+                                                <DropdownMenuItem
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         const newTitle = prompt('Rename chat:', session.title);
@@ -491,7 +478,7 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
                                                         }
                                                     }}
                                                 >
-                                                    <Edit className="h-4 w-4 mr-2" />
+                                                    <Pencil className="h-4 w-4 mr-2" />
                                                     Rename
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem 
@@ -520,8 +507,61 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
     )
 }
 
+// Preprocess LaTeX to fix common formatting issues
+const fixLatexSyntax = (content: string): string => {
+    // Fix display math: [ ... ] -> \[ ... \]
+    // Match any brackets that contain LaTeX syntax
+    content = content.replace(/\[\s*([^\]]+?)\s*\]/g, (match, formula) => {
+        // Check if it contains LaTeX-like syntax (backslashes, frac, text, etc.)
+        if (/\\[a-zA-Z]+|\\frac|\\text|\\sqrt|\\sum|\\int|\\approx|\\times|\\div/.test(formula)) {
+            // Check if it's already escaped
+            if (match.startsWith('\\[')) {
+                return match; // Already properly formatted
+            }
+            return `\\[ ${formula} \\]`;
+        }
+        return match; // Not LaTeX, keep original (could be array notation, etc.)
+    });
+
+    return content;
+};
+
+// Exciting loading component for when AI is thinking
+const ThinkingLoader = ({ modelName }: { modelName: string | undefined }) => {
+    return (
+        <div className="flex items-start gap-3 animate-in fade-in duration-500">
+            <div className="flex flex-col gap-1 items-start max-w-[85%]">
+                <div className="rounded-lg p-4 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 border border-purple-500/20 relative overflow-hidden">
+                    {/* Animated shimmer effect */}
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                    <div className="relative">
+                        <p className="text-xs font-semibold mb-3 text-muted-foreground">{modelName}</p>
+                        <div className="flex items-center gap-3">
+                            <Sparkles className="h-5 w-5 text-purple-500 animate-pulse" />
+                            <div className="flex gap-1">
+                                <div className="w-2 h-2 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <div className="w-2 h-2 rounded-full bg-pink-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                            <span className="text-sm text-muted-foreground animate-pulse">Thinking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const ChatMessage = ({ message, modelName }: { message: Message, modelName: string | undefined}) => {
     const isUser = message.role === 'user';
+    const processedContent = fixLatexSyntax(message.content);
+
+    // Show exciting loader when AI is thinking (streaming but no content yet)
+    if (!isUser && message.isStreaming && !message.content) {
+        return <ThinkingLoader modelName={modelName} />;
+    }
+
     return (
         <div className={`flex items-start gap-3 ${isUser ? 'justify-end' : ''}`}>
              {/* {!isUser && <Avatar className="w-8 h-8"><AvatarFallback><Bot/></AvatarFallback></Avatar>} */}
@@ -529,11 +569,11 @@ const ChatMessage = ({ message, modelName }: { message: Message, modelName: stri
                 {!isUser && message.reasoning && (
                     <ReasoningDisplay reasoning={message.reasoning} className="w-full" />
                 )}
-                <div className={`rounded-lg p-3 ${isUser ? 'bg-primary text-primary-foreground' : 'bg-card border border-border'} ${message.isStreaming ? 'streaming-message' : ''}`}>
+                <div className={`rounded-lg p-3 ${isUser ? 'bg-primary dark:bg-blue-600 text-primary-foreground dark:text-white' : 'bg-card border border-border'} ${message.isStreaming ? 'streaming-message' : ''}`}>
                      {!isUser && <p className="text-xs font-semibold mb-1">{modelName}</p>}
                     <div className={`text-sm prose prose-sm max-w-none ${isUser ? 'text-white prose-invert' : 'dark:prose-invert'}`}>
                         {isUser ? (
-                            <div className="whitespace-pre-wrap text-white">{message.content}</div>
+                            <div className="whitespace-pre-wrap text-white">{processedContent}</div>
                         ) : (
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm, remarkMath]}
@@ -559,7 +599,7 @@ const ChatMessage = ({ message, modelName }: { message: Message, modelName: stri
                                     li: ({ children }) => <li className="mb-1">{children}</li>,
                                 }}
                             >
-                                {message.content}
+                                {processedContent}
                             </ReactMarkdown>
                         )}
                     </div>
@@ -599,7 +639,7 @@ const ChatSkeleton = () => (
 
 function ChatPageContent() {
     const searchParams = useSearchParams();
-    const { login } = usePrivy();
+    const { login, authenticated, ready } = usePrivy();
     const [message, setMessage] = useState('');
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -714,25 +754,27 @@ function ChatPageContent() {
     }, [shouldAutoSend, activeSessionId, message, selectedModel, loading]);
 
     useEffect(() => {
-        // Load sessions from API
+        // Load sessions from API when authenticated
+        if (!ready) return; // Wait for Privy to initialize
+
         const loadSessions = async () => {
             try {
                 const sessionsData = await apiHelpers.loadChatSessions('user-1');
-                
+
                 setSessions(sessionsData);
-                
+
                 // Check if there's already a new/empty chat, if not create one
-                const hasNewChat = sessionsData.some(session => 
-                    session.messages.length === 0 && 
+                const hasNewChat = sessionsData.some(session =>
+                    session.messages.length === 0 &&
                     session.title === 'Untitled Chat'
                 );
-                
+
                 if (!hasNewChat) {
                     createNewChat();
                 } else {
                     // Set the first new chat as active
-                    const firstNewChat = sessionsData.find(session => 
-                        session.messages.length === 0 && 
+                    const firstNewChat = sessionsData.find(session =>
+                        session.messages.length === 0 &&
                         session.title === 'Untitled Chat'
                     );
                     if (firstNewChat) {
@@ -745,9 +787,9 @@ function ChatPageContent() {
                 createNewChat();
             }
         };
-        
+
         loadSessions();
-    }, []);
+    }, [ready, authenticated]);
 
     // Note: In a real app, you would save sessions to backend API here
     // useEffect(() => {
@@ -926,6 +968,29 @@ function ChatPageContent() {
     };
 
     const handleSendMessage = async () => {
+        // Check authentication first
+        const apiKey = getApiKey();
+        const userData = getUserData();
+
+        if (!apiKey || !userData?.privy_user_id) {
+            toast({
+                title: "Authentication required",
+                description: "Please wait for authentication to complete or log in.",
+                variant: 'destructive',
+                action: (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => login()}
+                        className="bg-white hover:bg-gray-100 text-destructive border-destructive/20"
+                    >
+                        Log In
+                    </Button>
+                ),
+            });
+            return;
+        }
+
         if (!message.trim() || !selectedModel || !activeSessionId) {
             toast({
                 title: "Cannot send message",
@@ -966,28 +1031,9 @@ function ChatPageContent() {
         setLoading(true);
 
         try {
+            // Auth is already checked at the beginning of handleSendMessage
             const apiKey = getApiKey();
             const userData = getUserData();
-
-            if (!apiKey || !userData?.privy_user_id) {
-                toast({
-                    title: "Authentication required",
-                    description: "Please log in to use the chat feature.",
-                    variant: 'destructive',
-                    action: (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => login()}
-                            className="bg-card hover:bg-muted/50 text-destructive border-destructive/20"
-                        >
-                            Log In
-                        </Button>
-                    ),
-                });
-                setLoading(false);
-                return;
-            }
 
             // Call backend API directly with privy_user_id query parameter
             const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
@@ -1032,12 +1078,20 @@ function ChatPageContent() {
                 // Use streaming API
                 const modelValue = selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value;
 
+                // Accumulate content locally to avoid state closure issues
+                let accumulatedContent = '';
+                let accumulatedReasoning = '';
+
                 for await (const chunk of streamChatResponse(
                     url,
                     apiKey,
                     modelValue,
                     [{ role: 'user', content: messageContent }]
                 )) {
+                    // Accumulate content locally
+                    accumulatedContent += chunk.content || '';
+                    accumulatedReasoning += chunk.reasoning || '';
+
                     // Update the assistant message with streamed content
                     setSessions(prev => prev.map(session => {
                         if (session.id === activeSessionId) {
@@ -1045,8 +1099,8 @@ function ChatPageContent() {
                             const lastMessage = messages[messages.length - 1];
 
                             if (lastMessage.role === 'assistant') {
-                                lastMessage.content += chunk.content || '';
-                                lastMessage.reasoning = (lastMessage.reasoning || '') + (chunk.reasoning || '');
+                                lastMessage.content = accumulatedContent;
+                                lastMessage.reasoning = accumulatedReasoning;
                                 lastMessage.isStreaming = !chunk.done;
                             }
 
@@ -1060,10 +1114,8 @@ function ChatPageContent() {
                     }));
                 }
 
-                // Get the final message content
-                const finalSession = sessions.find(s => s.id === activeSessionId);
-                const finalMessage = finalSession?.messages[finalSession.messages.length - 1];
-                const finalContent = finalMessage?.content || '';
+                // Use the accumulated content instead of reading from stale state
+                const finalContent = accumulatedContent;
 
                 // Save messages to API
                 try {
@@ -1085,13 +1137,15 @@ function ChatPageContent() {
                         let updatedSessions = sessions;
                         if (userResult?.apiSessionId && userResult.apiSessionId !== currentSession?.apiSessionId) {
                             console.log(`Updating session ${activeSessionId} with API session ID: ${userResult.apiSessionId}`);
-                            updatedSessions = sessions.map(session =>
-                                session.id === activeSessionId
-                                    ? { ...session, apiSessionId: userResult.apiSessionId }
-                                    : session
-                            );
-                            // Update React state
-                            setSessions(updatedSessions);
+                            // Use functional setState to avoid overwriting streamed content
+                            setSessions(prev => {
+                                updatedSessions = prev.map(session =>
+                                    session.id === activeSessionId
+                                        ? { ...session, apiSessionId: userResult.apiSessionId }
+                                        : session
+                                );
+                                return updatedSessions;
+                            });
                         }
 
                         // Save assistant message - use the updated sessions that include the API session ID
@@ -1185,7 +1239,7 @@ function ChatPageContent() {
   return (
     <div className="flex h-[calc(100svh-130px)] bg-background">
       {/* Left Sidebar */}
-        <div className="hidden lg:flex w-[32rem] bg-muted/20 border-r justify-end">
+        <div className="hidden lg:flex w-56 xl:w-72 bg-muted/20 border-r justify-end">
           <ChatSidebar 
             sessions={sessions} 
             activeSessionId={activeSessionId} 
@@ -1212,8 +1266,8 @@ function ChatPageContent() {
        
         
         {/* Header with title and model selector */}
-        <header className="relative z-10 w-full flex items-center justify-between gap-3 lg:gap-6 p-4 lg:p-6 max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+        <header className="relative z-10 w-full flex items-center justify-between gap-2 lg:gap-4 p-4 lg:p-6 max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="lg:hidden flex-shrink-0">
               <Sheet>
                 <SheetTrigger asChild>
@@ -1231,7 +1285,7 @@ function ChatPageContent() {
                 </SheetContent>
               </Sheet>
             </div>
-            <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               {isEditingTitle ? (
                 <Input
                   type="text"
@@ -1274,7 +1328,7 @@ function ChatPageContent() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-3 bg-card flex-shrink-0">
+          <div className="flex items-center gap-2 bg-card flex-shrink-0">
             <ModelSelect selectedModel={selectedModel} onSelectModel={setSelectedModel} />
           </div>
         </header>
@@ -1387,7 +1441,7 @@ function ChatPageContent() {
                     </Button>
                   </div>
                 )}
-                <div className="flex items-center gap-1 px-2 py-2 bg-card rounded-xl border border-border">
+                <div className="flex items-center gap-1 px-2 py-2 bg-muted/20 dark:bg-muted/40 rounded-xl border border-border">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1400,12 +1454,13 @@ function ChatPageContent() {
                     size="icon"
                     className="h-8 w-8 rounded-lg"
                     onClick={() => fileInputRef.current?.click()}
+                    disabled={!ready || !authenticated}
                   >
                     <ImageIcon className="h-5 w-5" />
                   </Button>
                   <Input
                     ref={messageInputRef}
-                    placeholder="Start A Message"
+                    placeholder={!ready ? "Authenticating..." : !authenticated ? "Please log in..." : "Start A Message"}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={(e) => {
@@ -1414,14 +1469,19 @@ function ChatPageContent() {
                         handleSendMessage();
                       }
                     }}
-                    className="border-0 bg-transparent focus-visible:ring-0 text-base flex-1"
+                    disabled={!ready || !authenticated}
+                    className="border-0 bg-transparent focus-visible:ring-0 text-base text-foreground flex-1"
                   />
+                  {(!ready || !authenticated) && (
+                    <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
                   <Button
                     size="icon"
                     variant="ghost"
                     onClick={handleSendMessage}
-                    disabled={loading || !message.trim()}
+                    disabled={loading || !message.trim() || !ready || !authenticated}
                     className="h-8 w-8"
+                    title={!ready ? "Waiting for authentication..." : !authenticated ? "Please log in" : "Send message"}
                   >
                      <img src="/Frame 13.svg" alt="Send" width={34} height={34} />
                   </Button>

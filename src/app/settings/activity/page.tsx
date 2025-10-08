@@ -111,6 +111,7 @@ const ActivityChart = ({ dataKey, title, value, currency = false, data }: { data
 };
 
 export default function ActivityPage() {
+  const [mounted, setMounted] = useState(false);
   const [date, setDate] = useState<DateRange | undefined>({
     from: addDays(new Date(), -29),
     to: new Date(),
@@ -122,6 +123,11 @@ export default function ActivityPage() {
   const [totalTokens, setTotalTokens] = useState('0');
   const [totalRequests, setTotalRequests] = useState('0');
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const fetchActivityData = async () => {
     try {
@@ -140,7 +146,7 @@ export default function ActivityPage() {
 
       // Fetch activity stats for charts
       const statsResponse = await makeAuthenticatedRequest(
-        `${API_BASE_URL}/user/activity/stats?from=${fromDate}&to=${toDate}`
+        `/api/user/activity/stats?from=${fromDate}&to=${toDate}`
       );
 
       if (statsResponse.ok) {
@@ -153,7 +159,7 @@ export default function ActivityPage() {
 
       // Fetch activity log
       const logResponse = await makeAuthenticatedRequest(
-        `${API_BASE_URL}/user/activity/log?from=${fromDate}&to=${toDate}&page=${currentPage}&limit=10`
+        `/api/user/activity/log?from=${fromDate}&to=${toDate}&page=${currentPage}&limit=10`
       );
 
       if (logResponse.ok) {
@@ -177,8 +183,21 @@ export default function ActivityPage() {
   };
 
   useEffect(() => {
-    fetchActivityData();
-  }, [date, currentPage]);
+    if (mounted) {
+      fetchActivityData();
+    }
+  }, [date, currentPage, mounted]);
+
+  if (!mounted) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold">Your Activity</h1>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

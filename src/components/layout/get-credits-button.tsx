@@ -66,16 +66,16 @@ export function GetCreditsButton() {
         <button
           onClick={handleClick}
           disabled={isLoading}
-          className="relative bg-black hover:bg-gray-900 text-white h-10 px-6 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative bg-black hover:bg-gray-900 text-white h-10 px-3 sm:px-6 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
             {isLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-gray-300 border-t-white rounded-full animate-spin"></div>
-                <span className="text-white font-semibold">Loading...</span>
+                <span className="text-white font-semibold text-xs sm:text-sm">Loading...</span>
               </>
             ) : (
-              <span className="text-white font-semibold tracking-wide uppercase text-sm">
+              <span className="text-white font-semibold tracking-tight sm:tracking-wide uppercase text-xs sm:text-sm whitespace-nowrap">
                 Get Credits
               </span>
             )}
