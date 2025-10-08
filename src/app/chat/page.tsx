@@ -511,15 +511,21 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
 
 // Preprocess LaTeX to fix common formatting issues
 const fixLatexSyntax = (content: string): string => {
-    // Fix display math: [ ... ] -> $$ ... $$
+    // Fix display math: [ ... ] -> $$ ... $$ with newlines for proper parsing
     // Match any brackets that contain LaTeX syntax
     content = content.replace(/\[\s*([^\]]+?)\s*\]/g, (match, formula) => {
         // Check if it contains LaTeX-like syntax (backslashes, frac, text, etc.)
         if (/\\[a-zA-Z]+|\\frac|\\text|\\sqrt|\\sum|\\int|\\approx|\\times|\\div/.test(formula)) {
-            // Use $$ for display math which is more reliable
-            return `$$${formula}$$`;
+            // Use $$ with newlines for display math (remark-math requires this format)
+            return `\n$$\n${formula}\n$$\n`;
         }
         return match; // Not LaTeX, keep original (could be array notation, etc.)
+    });
+
+    // Also fix any existing $$ delimiters that aren't on their own lines
+    content = content.replace(/\$\$([^$]+?)\$\$/g, (match, formula) => {
+        // Add newlines around display math for proper parsing
+        return `\n$$\n${formula}\n$$\n`;
     });
 
     return content;
