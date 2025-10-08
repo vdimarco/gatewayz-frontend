@@ -1380,7 +1380,7 @@ function ChatPageContent() {
         <div className="relative z-10 w-full flex-1 flex flex-col overflow-hidden">
           {/* Chat messages area */}
           {messages.length > 0 && (
-            <div ref={chatContainerRef} className="flex-1 flex flex-col gap-4 lg:gap-6 overflow-y-auto p-4 lg:p-6 bg-card max-w-4xl mx-auto w-full">
+            <div ref={chatContainerRef} className="flex-1 flex flex-col gap-4 lg:gap-6 overflow-y-auto p-4 lg:p-6 max-w-4xl mx-auto w-full">
               {messages.map((msg, index) => (
                 <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                   <div className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
