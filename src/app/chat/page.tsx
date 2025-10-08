@@ -1162,7 +1162,18 @@ function ChatPageContent() {
                                 const apiKey = getApiKey();
                                 if (apiKey) {
                                     const chatAPI = new ChatHistoryAPI(apiKey);
-                                    await chatAPI.updateSession(sessionForTitle.apiSessionId, userMessage);
+                                    // Truncate title if too long (max 100 chars)
+                                    const newTitle = userMessage.length > 100 ? userMessage.substring(0, 100) + '...' : userMessage;
+                                    await chatAPI.updateSession(sessionForTitle.apiSessionId, newTitle);
+
+                                    // Update local session state with new title
+                                    setSessions(prev => prev.map(session => {
+                                        if (session.id === activeSessionId) {
+                                            console.log('Updating session title:', { oldTitle: session.title, newTitle });
+                                            return { ...session, title: newTitle };
+                                        }
+                                        return session;
+                                    }));
                                 }
                             } catch (error) {
                                 console.error('Failed to update session title in API:', error);
