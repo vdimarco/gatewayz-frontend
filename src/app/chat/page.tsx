@@ -1374,7 +1374,7 @@ function ChatPageContent() {
                 <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                   <div className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                     {msg.role === 'user' ? (
-                      <div className="rounded-lg p-3 bg-primary text-primary-foreground">
+                      <div className="rounded-lg p-3 bg-blue-600 dark:bg-blue-600 text-white">
                         {msg.image && (
                           <img
                             src={msg.image}
