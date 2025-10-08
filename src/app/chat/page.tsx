@@ -913,6 +913,29 @@ function ChatPageContent() {
     };
 
     const handleSendMessage = async () => {
+        // Check authentication first
+        const apiKey = getApiKey();
+        const userData = getUserData();
+
+        if (!apiKey || !userData?.privy_user_id) {
+            toast({
+                title: "Authentication required",
+                description: "Please wait for authentication to complete or log in.",
+                variant: 'destructive',
+                action: (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => login()}
+                        className="bg-white hover:bg-gray-100 text-destructive border-destructive/20"
+                    >
+                        Log In
+                    </Button>
+                ),
+            });
+            return;
+        }
+
         if (!message.trim() || !selectedModel || !activeSessionId) {
             toast({
                 title: "Cannot send message",
@@ -953,28 +976,9 @@ function ChatPageContent() {
         setLoading(true);
 
         try {
+            // Auth is already checked at the beginning of handleSendMessage
             const apiKey = getApiKey();
             const userData = getUserData();
-
-            if (!apiKey || !userData?.privy_user_id) {
-                toast({
-                    title: "Authentication required",
-                    description: "Please log in to use the chat feature.",
-                    variant: 'destructive',
-                    action: (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => login()}
-                            className="bg-white hover:bg-gray-100 text-destructive border-destructive/20"
-                        >
-                            Log In
-                        </Button>
-                    ),
-                });
-                setLoading(false);
-                return;
-            }
 
             // Call backend API directly with privy_user_id query parameter
             const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
@@ -1415,8 +1419,9 @@ function ChatPageContent() {
                     size="icon"
                     variant="ghost"
                     onClick={handleSendMessage}
-                    disabled={loading || !message.trim()}
+                    disabled={loading || !message.trim() || !ready || !authenticated}
                     className="h-8 w-8"
+                    title={!ready ? "Waiting for authentication..." : !authenticated ? "Please log in" : "Send message"}
                   >
                      <img src="/Frame 13.svg" alt="Send" width={34} height={34} />
                   </Button>
