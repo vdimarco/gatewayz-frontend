@@ -1379,7 +1379,7 @@ function ChatPageContent() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-card flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <ModelSelect selectedModel={selectedModel} onSelectModel={setSelectedModel} />
           </div>
         </header>
