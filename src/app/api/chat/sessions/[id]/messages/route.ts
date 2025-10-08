@@ -44,6 +44,7 @@ export async function POST(
 
     const url = `${API_BASE_URL}/v1/chat/sessions/${cleanSessionId}/messages`;
 
+    // Send message data in JSON body to support long content
     console.log(`Chat messages API - Saving message to: ${url}`);
     console.log(`Chat messages API - Content length: ${content.length} chars`);
     console.log(`Chat messages API - API Key:`, apiKey ? `${apiKey.substring(0, 10)}...` : 'None');
