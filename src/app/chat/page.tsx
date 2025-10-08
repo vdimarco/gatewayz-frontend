@@ -505,8 +505,25 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
     )
 }
 
+// Preprocess LaTeX to fix common formatting issues
+const fixLatexSyntax = (content: string): string => {
+    // Fix display math: [ ... ] -> \[ ... \]
+    // Match standalone brackets that look like display math (on their own line or with whitespace)
+    content = content.replace(/(?:^|\n)\s*\[\s*([^\]]+?)\s*\]\s*(?:\n|$)/g, (match, formula) => {
+        // Check if it contains LaTeX-like syntax (backslashes, frac, text, etc.)
+        if (/\\[a-zA-Z]+|\\frac|\\text|\\sqrt|\\sum|\\int|\\approx|\\times/.test(formula)) {
+            return `\n\\[\n${formula}\n\\]\n`;
+        }
+        return match; // Not LaTeX, keep original
+    });
+
+    return content;
+};
+
 const ChatMessage = ({ message, modelName }: { message: Message, modelName: string | undefined}) => {
     const isUser = message.role === 'user';
+    const processedContent = isUser ? message.content : fixLatexSyntax(message.content);
+
     return (
         <div className={`flex items-start gap-3 ${isUser ? 'justify-end' : ''}`}>
              {/* {!isUser && <Avatar className="w-8 h-8"><AvatarFallback><Bot/></AvatarFallback></Avatar>} */}
@@ -518,7 +535,7 @@ const ChatMessage = ({ message, modelName }: { message: Message, modelName: stri
                      {!isUser && <p className="text-xs font-semibold mb-1">{modelName}</p>}
                     <div className={`text-sm prose prose-sm max-w-none ${isUser ? 'text-white prose-invert' : 'dark:prose-invert'}`}>
                         {isUser ? (
-                            <div className="whitespace-pre-wrap text-white">{message.content}</div>
+                            <div className="whitespace-pre-wrap text-white">{processedContent}</div>
                         ) : (
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm, remarkMath]}
@@ -544,7 +561,7 @@ const ChatMessage = ({ message, modelName }: { message: Message, modelName: stri
                                     li: ({ children }) => <li className="mb-1">{children}</li>,
                                 }}
                             >
-                                {message.content}
+                                {processedContent}
                             </ReactMarkdown>
                         )}
                     </div>
