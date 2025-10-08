@@ -536,20 +536,33 @@ const ThinkingLoader = ({ modelName }: { modelName: string | undefined }) => {
     return (
         <div className="flex items-start gap-3 animate-in fade-in duration-500">
             <div className="flex flex-col gap-1 items-start max-w-[85%]">
-                <div className="rounded-lg p-4 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 border border-purple-500/20 relative overflow-hidden">
-                    {/* Animated shimmer effect */}
-                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                <div className="rounded-lg p-5 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 dark:from-purple-500/10 dark:via-pink-500/10 dark:to-blue-500/10 border-2 border-purple-500/30 relative overflow-hidden shadow-lg">
+                    {/* Multiple animated shimmer effects for more dopamine */}
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-purple-300/20 to-transparent" />
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-pink-300/20 to-transparent" style={{ animationDelay: '0.5s' }} />
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-blue-300/20 to-transparent" style={{ animationDelay: '1s' }} />
 
                     <div className="relative">
-                        <p className="text-xs font-semibold mb-3 text-muted-foreground">{modelName}</p>
-                        <div className="flex items-center gap-3">
-                            <Sparkles className="h-5 w-5 text-purple-500 animate-pulse" />
-                            <div className="flex gap-1">
-                                <div className="w-2 h-2 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <div className="w-2 h-2 rounded-full bg-pink-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <p className="text-xs font-semibold mb-4 text-purple-600 dark:text-purple-400 flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 animate-spin" style={{ animationDuration: '3s' }} />
+                            {modelName}
+                        </p>
+                        <div className="flex items-center gap-4">
+                            {/* Pulsing brain icon */}
+                            <BrainCircuit className="h-6 w-6 text-purple-500 animate-pulse" />
+
+                            {/* Rainbow bouncing dots */}
+                            <div className="flex gap-1.5">
+                                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 animate-bounce shadow-lg shadow-purple-500/50" style={{ animationDelay: '0ms', animationDuration: '0.6s' }} />
+                                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 animate-bounce shadow-lg shadow-pink-500/50" style={{ animationDelay: '100ms', animationDuration: '0.6s' }} />
+                                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 animate-bounce shadow-lg shadow-blue-500/50" style={{ animationDelay: '200ms', animationDuration: '0.6s' }} />
+                                <div className="w-3 h-3 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 animate-bounce shadow-lg shadow-cyan-500/50" style={{ animationDelay: '300ms', animationDuration: '0.6s' }} />
                             </div>
-                            <span className="text-sm text-muted-foreground animate-pulse">Thinking...</span>
+
+                            {/* Animated text with gradient */}
+                            <span className="text-sm font-medium bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 dark:from-purple-400 dark:via-pink-400 dark:to-blue-400 bg-clip-text text-transparent animate-pulse">
+                                Generating magic...
+                            </span>
                         </div>
                     </div>
                 </div>
