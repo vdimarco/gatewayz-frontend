@@ -132,6 +132,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const [selectedDevelopers, setSelectedDevelopers] = useState<string[]>(searchParams.get('developers')?.split(',').filter(Boolean) || []);
   const [selectedGateways, setSelectedGateways] = useState<string[]>(searchParams.get('gateways')?.split(',').filter(Boolean) || []);
   const [selectedModelSeries, setSelectedModelSeries] = useState<string[]>(searchParams.get('modelSeries')?.split(',').filter(Boolean) || []);
+  const [pricingFilter, setPricingFilter] = useState<'all' | 'free' | 'paid'>(searchParams.get('pricing') as 'all' | 'free' | 'paid' || 'all');
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'tokens-desc');
 
   // Debounce search input
@@ -158,11 +159,12 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     if (selectedDevelopers.length > 0) params.set('developers', selectedDevelopers.join(','));
     if (selectedGateways.length > 0) params.set('gateways', selectedGateways.join(','));
     if (selectedModelSeries.length > 0) params.set('modelSeries', selectedModelSeries.join(','));
+    if (pricingFilter !== 'all') params.set('pricing', pricingFilter);
     if (sortBy !== 'tokens-desc') params.set('sortBy', sortBy);
 
     const queryString = params.toString();
     router.replace(queryString ? `?${queryString}` : '/models', { scroll: false });
-  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy, router]);
+  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, pricingFilter, sortBy, router]);
 
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (value: string, checked: boolean) => {
     setter(prev => checked ? [...prev, value] : prev.filter(v => v !== value));
@@ -195,6 +197,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     setSelectedDevelopers([]);
     setSelectedGateways([]);
     setSelectedModelSeries([]);
+    setPricingFilter('all');
     setSortBy('tokens-desc');
   };
 
@@ -203,7 +206,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     contextLengthRange[0] !== 0 || contextLengthRange[1] !== 1024 ||
     promptPricingRange[0] !== 0 || promptPricingRange[1] !== 10 ||
     selectedParameters.length > 0 ||
-    selectedDevelopers.length > 0 || selectedGateways.length > 0 || selectedModelSeries.length > 0 || sortBy !== 'tokens-desc';
+    selectedDevelopers.length > 0 || selectedGateways.length > 0 || selectedModelSeries.length > 0 || pricingFilter !== 'all' || sortBy !== 'tokens-desc';
 
   // Calculate search matches separately from other filters
   const searchFilteredModels = useMemo(() => {
@@ -240,8 +243,9 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
       const developerMatch = selectedDevelopers.length === 0 || selectedDevelopers.includes(model.provider_slug);
       const gatewayMatch = selectedGateways.length === 0 || selectedGateways.includes(model.source_gateway || '');
       const seriesMatch = selectedModelSeries.length === 0 || selectedModelSeries.includes(getModelSeries(model));
+      const pricingMatch = pricingFilter === 'all' || (pricingFilter === 'free' && isFree) || (pricingFilter === 'paid' && !isFree);
 
-      return inputFormatMatch && outputFormatMatch && contextMatch && priceMatch && parameterMatch && developerMatch && gatewayMatch && seriesMatch;
+      return inputFormatMatch && outputFormatMatch && contextMatch && priceMatch && parameterMatch && developerMatch && gatewayMatch && seriesMatch && pricingMatch;
     });
 
     // Then sort the filtered results
@@ -262,7 +266,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     });
 
     return sorted;
-  }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy, getModelSeries]);
+  }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, pricingFilter, sortBy, getModelSeries]);
 
   // Visible models for infinite scroll
   const visibleModels = useMemo(() => {
@@ -274,7 +278,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   // Reset visible count when filters change
   useEffect(() => {
     setVisibleCount(48);
-  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy]);
+  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, pricingFilter, sortBy]);
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -428,6 +432,20 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
               </div>
             </SidebarGroup>
 
+            <SidebarGroup>
+              <SidebarGroupLabel>Pricing</SidebarGroupLabel>
+              <Select value={pricingFilter} onValueChange={(value: 'all' | 'free' | 'paid') => setPricingFilter(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All models" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All models</SelectItem>
+                  <SelectItem value="free">Free only</SelectItem>
+                  <SelectItem value="paid">Paid only</SelectItem>
+                </SelectContent>
+              </Select>
+            </SidebarGroup>
+
             <FilterRangeSlider label="Context Length" value={contextLengthRange} onValueChange={setContextLengthRange} min={4} max={1024} step={4} unit="K" />
             <FilterRangeSlider label="Prompt Pricing" value={promptPricingRange} onValueChange={setPromptPricingRange} min={0} max={10} step={0.1} unit="$" />
 
@@ -498,6 +516,14 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                   </button>
                 </Badge>
               ))}
+              {pricingFilter !== 'all' && (
+                <Badge variant="secondary" className="gap-1">
+                  {pricingFilter === 'free' ? 'Free only' : 'Paid only'}
+                  <button onClick={() => setPricingFilter('all')} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
               {(contextLengthRange[0] !== 0 || contextLengthRange[1] !== 1024) && (
                 <Badge variant="secondary" className="gap-1">
                   Context: {contextLengthRange[0]}K-{contextLengthRange[1]}K tokens
