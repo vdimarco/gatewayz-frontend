@@ -478,7 +478,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
               icon={<Bot className="w-4 h-4"/>}
             />
             <FilterDropdown
-              label="Developer"
+              label="Researcher"
               items={allDevelopersWithCounts}
               selectedItems={selectedDevelopers}
               onSelectionChange={handleCheckboxChange(setSelectedDevelopers)}
@@ -572,7 +572,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
               ))}
               {selectedDevelopers.map(developer => (
                 <Badge key={developer} variant="secondary" className="gap-1">
-                  Developer: {developer}
+                  Researcher: {developer}
                   <button onClick={() => setSelectedDevelopers(prev => prev.filter(d => d !== developer))} className="ml-1 hover:bg-muted rounded-sm">
                     <X className="h-3 w-3" />
                   </button>
