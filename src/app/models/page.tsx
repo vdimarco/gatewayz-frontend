@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import ModelsClient from './models-client';
-import { API_BASE_URL } from '@/lib/config';
+import { getModelsForGateway } from '@/lib/models-service';
 
 interface Model {
   id: string;
@@ -23,28 +23,12 @@ interface Model {
 
 async function getModels(): Promise<Model[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
-      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-      : 'http://localhost:3000';
-
-    // Fetch from OpenRouter, Portkey, and Featherless separately via API proxy
-    // Cache for 10 minutes to improve performance
-    const [openrouterRes, portkeyRes, featherlessRes] = await Promise.all([
-      fetch(`${baseUrl}/api/models?gateway=openrouter`, {
-        next: { revalidate: 600 } // 10 minutes
-      }),
-      fetch(`${baseUrl}/api/models?gateway=portkey`, {
-        next: { revalidate: 600 }
-      }),
-      fetch(`${baseUrl}/api/models?gateway=featherless`, {
-        next: { revalidate: 600 }
-      })
-    ]);
-
+    // Fetch from OpenRouter, Portkey, and Featherless separately
+    // Call service directly during SSR to avoid HTTP overhead
     const [openrouterData, portkeyData, featherlessData] = await Promise.all([
-      openrouterRes.json(),
-      portkeyRes.json(),
-      featherlessRes.json()
+      getModelsForGateway('openrouter'),
+      getModelsForGateway('portkey'),
+      getModelsForGateway('featherless')
     ]);
 
     const models = [
