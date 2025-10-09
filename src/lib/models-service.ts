@@ -23,16 +23,16 @@ function transformModel(model: any, gateway: string) {
 
 export async function getModelsForGateway(gateway: string) {
   // Validate gateway
-  const validGateways = ['openrouter', 'portkey', 'featherless'];
+  const validGateways = ['openrouter', 'portkey', 'featherless', 'chutes', 'all'];
   if (!validGateways.includes(gateway)) {
     throw new Error('Invalid gateway');
   }
 
-  console.log(`Models Service - Attempting backend: ${API_BASE_URL}/models?gateway=${gateway}`);
+  console.log(`Models Service - Attempting backend: ${API_BASE_URL}/catalog/models?gateway=${gateway}`);
 
   // Try backend first
   try {
-    const url = `${API_BASE_URL}/models?gateway=${gateway}`;
+    const url = `${API_BASE_URL}/catalog/models?gateway=${gateway}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -43,7 +43,7 @@ export async function getModelsForGateway(gateway: string) {
 
     if (response.ok) {
       const data = await response.json();
-      console.log(`Models Service - Backend success: ${data.data?.length || 0} models`);
+      console.log(`Models Service - Backend success: ${data.data?.length || 0} models from ${gateway} gateway`);
       return data;
     }
 

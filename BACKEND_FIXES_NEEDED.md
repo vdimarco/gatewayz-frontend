@@ -1,22 +1,27 @@
-# Backend Fixes Needed
+# Backend API Documentation
 
-## Issue 1: Models API Endpoint Missing
+## ✅ Models API Endpoint - WORKING
 
-### Problem
-The `/models?gateway=X` endpoint returns 404 Not Found. This breaks:
-- Model dropdown in chat interface
-- Individual model detail pages at `/models/[name]`
-- Model browser functionality
+### Endpoint
+`GET /catalog/models`
 
-### Root Cause
-Backend does not implement the `/models` endpoint with gateway parameter support.
+### Description
+The backend has a fully functional models catalog endpoint that returns all 6,946 models across all gateways.
 
-### What Needs to be Fixed (Backend)
+### Parameters
+- `gateway` (optional): Filter models by gateway
+  - `openrouter` - Returns 326 models from OpenRouter
+  - `portkey` - Returns 500 models from Portkey
+  - `featherless` - Returns 6,384 models from Featherless
+  - `chutes` - Returns 104 models from Chutes
+  - `all` - Returns all 6,946 unique models (recommended)
 
-#### Implement GET /models Endpoint
-- Accept `gateway` query parameter: `openrouter`, `portkey`, or `featherless`
-- Return models from the specified gateway
-- Response format:
+- `provider` (optional): Filter by provider/developer name
+- `limit` (optional): Limit number of results
+- `offset` (optional): Offset for pagination
+- `include_huggingface` (optional, default: true): Include HuggingFace metrics
+
+### Response Format
 ```json
 {
   "data": [
@@ -35,19 +40,35 @@ Backend does not implement the `/models` endpoint with gateway parameter support
       "supported_parameters": ["temperature", "top_p", "tools"],
       "provider_slug": "openai"
     }
-  ]
+  ],
+  "total": 6946,
+  "returned": 6946,
+  "offset": 0,
+  "limit": null,
+  "gateway": "all",
+  "timestamp": "2025-10-09T20:00:00.000Z"
 }
 ```
 
-### Current Workaround
-Created `/api/models` proxy endpoint that will call backend once it's implemented.
+### Frontend Integration
+The frontend now correctly uses `/catalog/models` endpoint through:
+- `src/lib/models-service.ts` - Core service that calls `/catalog/models`
+- `src/app/api/models/route.ts` - API proxy that uses the models service
+- `src/app/models/page.tsx` - Models browse page (optimized to use `gateway=all`)
 
-### Testing
-After implementing the backend endpoint:
+### Examples
 ```bash
-curl "https://api.gatewayz.ai/models?gateway=openrouter"
-curl "https://api.gatewayz.ai/models?gateway=portkey"
-curl "https://api.gatewayz.ai/models?gateway=featherless"
+# Get all models (recommended)
+curl "https://api.gatewayz.ai/catalog/models?gateway=all"
+
+# Get OpenRouter models only
+curl "https://api.gatewayz.ai/catalog/models?gateway=openrouter"
+
+# Get models with pagination
+curl "https://api.gatewayz.ai/catalog/models?gateway=all&limit=100&offset=0"
+
+# Get models from specific provider
+curl "https://api.gatewayz.ai/catalog/models?gateway=all&provider=anthropic"
 ```
 
 ---

@@ -23,22 +23,14 @@ interface Model {
 
 async function getModels(): Promise<Model[]> {
   try {
-    // Fetch from OpenRouter, Portkey, and Featherless separately
-    // Call service directly during SSR to avoid HTTP overhead
-    const [openrouterData, portkeyData, featherlessData] = await Promise.all([
-      getModelsForGateway('openrouter'),
-      getModelsForGateway('portkey'),
-      getModelsForGateway('featherless')
-    ]);
+    // Fetch all models at once using gateway=all for better performance
+    // This gets all 6,946 models from OpenRouter, Portkey, Featherless, and Chutes
+    const allModelsData = await getModelsForGateway('all');
 
-    const models = [
-      ...(openrouterData.data || []),
-      ...(portkeyData.data || []),
-      ...(featherlessData.data || [])
-    ];
+    const models = allModelsData.data || [];
 
     // Log total models before deduplication
-    console.log(`Fetched ${models.length} models from API (OpenRouter: ${openrouterData.data?.length || 0}, Portkey: ${portkeyData.data?.length || 0}, Featherless: ${featherlessData.data?.length || 0})`);
+    console.log(`Fetched ${models.length} models from API using gateway=all`);
 
     // Remove duplicates based on model ID
     const uniqueModels = models.reduce((acc: Model[], current: Model) => {
