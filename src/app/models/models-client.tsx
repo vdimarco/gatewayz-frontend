@@ -47,6 +47,7 @@ interface Model {
   supported_parameters: string[] | null;
   provider_slug: string;
   source_gateway?: string;
+  created?: number;
 }
 
 const ModelCard = ({ model }: { model: Model }) => {
@@ -134,6 +135,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const [selectedModelSeries, setSelectedModelSeries] = useState<string[]>(searchParams.get('modelSeries')?.split(',').filter(Boolean) || []);
   const [pricingFilter, setPricingFilter] = useState<'all' | 'free' | 'paid'>(searchParams.get('pricing') as 'all' | 'free' | 'paid' || 'all');
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'tokens-desc');
+  const [releaseDateFilter, setReleaseDateFilter] = useState<string>(searchParams.get('releaseDate') || 'all');
 
   // Debounce search input
   useEffect(() => {
@@ -161,10 +163,11 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     if (selectedModelSeries.length > 0) params.set('modelSeries', selectedModelSeries.join(','));
     if (pricingFilter !== 'all') params.set('pricing', pricingFilter);
     if (sortBy !== 'tokens-desc') params.set('sortBy', sortBy);
+    if (releaseDateFilter !== 'all') params.set('releaseDate', releaseDateFilter);
 
     const queryString = params.toString();
     router.replace(queryString ? `?${queryString}` : '/models', { scroll: false });
-  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, pricingFilter, sortBy, router]);
+  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, pricingFilter, sortBy, releaseDateFilter, router]);
 
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (value: string, checked: boolean) => {
     setter(prev => checked ? [...prev, value] : prev.filter(v => v !== value));
@@ -199,6 +202,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     setSelectedModelSeries([]);
     setPricingFilter('all');
     setSortBy('tokens-desc');
+    setReleaseDateFilter('all');
   };
 
   // Check if any filters are active
@@ -206,7 +210,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     contextLengthRange[0] !== 0 || contextLengthRange[1] !== 1024 ||
     promptPricingRange[0] !== 0 || promptPricingRange[1] !== 10 ||
     selectedParameters.length > 0 ||
-    selectedDevelopers.length > 0 || selectedGateways.length > 0 || selectedModelSeries.length > 0 || pricingFilter !== 'all' || sortBy !== 'tokens-desc';
+    selectedDevelopers.length > 0 || selectedGateways.length > 0 || selectedModelSeries.length > 0 || pricingFilter !== 'all' || sortBy !== 'tokens-desc' || releaseDateFilter !== 'all';
 
   // Calculate search matches separately from other filters
   const searchFilteredModels = useMemo(() => {
@@ -245,7 +249,21 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
       const seriesMatch = selectedModelSeries.length === 0 || selectedModelSeries.includes(getModelSeries(model));
       const pricingMatch = pricingFilter === 'all' || (pricingFilter === 'free' && isFree) || (pricingFilter === 'paid' && !isFree);
 
-      return inputFormatMatch && outputFormatMatch && contextMatch && priceMatch && parameterMatch && developerMatch && gatewayMatch && seriesMatch && pricingMatch;
+      // Release date filter
+      const now = Date.now() / 1000; // Convert to Unix timestamp
+      const created = model.created || 0;
+      let releaseDateMatch = true;
+      if (releaseDateFilter === 'last-30-days') {
+        releaseDateMatch = created > 0 && created >= now - (30 * 24 * 60 * 60);
+      } else if (releaseDateFilter === 'last-90-days') {
+        releaseDateMatch = created > 0 && created >= now - (90 * 24 * 60 * 60);
+      } else if (releaseDateFilter === 'last-6-months') {
+        releaseDateMatch = created > 0 && created >= now - (180 * 24 * 60 * 60);
+      } else if (releaseDateFilter === 'last-year') {
+        releaseDateMatch = created > 0 && created >= now - (365 * 24 * 60 * 60);
+      }
+
+      return inputFormatMatch && outputFormatMatch && contextMatch && priceMatch && parameterMatch && developerMatch && gatewayMatch && seriesMatch && pricingMatch && releaseDateMatch;
     });
 
     // Then sort the filtered results
@@ -278,7 +296,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   // Reset visible count when filters change
   useEffect(() => {
     setVisibleCount(48);
-  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, pricingFilter, sortBy]);
+  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, pricingFilter, sortBy, releaseDateFilter]);
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -460,11 +478,27 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
               </Select>
             </SidebarGroup>
 
+            <SidebarGroup>
+              <SidebarGroupLabel>Release Date</SidebarGroupLabel>
+              <Select value={releaseDateFilter} onValueChange={setReleaseDateFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All time</SelectItem>
+                  <SelectItem value="last-30-days">Last 30 days</SelectItem>
+                  <SelectItem value="last-90-days">Last 90 days</SelectItem>
+                  <SelectItem value="last-6-months">Last 6 months</SelectItem>
+                  <SelectItem value="last-year">Last year</SelectItem>
+                </SelectContent>
+              </Select>
+            </SidebarGroup>
+
             <FilterRangeSlider label="Context Length" value={contextLengthRange} onValueChange={setContextLengthRange} min={4} max={1024} step={4} unit="K" />
             <FilterRangeSlider label="Prompt Pricing" value={promptPricingRange} onValueChange={setPromptPricingRange} min={0} max={10} step={0.1} unit="$" />
 
             <FilterDropdown
-              label="Available Parameters"
+              label="Parameters"
               items={allParametersWithCounts}
               selectedItems={selectedParameters}
               onSelectionChange={handleCheckboxChange(setSelectedParameters)}
@@ -534,6 +568,17 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                 <Badge variant="secondary" className="gap-1">
                   {pricingFilter === 'free' ? 'Free only' : 'Paid only'}
                   <button onClick={() => setPricingFilter('all')} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {releaseDateFilter !== 'all' && (
+                <Badge variant="secondary" className="gap-1">
+                  {releaseDateFilter === 'last-30-days' && 'Last 30 days'}
+                  {releaseDateFilter === 'last-90-days' && 'Last 90 days'}
+                  {releaseDateFilter === 'last-6-months' && 'Last 6 months'}
+                  {releaseDateFilter === 'last-year' && 'Last year'}
+                  <button onClick={() => setReleaseDateFilter('all')} className="ml-1 hover:bg-muted rounded-sm">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>

@@ -142,7 +142,7 @@ const mockChatSessions: ChatSession[] = [
 
 // API helper functions for chat history integration
 const apiHelpers = {
-    // Load chat sessions from API
+    // Load chat sessions from API (without messages for faster initial load)
     loadChatSessions: async (userId: string): Promise<ChatSession[]> => {
         try {
             const apiKey = getApiKey();
@@ -159,49 +159,47 @@ const apiHelpers = {
             const chatAPI = new ChatHistoryAPI(apiKey, undefined, userData?.privy_user_id);
             console.log('Chat sessions - Making API request to getSessions');
             const apiSessions = await chatAPI.getSessions(50, 0);
-            
-            // Load messages for each session
-            const sessionsWithMessages = await Promise.all(
-                apiSessions.map(async (apiSession) => {
-                    try {
-                        // Load the full session with messages
-                        const fullSession = await chatAPI.getSession(apiSession.id);
-                        return {
-                            id: `api-${apiSession.id}`,
-                            title: apiSession.title,
-                            startTime: new Date(apiSession.created_at),
-                            createdAt: new Date(apiSession.created_at),
-                            updatedAt: new Date(apiSession.updated_at),
-                            userId: userId,
-                            apiSessionId: apiSession.id,
-                            messages: fullSession.messages?.map(msg => ({
-                                role: msg.role,
-                                content: msg.content,
-                                reasoning: undefined,
-                                image: undefined
-                            })) || []
-                        };
-                    } catch (error) {
-                        console.error(`Failed to load messages for session ${apiSession.id}:`, error);
-                        // Return session without messages if loading fails
-                        return {
-                            id: `api-${apiSession.id}`,
-                            title: apiSession.title,
-                            startTime: new Date(apiSession.created_at),
-                            createdAt: new Date(apiSession.created_at),
-                            updatedAt: new Date(apiSession.updated_at),
-                            userId: userId,
-                            apiSessionId: apiSession.id,
-                            messages: []
-                        };
-                    }
-                })
-            );
-            
-            return sessionsWithMessages;
+
+            // Map sessions WITHOUT loading messages (for faster initial load)
+            const sessions = apiSessions.map((apiSession) => ({
+                id: `api-${apiSession.id}`,
+                title: apiSession.title,
+                startTime: new Date(apiSession.created_at),
+                createdAt: new Date(apiSession.created_at),
+                updatedAt: new Date(apiSession.updated_at),
+                userId: userId,
+                apiSessionId: apiSession.id,
+                messages: [] // Empty initially, will load on demand
+            }));
+
+            console.log(`Chat sessions - Loaded ${sessions.length} sessions (messages will load on demand)`);
+            return sessions;
         } catch (error) {
             console.error('Failed to load chat sessions from API:', error);
             // Return empty array instead of throwing error
+            return [];
+        }
+    },
+
+    // Load messages for a specific session (lazy loading)
+    loadSessionMessages: async (sessionId: string, apiSessionId?: number): Promise<Message[]> => {
+        try {
+            const apiKey = getApiKey();
+            if (!apiKey || !apiSessionId) {
+                return [];
+            }
+
+            const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
+            const fullSession = await chatAPI.getSession(apiSessionId);
+
+            return fullSession.messages?.map(msg => ({
+                role: msg.role,
+                content: msg.content,
+                reasoning: undefined,
+                image: undefined
+            })) || [];
+        } catch (error) {
+            console.error(`Failed to load messages for session ${sessionId}:`, error);
             return [];
         }
     },
@@ -379,10 +377,10 @@ const ExamplePrompt = ({ title, subtitle, onClick }: { title: string, subtitle: 
     </Card>
 )
 
-const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewChat, onDeleteSession, onRenameSession }: {
+const ChatSidebar = ({ sessions, activeSessionId, switchToSession, createNewChat, onDeleteSession, onRenameSession }: {
     sessions: ChatSession[],
     activeSessionId: string | null,
-    setActiveSessionId: (id: string) => void,
+    switchToSession: (id: string) => void,
     createNewChat: () => void,
     onDeleteSession: (sessionId: string) => void,
     onRenameSession: (sessionId: string, newTitle: string) => void
@@ -447,7 +445,7 @@ const ChatSidebar = ({ sessions, activeSessionId, setActiveSessionId, createNewC
                                     <Button
                                         variant={activeSessionId === session.id ? "secondary" : "ghost"}
                                         className="w-full justify-start items-start text-left flex flex-col h-auto py-2 rounded-lg pr-16 overflow-hidden"
-                                        onClick={() => setActiveSessionId(session.id)}
+                                        onClick={() => switchToSession(session.id)}
                                     >
                                         <span className="font-medium truncate w-full block">
                                             {session.title}
@@ -675,6 +673,10 @@ function ChatPageContent() {
     const messageInputRef = useRef<HTMLInputElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Track which sessions have loaded their messages
+    const [loadedSessionIds, setLoadedSessionIds] = useState<Set<string>>(new Set());
+    const [loadingMessages, setLoadingMessages] = useState(false);
+
     // Track if we should auto-send the message from URL
     const [shouldAutoSend, setShouldAutoSend] = useState(false);
 
@@ -812,7 +814,7 @@ function ChatPageContent() {
                     );
                     if (firstNewChat) {
                         console.log('Session loading - Setting active session:', firstNewChat.id);
-                        setActiveSessionId(firstNewChat.id);
+                        switchToSession(firstNewChat.id);
                     }
                 }
             } catch (error) {
@@ -839,6 +841,40 @@ function ChatPageContent() {
         }
     }, [messages]);
 
+    // Lazy load messages when switching to a session
+    const switchToSession = async (sessionId: string) => {
+        const session = sessions.find(s => s.id === sessionId);
+        if (!session) return;
+
+        // Set active session immediately for UI responsiveness
+        setActiveSessionId(sessionId);
+
+        // If messages already loaded or session is new (no messages), skip loading
+        if (loadedSessionIds.has(sessionId) || session.messages.length > 0) {
+            return;
+        }
+
+        // Load messages for this session
+        if (session.apiSessionId) {
+            setLoadingMessages(true);
+            try {
+                const messages = await apiHelpers.loadSessionMessages(sessionId, session.apiSessionId);
+
+                // Update the session with loaded messages
+                setSessions(prev => prev.map(s =>
+                    s.id === sessionId ? { ...s, messages } : s
+                ));
+
+                // Mark session as loaded
+                setLoadedSessionIds(prev => new Set(prev).add(sessionId));
+            } catch (error) {
+                console.error(`Failed to load messages for session ${sessionId}:`, error);
+            } finally {
+                setLoadingMessages(false);
+            }
+        }
+    };
+
     const createNewChat = async () => {
         // Check if there's already a new/empty chat session
         const existingNewChat = sessions.find(session => 
@@ -848,7 +884,7 @@ function ChatPageContent() {
 
         if (existingNewChat) {
             // If there's already a new chat, just switch to it
-            setActiveSessionId(existingNewChat.id);
+            switchToSession(existingNewChat.id);
             return;
         }
 
@@ -856,7 +892,7 @@ function ChatPageContent() {
             // Create new session using API helper
             const newSession = await apiHelpers.createChatSession('Untitled Chat', selectedModel?.value);
             setSessions(prev => [newSession, ...prev]);
-            setActiveSessionId(newSession.id);
+            switchToSession(newSession.id);
         } catch (error) {
             console.error('Failed to create new chat session:', error);
             toast({
@@ -886,7 +922,7 @@ function ChatPageContent() {
                 // If the deleted session was active, switch to the first available session or create a new one
                 if (activeSessionId === sessionId) {
                     if (updatedSessions.length > 0) {
-                        setActiveSessionId(updatedSessions[0].id);
+                        switchToSession(updatedSessions[0].id);
                     } else {
                         createNewChat();
                     }
@@ -1312,7 +1348,7 @@ function ChatPageContent() {
           <ChatSidebar
             sessions={sessions}
             activeSessionId={activeSessionId}
-            setActiveSessionId={setActiveSessionId}
+            switchToSession={switchToSession}
             createNewChat={createNewChat}
             onDeleteSession={handleDeleteSession}
             onRenameSession={handleRenameSession}
@@ -1346,7 +1382,7 @@ function ChatPageContent() {
                   <ChatSidebar
                     sessions={sessions}
                     activeSessionId={activeSessionId}
-                    setActiveSessionId={setActiveSessionId}
+                    switchToSession={switchToSession}
                     createNewChat={createNewChat}
                     onDeleteSession={handleDeleteSession}
                     onRenameSession={handleRenameSession}
@@ -1405,6 +1441,14 @@ function ChatPageContent() {
         {/* Main content area */}
         <div className="relative z-10 w-full flex-1 flex flex-col overflow-hidden">
           {/* Chat messages area */}
+          {loadingMessages && messages.length === 0 && (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                <p className="text-sm text-muted-foreground">Loading messages...</p>
+              </div>
+            </div>
+          )}
           {messages.length > 0 && (
             <div ref={chatContainerRef} className="flex-1 flex flex-col gap-4 lg:gap-6 overflow-y-auto p-4 lg:p-6 max-w-4xl mx-auto w-full">
               {messages.map((msg, index) => {

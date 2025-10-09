@@ -18,6 +18,7 @@ interface Model {
   supported_parameters: string[] | null;
   provider_slug: string;
   source_gateway?: string;
+  created?: number;
 }
 
 async function getModels(): Promise<Model[]> {
