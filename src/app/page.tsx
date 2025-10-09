@@ -138,8 +138,8 @@ const FeaturedModelCard = ({
 
         <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <div className="text-center">
-            <p className="text-lg sm:text-xl md:text-2xl font-bold">{model.tokens}</p>
-            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Tokens/Sec</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold">{model.tokens}B</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Tokens</p>
           </div>
           <div className="text-center">
             <p className="text-lg sm:text-xl md:text-2xl font-bold">{model.latency}</p>
