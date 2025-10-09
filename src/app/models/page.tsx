@@ -22,28 +22,33 @@ interface Model {
 
 async function getModels(): Promise<Model[]> {
   try {
-    // Fetch from both OpenRouter and Portkey separately to get all models
-    const [openrouterRes, portkeyRes] = await Promise.all([
+    // Fetch from OpenRouter, Portkey, and Featherless separately to get all models
+    const [openrouterRes, portkeyRes, featherlessRes] = await Promise.all([
       fetch(`${API_BASE_URL}/models?gateway=openrouter`, {
         next: { revalidate: 0 }
       }),
       fetch(`${API_BASE_URL}/models?gateway=portkey`, {
         next: { revalidate: 0 }
+      }),
+      fetch(`${API_BASE_URL}/models?gateway=featherless`, {
+        next: { revalidate: 0 }
       })
     ]);
 
-    const [openrouterData, portkeyData] = await Promise.all([
+    const [openrouterData, portkeyData, featherlessData] = await Promise.all([
       openrouterRes.json(),
-      portkeyRes.json()
+      portkeyRes.json(),
+      featherlessRes.json()
     ]);
 
     const models = [
       ...(openrouterData.data || []),
-      ...(portkeyData.data || [])
+      ...(portkeyData.data || []),
+      ...(featherlessData.data || [])
     ];
 
     // Log total models before deduplication
-    console.log(`Fetched ${models.length} models from API (OpenRouter: ${openrouterData.data?.length || 0}, Portkey: ${portkeyData.data?.length || 0})`);
+    console.log(`Fetched ${models.length} models from API (OpenRouter: ${openrouterData.data?.length || 0}, Portkey: ${portkeyData.data?.length || 0}, Featherless: ${featherlessData.data?.length || 0})`);
 
     // Remove duplicates based on model ID
     const uniqueModels = models.reduce((acc: Model[], current: Model) => {
