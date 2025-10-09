@@ -715,56 +715,6 @@ function ChatPageContent() {
 
     const messages = activeSession?.messages || [];
 
-    // Load messages for active session when it changes
-    useEffect(() => {
-        const loadSessionMessages = async (retryCount = 0) => {
-            if (activeSessionId && activeSession?.apiSessionId) {
-                try {
-                    const apiKey = getApiKey();
-                    if (!apiKey) return;
-
-                    // Add a small delay to ensure the session is fully created on the backend
-                    await new Promise(resolve => setTimeout(resolve, 500));
-
-                    const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
-                    const fullSession = await chatAPI.getSession(activeSession.apiSessionId);
-                    
-                    // Update the session with loaded messages
-                    setSessions(prev => prev.map(session => 
-                        session.id === activeSessionId 
-                            ? {
-                                ...session,
-                                messages: fullSession.messages?.map(msg => ({
-                                    role: msg.role,
-                                    content: msg.content,
-                                    reasoning: undefined,
-                                    image: undefined
-                                })) || []
-                            }
-                            : session
-                    ));
-                } catch (error: unknown) {
-                    // Only log 404 errors as warnings, not errors, since new sessions might not be immediately available
-                    const errorMessage = error instanceof Error ? error.message : String(error);
-                    if (errorMessage.includes('404')) {
-                        console.warn(`Session not yet available on backend (attempt ${retryCount + 1}), will retry later:`, errorMessage);
-                        
-                        // Retry up to 2 times with increasing delay
-                        if (retryCount < 2) {
-                            setTimeout(() => {
-                                loadSessionMessages(retryCount + 1);
-                            }, 1000 * (retryCount + 1)); // 1s, 2s delays
-                        }
-                    } else {
-                        console.error('Failed to load session messages:', error);
-                    }
-                }
-            }
-        };
-
-        loadSessionMessages();
-    }, [activeSessionId, activeSession?.apiSessionId]);
-
     // Auto-send message from URL parameter when session is ready
     useEffect(() => {
         if (shouldAutoSend && activeSessionId && message.trim() && selectedModel && !loading) {
@@ -843,22 +793,33 @@ function ChatPageContent() {
 
     // Lazy load messages when switching to a session
     const switchToSession = async (sessionId: string) => {
+        console.log('switchToSession called for:', sessionId);
         const session = sessions.find(s => s.id === sessionId);
-        if (!session) return;
+        if (!session) {
+            console.log('Session not found:', sessionId);
+            return;
+        }
+
+        console.log('Session found:', session);
+        console.log('Session has messages:', session.messages.length);
+        console.log('Already loaded:', loadedSessionIds.has(sessionId));
 
         // Set active session immediately for UI responsiveness
         setActiveSessionId(sessionId);
 
         // If messages already loaded or session is new (no messages), skip loading
         if (loadedSessionIds.has(sessionId) || session.messages.length > 0) {
+            console.log('Skipping message load - already loaded or has messages');
             return;
         }
 
         // Load messages for this session
         if (session.apiSessionId) {
+            console.log('Loading messages for session:', sessionId, 'API ID:', session.apiSessionId);
             setLoadingMessages(true);
             try {
                 const messages = await apiHelpers.loadSessionMessages(sessionId, session.apiSessionId);
+                console.log('Loaded messages:', messages.length);
 
                 // Update the session with loaded messages
                 setSessions(prev => prev.map(s =>
@@ -872,6 +833,8 @@ function ChatPageContent() {
             } finally {
                 setLoadingMessages(false);
             }
+        } else {
+            console.log('No API session ID for session:', sessionId);
         }
     };
 
