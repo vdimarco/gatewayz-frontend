@@ -462,18 +462,18 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                   </button>
                 </Badge>
               ))}
-              {contextLength !== 1024 && (
+              {(contextLengthRange[0] !== 0 || contextLengthRange[1] !== 1024) && (
                 <Badge variant="secondary" className="gap-1">
-                  Context: ≥{contextLength}K tokens
-                  <button onClick={() => setContextLength(1024)} className="ml-1 hover:bg-muted rounded-sm">
+                  Context: {contextLengthRange[0]}K-{contextLengthRange[1]}K tokens
+                  <button onClick={() => setContextLengthRange([0, 1024])} className="ml-1 hover:bg-muted rounded-sm">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
               )}
-              {promptPricing !== 10 && (
+              {(promptPricingRange[0] !== 0 || promptPricingRange[1] !== 10) && (
                 <Badge variant="secondary" className="gap-1">
-                  Price: ≤${promptPricing}/M tokens
-                  <button onClick={() => setPromptPricing(10)} className="ml-1 hover:bg-muted rounded-sm">
+                  Price: ${promptPricingRange[0]}-${promptPricingRange[1]}/M tokens
+                  <button onClick={() => setPromptPricingRange([0, 10])} className="ml-1 hover:bg-muted rounded-sm">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
