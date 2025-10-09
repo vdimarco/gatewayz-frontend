@@ -686,11 +686,19 @@ function ChatPageContent() {
         const messageParam = searchParams.get('message');
 
         if (modelParam) {
-            // Fetch the model details from API to get the label
-            fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai'}/models?gateway=all`)
-                .then(res => res.json())
-                .then(data => {
-                    const foundModel = data.data?.find((m: any) => m.id === modelParam);
+            // Fetch the model details from all gateways
+            Promise.all([
+                fetch(`/api/models?gateway=openrouter`).then(res => res.json()),
+                fetch(`/api/models?gateway=portkey`).then(res => res.json()),
+                fetch(`/api/models?gateway=featherless`).then(res => res.json())
+            ])
+                .then(([openrouterData, portkeyData, featherlessData]) => {
+                    const allModels = [
+                        ...(openrouterData.data || []),
+                        ...(portkeyData.data || []),
+                        ...(featherlessData.data || [])
+                    ];
+                    const foundModel = allModels.find((m: any) => m.id === modelParam);
                     if (foundModel) {
                         setSelectedModel({
                             value: foundModel.id,
