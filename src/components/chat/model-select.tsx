@@ -192,7 +192,7 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
     fetchModels();
   }, []);
 
-  // Group models by developer
+  // Group models by developer and sort by model count (descending)
   const modelsByDeveloper = React.useMemo(() => {
     const groups: Record<string, ModelOption[]> = {};
 
@@ -204,9 +204,13 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
       groups[dev].push(model);
     });
 
-    // Sort developers alphabetically
+    // Sort developers by model count (descending), then alphabetically
     return Object.keys(groups)
-      .sort()
+      .sort((a, b) => {
+        const countDiff = groups[b].length - groups[a].length;
+        if (countDiff !== 0) return countDiff;
+        return a.localeCompare(b);
+      })
       .reduce((acc, key) => {
         acc[key] = groups[key];
         return acc;
