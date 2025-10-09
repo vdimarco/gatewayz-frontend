@@ -94,9 +94,10 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Pagination state
-  const [itemsPerPage] = useState(48); // Show 48 models per page (4x4 grid on desktop)
-  const [currentPage, setCurrentPage] = useState(1);
+  // Infinite scroll state
+  const [itemsPerPage] = useState(48); // Load 48 models at a time
+  const [visibleCount, setVisibleCount] = useState(48); // Number of items currently visible
+  const loadMoreRef = React.useRef<HTMLDivElement>(null);
 
   // Additional deduplication as a safety measure
   const deduplicatedModels = useMemo(() => {
@@ -263,19 +264,34 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     return sorted;
   }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy, getModelSeries]);
 
-  // Paginated models
-  const paginatedModels = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredModels.slice(startIndex, endIndex);
-  }, [filteredModels, currentPage, itemsPerPage]);
+  // Visible models for infinite scroll
+  const visibleModels = useMemo(() => {
+    return filteredModels.slice(0, visibleCount);
+  }, [filteredModels, visibleCount]);
 
-  const totalPages = Math.ceil(filteredModels.length / itemsPerPage);
+  const hasMore = visibleCount < filteredModels.length;
 
-  // Reset to page 1 when filters change
+  // Reset visible count when filters change
   useEffect(() => {
-    setCurrentPage(1);
+    setVisibleCount(48);
   }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy]);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setVisibleCount(prev => Math.min(prev + itemsPerPage, filteredModels.length));
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, filteredModels.length, itemsPerPage]);
 
   const allInputFormatsWithCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -580,33 +596,26 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
             }
             key={`models-${filteredModels.length}-${debouncedSearchTerm}`}
           >
-            {paginatedModels.map((model, key) => (
+            {visibleModels.map((model, key) => (
               <ModelCard key={key} model={model} />
             ))}
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
+          {/* Infinite Scroll Trigger */}
+          {hasMore && (
+            <div ref={loadMoreRef} className="flex items-center justify-center py-8">
+              <div className="text-sm text-muted-foreground">
+                Loading more models... ({visibleCount} of {filteredModels.length})
+              </div>
+            </div>
+          )}
+
+          {/* End of results */}
+          {!hasMore && filteredModels.length > 0 && (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-sm text-muted-foreground">
+                Showing all {filteredModels.length} models
+              </div>
             </div>
           )}
           </div>
