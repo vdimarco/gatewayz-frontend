@@ -1118,6 +1118,19 @@ function ChatPageContent() {
                 // Use streaming API
                 const modelValue = selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value;
 
+                // Detect DeepInfra models and determine portkey_provider
+                // DeepInfra models have IDs starting with @deepinfra/ in the backend
+                // Check if the model ID contains patterns indicating DeepInfra
+                const isDeepInfraModel = modelValue?.includes('airoboros') ||
+                                        modelValue?.includes('wizardlm') ||
+                                        selectedModel.sourceGateway === 'portkey';
+
+                const portkeyProvider = isDeepInfraModel ? 'deepinfra' : undefined;
+
+                console.log('Model:', modelValue);
+                console.log('Source Gateway:', selectedModel.sourceGateway);
+                console.log('Portkey Provider:', portkeyProvider);
+
                 // Accumulate content locally to avoid state closure issues
                 let accumulatedContent = '';
                 let accumulatedReasoning = '';
@@ -1126,7 +1139,8 @@ function ChatPageContent() {
                     url,
                     apiKey,
                     modelValue,
-                    [{ role: 'user', content: messageContent }]
+                    [{ role: 'user', content: messageContent }],
+                    portkeyProvider
                 )) {
                     // Accumulate content locally
                     accumulatedContent += chunk.content || '';

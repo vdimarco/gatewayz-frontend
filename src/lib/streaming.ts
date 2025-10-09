@@ -12,19 +12,27 @@ export async function* streamChatResponse(
   url: string,
   apiKey: string,
   model: string,
-  messages: any[]
+  messages: any[],
+  portkeyProvider?: string
 ): AsyncGenerator<StreamChunk> {
+  const requestBody: any = {
+    model,
+    messages,
+    stream: true,
+  };
+
+  // Add portkey_provider if specified (required for DeepInfra and other providers)
+  if (portkeyProvider) {
+    requestBody.portkey_provider = portkeyProvider;
+  }
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      model,
-      messages,
-      stream: true,
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
