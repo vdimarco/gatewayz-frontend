@@ -30,7 +30,8 @@
       "Bash(gh pr:*)",
       "Read(//c/Users/vaughn.v/Downloads/**)",
       "Bash(npm i:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(/dev/null)"
     ],
     "deny": [],
     "ask": []

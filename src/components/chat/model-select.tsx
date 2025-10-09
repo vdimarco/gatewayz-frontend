@@ -34,8 +34,8 @@ interface ModelSelectProps {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
 
-const CACHE_KEY = 'gatewayz_models_cache_v3_dual_gateway';
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_KEY = 'gatewayz_models_cache_v4_all_gateways';
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes - longer cache for better performance
 
 export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) {
   const [open, setOpen] = React.useState(false)
@@ -63,33 +63,48 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
         console.log('No cache found, fetching from API');
       }
 
-      // Fetch from both gateways to get all models
+      // Fetch from all gateways to get all models
       setLoading(true);
       try {
-        // Fetch from both OpenRouter and Portkey separately
-        const [openrouterRes, portkeyRes] = await Promise.all([
+        // Fetch from OpenRouter, Portkey, and Featherless separately
+        const [openrouterRes, portkeyRes, featherlessRes] = await Promise.all([
           fetch(`${API_BASE_URL}/models?gateway=openrouter`),
-          fetch(`${API_BASE_URL}/models?gateway=portkey`)
+          fetch(`${API_BASE_URL}/models?gateway=portkey`),
+          fetch(`${API_BASE_URL}/models?gateway=featherless`)
         ]);
 
-        const [openrouterData, portkeyData] = await Promise.all([
+        const [openrouterData, portkeyData, featherlessData] = await Promise.all([
           openrouterRes.json(),
-          portkeyRes.json()
+          portkeyRes.json(),
+          featherlessRes.json()
         ]);
 
-        // Combine models from both gateways
+        // Combine models from all gateways
         const allModels = [
           ...(openrouterData.data || []),
-          ...(portkeyData.data || [])
+          ...(portkeyData.data || []),
+          ...(featherlessData.data || [])
         ];
 
         console.log('Models fetched from API:', {
           openrouter: openrouterData.data?.length || 0,
           portkey: portkeyData.data?.length || 0,
+          featherless: featherlessData.data?.length || 0,
           total: allModels.length
         });
 
-        const modelOptions: ModelOption[] = allModels.map((model: any) => {
+        // Deduplicate models by ID - keep the first occurrence
+        const uniqueModelsMap = new Map();
+        allModels.forEach((model: any) => {
+          if (!uniqueModelsMap.has(model.id)) {
+            uniqueModelsMap.set(model.id, model);
+          }
+        });
+        const uniqueModels = Array.from(uniqueModelsMap.values());
+
+        console.log(`After deduplication: ${uniqueModels.length} unique models`);
+
+        const modelOptions: ModelOption[] = uniqueModels.map((model: any) => {
           const sourceGateway = model.source_gateway || 'openrouter';
           const promptPrice = Number(model.pricing?.prompt ?? 0);
           const completionPrice = Number(model.pricing?.completion ?? 0);

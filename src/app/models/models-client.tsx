@@ -94,6 +94,10 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Pagination state
+  const [itemsPerPage] = useState(48); // Show 48 models per page (4x4 grid on desktop)
+  const [currentPage, setCurrentPage] = useState(1);
+
   // Additional deduplication as a safety measure
   const deduplicatedModels = useMemo(() => {
     console.log(`Initial models received: ${initialModels.length}`);
@@ -258,6 +262,20 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
     return sorted;
   }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy, getModelSeries]);
+
+  // Paginated models
+  const paginatedModels = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredModels.slice(startIndex, endIndex);
+  }, [filteredModels, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredModels.length / itemsPerPage);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy]);
 
   const allInputFormatsWithCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -562,10 +580,35 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
             }
             key={`models-${filteredModels.length}-${debouncedSearchTerm}`}
           >
-            {filteredModels.map((model, key) => (
+            {paginatedModels.map((model, key) => (
               <ModelCard key={key} model={model} />
             ))}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-8">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
           </div>
         </SidebarInset>
       </div>
