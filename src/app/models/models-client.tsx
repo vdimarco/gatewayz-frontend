@@ -46,6 +46,7 @@ interface Model {
   } | null;
   supported_parameters: string[] | null;
   provider_slug: string;
+  source_gateway?: string;
 }
 
 const ModelCard = ({ model }: { model: Model }) => {
@@ -117,7 +118,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const [contextLength, setContextLength] = useState(parseInt(searchParams.get('contextLength') || '1024'));
   const [promptPricing, setPromptPricing] = useState(parseFloat(searchParams.get('promptPricing') || '10'));
   const [selectedParameters, setSelectedParameters] = useState<string[]>(searchParams.get('parameters')?.split(',').filter(Boolean) || []);
-  const [selectedProviders, setSelectedProviders] = useState<string[]>(searchParams.get('providers')?.split(',').filter(Boolean) || []);
+  const [selectedDevelopers, setSelectedDevelopers] = useState<string[]>(searchParams.get('developers')?.split(',').filter(Boolean) || []);
+  const [selectedGateways, setSelectedGateways] = useState<string[]>(searchParams.get('gateways')?.split(',').filter(Boolean) || []);
   const [selectedModelSeries, setSelectedModelSeries] = useState<string[]>(searchParams.get('modelSeries')?.split(',').filter(Boolean) || []);
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'tokens-desc');
 
@@ -140,13 +142,14 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     if (contextLength !== 1024) params.set('contextLength', contextLength.toString());
     if (promptPricing !== 10) params.set('promptPricing', promptPricing.toString());
     if (selectedParameters.length > 0) params.set('parameters', selectedParameters.join(','));
-    if (selectedProviders.length > 0) params.set('providers', selectedProviders.join(','));
+    if (selectedDevelopers.length > 0) params.set('developers', selectedDevelopers.join(','));
+    if (selectedGateways.length > 0) params.set('gateways', selectedGateways.join(','));
     if (selectedModelSeries.length > 0) params.set('modelSeries', selectedModelSeries.join(','));
     if (sortBy !== 'tokens-desc') params.set('sortBy', sortBy);
 
     const queryString = params.toString();
     router.replace(queryString ? `?${queryString}` : '/models', { scroll: false });
-  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, selectedModelSeries, sortBy, router]);
+  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy, router]);
 
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (value: string, checked: boolean) => {
     setter(prev => checked ? [...prev, value] : prev.filter(v => v !== value));
@@ -176,7 +179,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     setContextLength(1024);
     setPromptPricing(10);
     setSelectedParameters([]);
-    setSelectedProviders([]);
+    setSelectedDevelopers([]);
+    setSelectedGateways([]);
     setSelectedModelSeries([]);
     setSortBy('tokens-desc');
   };
@@ -184,7 +188,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   // Check if any filters are active
   const hasActiveFilters = searchTerm || selectedInputFormats.length > 0 || selectedOutputFormats.length > 0 ||
     contextLength !== 1024 || promptPricing !== 10 || selectedParameters.length > 0 ||
-    selectedProviders.length > 0 || selectedModelSeries.length > 0 || sortBy !== 'tokens-desc';
+    selectedDevelopers.length > 0 || selectedGateways.length > 0 || selectedModelSeries.length > 0 || sortBy !== 'tokens-desc';
 
   // Calculate search matches separately from other filters
   const searchFilteredModels = useMemo(() => {
@@ -214,10 +218,11 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
       const avgPrice = (parseFloat(model.pricing?.prompt || '0') + parseFloat(model.pricing?.completion || '0')) / 2;
       const priceMatch = avgPrice <= promptPricing / 1000000 || isFree;
       const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => (model.supported_parameters || []).includes(p));
-      const providerMatch = selectedProviders.length === 0 || selectedProviders.includes(model.provider_slug);
+      const developerMatch = selectedDevelopers.length === 0 || selectedDevelopers.includes(model.provider_slug);
+      const gatewayMatch = selectedGateways.length === 0 || selectedGateways.includes(model.source_gateway || '');
       const seriesMatch = selectedModelSeries.length === 0 || selectedModelSeries.includes(getModelSeries(model));
 
-      return inputFormatMatch && outputFormatMatch && contextMatch && priceMatch && parameterMatch && providerMatch && seriesMatch;
+      return inputFormatMatch && outputFormatMatch && contextMatch && priceMatch && parameterMatch && developerMatch && gatewayMatch && seriesMatch;
     });
 
     // Then sort the filtered results
@@ -238,15 +243,56 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     });
 
     return sorted;
-  }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, selectedModelSeries, sortBy, getModelSeries]);
+  }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy, getModelSeries]);
 
   const allInputFormats = useMemo(() => Array.from(new Set(deduplicatedModels.flatMap(m => m.architecture?.input_modalities || []))).filter(Boolean), [deduplicatedModels]);
   const allOutputFormats = useMemo(() => Array.from(new Set(deduplicatedModels.flatMap(m => m.architecture?.output_modalities || []))).filter(Boolean), [deduplicatedModels]);
-  const allParameters = useMemo(() => Array.from(new Set(deduplicatedModels.flatMap(m => m.supported_parameters || []))), [deduplicatedModels]);
-  const allProviders = useMemo(() => Array.from(new Set(deduplicatedModels.map(m => m.provider_slug).filter(Boolean))), [deduplicatedModels]);
-  const allModelSeries = useMemo(() => {
-    const series = Array.from(new Set(deduplicatedModels.map(m => getModelSeries(m))));
-    return series.sort();
+
+  const allParametersWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    deduplicatedModels.forEach(m => {
+      (m.supported_parameters || []).forEach(p => {
+        counts[p] = (counts[p] || 0) + 1;
+      });
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([param, count]) => ({ value: param, count }));
+  }, [deduplicatedModels]);
+
+  const allDevelopersWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    deduplicatedModels.forEach(m => {
+      if (m.provider_slug) {
+        counts[m.provider_slug] = (counts[m.provider_slug] || 0) + 1;
+      }
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([dev, count]) => ({ value: dev, count }));
+  }, [deduplicatedModels]);
+
+  const allGatewaysWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    deduplicatedModels.forEach(m => {
+      if (m.source_gateway) {
+        counts[m.source_gateway] = (counts[m.source_gateway] || 0) + 1;
+      }
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([gateway, count]) => ({ value: gateway, count }));
+  }, [deduplicatedModels]);
+
+  const allModelSeriesWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    deduplicatedModels.forEach(m => {
+      const series = getModelSeries(m);
+      counts[series] = (counts[series] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([series, count]) => ({ value: series, count }));
   }, [deduplicatedModels, getModelSeries]);
 
 
@@ -312,23 +358,30 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
             <FilterDropdown
               label="Available Parameters"
-              items={allParameters}
+              items={allParametersWithCounts}
               selectedItems={selectedParameters}
               onSelectionChange={handleCheckboxChange(setSelectedParameters)}
               icon={<SlidersIcon className="w-4 h-4"/>}
             />
             <FilterDropdown
               label="Model Series"
-              items={allModelSeries}
+              items={allModelSeriesWithCounts}
               selectedItems={selectedModelSeries}
               onSelectionChange={handleCheckboxChange(setSelectedModelSeries)}
               icon={<Bot className="w-4 h-4"/>}
             />
             <FilterDropdown
-              label="Providers"
-              items={allProviders}
-              selectedItems={selectedProviders}
-              onSelectionChange={handleCheckboxChange(setSelectedProviders)}
+              label="Developer"
+              items={allDevelopersWithCounts}
+              selectedItems={selectedDevelopers}
+              onSelectionChange={handleCheckboxChange(setSelectedDevelopers)}
+              icon={<Bot className="w-4 h-4"/>}
+            />
+            <FilterDropdown
+              label="Gateway"
+              items={allGatewaysWithCounts}
+              selectedItems={selectedGateways}
+              onSelectionChange={handleCheckboxChange(setSelectedGateways)}
               icon={<Bot className="w-4 h-4"/>}
             />
           </SidebarContent>
@@ -402,10 +455,18 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                   </button>
                 </Badge>
               ))}
-              {selectedProviders.map(provider => (
-                <Badge key={provider} variant="secondary" className="gap-1">
-                  {provider}
-                  <button onClick={() => setSelectedProviders(prev => prev.filter(p => p !== provider))} className="ml-1 hover:bg-muted rounded-sm">
+              {selectedDevelopers.map(developer => (
+                <Badge key={developer} variant="secondary" className="gap-1">
+                  Developer: {developer}
+                  <button onClick={() => setSelectedDevelopers(prev => prev.filter(d => d !== developer))} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {selectedGateways.map(gateway => (
+                <Badge key={gateway} variant="secondary" className="gap-1">
+                  Gateway: {gateway}
+                  <button onClick={() => setSelectedGateways(prev => prev.filter(g => g !== gateway))} className="ml-1 hover:bg-muted rounded-sm">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
@@ -485,12 +546,17 @@ const FilterSlider = ({ label, value, onValueChange, min, max, step, unit }: { l
     );
 };
 
-const FilterDropdown = ({ label, items, icon, selectedItems, onSelectionChange }: { label: string, items: string[], icon: React.ReactNode, selectedItems: string[], onSelectionChange: (value: string, checked: boolean) => void }) => {
+const FilterDropdown = ({ label, items, icon, selectedItems, onSelectionChange }: { label: string, items: { value: string, count: number }[], icon: React.ReactNode, selectedItems: string[], onSelectionChange: (value: string, checked: boolean) => void }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const displayedItems = showAll ? items : items.slice(0, 3);
-  const hasMore = items.length > 3;
+  const filteredItems = items.filter(item =>
+    item.value.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const displayedItems = showAll ? filteredItems : filteredItems.slice(0, 5);
+  const hasMore = filteredItems.length > 5;
 
   return (
     <SidebarGroup>
@@ -502,18 +568,32 @@ const FilterDropdown = ({ label, items, icon, selectedItems, onSelectionChange }
       </button>
       {isOpen && (
         <div className="flex flex-col gap-2 mt-2">
+          {items.length > 5 && (
+            <Input
+              placeholder={`Search ${label.toLowerCase()}...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-8 text-sm"
+            />
+          )}
           {displayedItems.map((item) => (
-            <div key={item} className="flex items-center space-x-2">
-              <Checkbox id={item.toLowerCase()} checked={selectedItems.includes(item)} onCheckedChange={(c) => onSelectionChange(item, !!c)} />
-              <Label htmlFor={item.toLowerCase()} className="font-normal">{item}</Label>
+            <div key={item.value} className="flex items-center justify-between space-x-2">
+              <div className="flex items-center space-x-2 flex-1 min-w-0">
+                <Checkbox id={item.value.toLowerCase()} checked={selectedItems.includes(item.value)} onCheckedChange={(c) => onSelectionChange(item.value, !!c)} />
+                <Label htmlFor={item.value.toLowerCase()} className="font-normal truncate cursor-pointer">{item.value}</Label>
+              </div>
+              <span className="text-xs text-muted-foreground flex-shrink-0">({item.count})</span>
             </div>
           ))}
+          {filteredItems.length === 0 && (
+            <div className="text-sm text-muted-foreground py-2">No matches found</div>
+          )}
           {hasMore && (
             <button
               onClick={() => setShowAll(!showAll)}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left"
             >
-              {showAll ? 'Show less...' : `More... (${items.length - 3} more)`}
+              {showAll ? 'Show less...' : `Show ${filteredItems.length - 5} more...`}
             </button>
           )}
         </div>
