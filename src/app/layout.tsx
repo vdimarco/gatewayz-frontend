@@ -7,7 +7,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { PrivyProviderWrapper } from '@/components/providers/privy-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Inter } from 'next/font/google';
-import { GTMLoader } from '@/components/analytics/gtm-loader';
+// import { GTMLoader } from '@/components/analytics/gtm-loader'; // Temporarily disabled due to layout router issues
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -40,7 +40,7 @@ export default function RootLayout({
         >
           <ErrorBoundary>
             <PrivyProviderWrapper>
-              <GTMLoader />
+              {/* <GTMLoader /> Temporarily disabled due to layout router issues */}
               <AppHeader />
               {children}
               <Toaster />
