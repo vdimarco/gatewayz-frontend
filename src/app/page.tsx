@@ -69,24 +69,24 @@ const FeaturedModelCard = ({
           isActive ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
       >
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-muted flex-shrink-0">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-200 flex-shrink-0 p-1">
           {model.logo_url ? (
-            <img src={model.logo_url} alt={model.by} width="42" height="42" />
+            <img src={model.logo_url} alt={model.by} width="42" height="42" className="w-full h-full object-contain" />
           ) : (
             <>
               {model.by === 'google' && (
-                <div className="flex">
-                  <img src="/Google_Logo-black.svg" alt="Google" width="42" height="42" />
+                <div className="flex w-full h-full">
+                  <img src="/Google_Logo-black.svg" alt="Google" className="w-full h-full object-contain" />
                 </div>
               )}
               {model.by === 'openai' && (
-                <div className="flex">
-                  <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="42" height="42" />
+                <div className="flex w-full h-full">
+                  <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-full h-full object-contain" />
                 </div>
               )}
               {model.by === 'anthropic' && (
-                <div className="flex">
-                  <img src="/anthropic-logo.svg" alt="Anthropic" width="42" height="42" />
+                <div className="flex w-full h-full">
+                  <img src="/anthropic-logo.svg" alt="Anthropic" className="w-full h-full object-contain" />
                 </div>
               )}
             </>
@@ -107,24 +107,24 @@ const FeaturedModelCard = ({
         }`}
       >
         <div className="flex gap-2 sm:gap-3 mb-2 sm:mb-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-muted flex-shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-200 flex-shrink-0 p-1">
               {model.logo_url ? (
-                <img src={model.logo_url} alt={model.by} className="w-8 h-8 sm:w-10 sm:h-10" />
+                <img src={model.logo_url} alt={model.by} className="w-full h-full object-contain" />
               ) : (
                 <>
                   {model.by === 'google' && (
-                    <div className="flex">
-                      <img src="/Google_Logo-black.svg" alt="Google" className="w-8 h-8 sm:w-10 sm:h-10" />
+                    <div className="flex w-full h-full">
+                      <img src="/Google_Logo-black.svg" alt="Google" className="w-full h-full object-contain" />
                     </div>
                   )}
                   {model.by === 'openai' && (
-                    <div className="flex">
-                      <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-8 h-8 sm:w-10 sm:h-10" />
+                    <div className="flex w-full h-full">
+                      <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-full h-full object-contain" />
                     </div>
                   )}
                   {model.by === 'anthropic' && (
-                    <div className="flex">
-                      <img src="/anthropic-logo.svg" alt="Anthropic" className="w-8 h-8 sm:w-10 sm:h-10" />
+                    <div className="flex w-full h-full">
+                      <img src="/anthropic-logo.svg" alt="Anthropic" className="w-full h-full object-contain" />
                     </div>
                   )}
                 </>
