@@ -104,15 +104,20 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
       if (cached) {
         try {
           const { data, timestamp } = JSON.parse(cached);
-          if (Date.now() - timestamp < CACHE_DURATION) {
+          // Validate cached data has correct structure
+          if (Date.now() - timestamp < CACHE_DURATION && data && data.length > 0 && data[0].value) {
             console.log('Models loaded from cache (v4):', data.length);
             setModels(data);
             return;
           } else {
-            console.log('Cache expired, fetching fresh data');
+            console.log('Cache expired or invalid, fetching fresh data');
+            // Clear invalid cache
+            localStorage.removeItem(CACHE_KEY);
           }
         } catch (e) {
           console.log('Cache parse error:', e);
+          // Clear corrupted cache
+          localStorage.removeItem(CACHE_KEY);
         }
       } else {
         console.log('No cache found, fetching from API');
