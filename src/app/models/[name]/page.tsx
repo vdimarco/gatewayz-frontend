@@ -153,8 +153,8 @@ export default function ModelProfilePage() {
     }, [params.name]);
 
     useEffect(() => {
-        const CACHE_KEY = 'gatewayz_models_cache';
-        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+        const CACHE_KEY = 'gatewayz_models_cache_v4_all_gateways';
+        const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
         const fetchModels = async () => {
             try {
@@ -178,10 +178,34 @@ export default function ModelProfilePage() {
                     }
                 }
 
-                // Fetch from API if no valid cache
-                const response = await fetch(`${API_BASE_URL}/models?gateway=all`);
-                const data = await response.json();
-                models = data.data || [];
+                // Fetch from all gateways to get all models
+                const [openrouterRes, portkeyRes, featherlessRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/models?gateway=openrouter`),
+                    fetch(`${API_BASE_URL}/models?gateway=portkey`),
+                    fetch(`${API_BASE_URL}/models?gateway=featherless`)
+                ]);
+
+                const [openrouterData, portkeyData, featherlessData] = await Promise.all([
+                    openrouterRes.json(),
+                    portkeyRes.json(),
+                    featherlessRes.json()
+                ]);
+
+                // Combine models from all gateways
+                const allModels = [
+                    ...(openrouterData.data || []),
+                    ...(portkeyData.data || []),
+                    ...(featherlessData.data || [])
+                ];
+
+                // Deduplicate models by ID - keep the first occurrence
+                const uniqueModelsMap = new Map();
+                allModels.forEach((model: any) => {
+                    if (!uniqueModelsMap.has(model.id)) {
+                        uniqueModelsMap.set(model.id, model);
+                    }
+                });
+                models = Array.from(uniqueModelsMap.values());
 
                 // Cache the result
                 localStorage.setItem(CACHE_KEY, JSON.stringify({
