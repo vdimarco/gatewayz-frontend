@@ -1118,14 +1118,35 @@ function ChatPageContent() {
                 // Use streaming API
                 const modelValue = selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value;
 
-                // Detect DeepInfra models and determine portkey_provider
-                // DeepInfra models have IDs starting with @deepinfra/ in the backend
-                // Check if the model ID contains patterns indicating DeepInfra
-                const isDeepInfraModel = modelValue?.includes('airoboros') ||
-                                        modelValue?.includes('wizardlm') ||
-                                        selectedModel.sourceGateway === 'portkey';
+                // Detect the Portkey provider based on model characteristics
+                // Only set portkey_provider for Portkey gateway models
+                let portkeyProvider: string | undefined = undefined;
 
-                const portkeyProvider = isDeepInfraModel ? 'deepinfra' : undefined;
+                if (selectedModel.sourceGateway === 'portkey') {
+                    // DeepInfra models: typically community fine-tunes like airoboros, wizardlm, etc.
+                    const deepInfraPatterns = ['airoboros', 'wizardlm', 'jondurbin', 'undi95', 'gryphe', 'alpindale'];
+                    const isDeepInfra = deepInfraPatterns.some(pattern =>
+                        modelValue?.toLowerCase().includes(pattern)
+                    );
+
+                    // OpenAI models
+                    const openAIPatterns = ['gpt-', 'o1-', 'o3-'];
+                    const isOpenAI = openAIPatterns.some(pattern =>
+                        modelValue?.toLowerCase().includes(pattern)
+                    );
+
+                    // Anthropic models
+                    const isAnthropic = modelValue?.toLowerCase().includes('claude');
+
+                    if (isDeepInfra) {
+                        portkeyProvider = 'deepinfra';
+                    } else if (isOpenAI) {
+                        portkeyProvider = 'openai';
+                    } else if (isAnthropic) {
+                        portkeyProvider = 'anthropic';
+                    }
+                    // If none match, leave undefined and let backend handle default routing
+                }
 
                 console.log('Model:', modelValue);
                 console.log('Source Gateway:', selectedModel.sourceGateway);
