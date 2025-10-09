@@ -23,16 +23,20 @@ interface Model {
 
 async function getModels(): Promise<Model[]> {
   try {
-    // Fetch from OpenRouter, Portkey, and Featherless separately to get all models
+    const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+      : 'http://localhost:3000';
+
+    // Fetch from OpenRouter, Portkey, and Featherless separately via API proxy
     // Cache for 10 minutes to improve performance
     const [openrouterRes, portkeyRes, featherlessRes] = await Promise.all([
-      fetch(`${API_BASE_URL}/models?gateway=openrouter`, {
+      fetch(`${baseUrl}/api/models?gateway=openrouter`, {
         next: { revalidate: 600 } // 10 minutes
       }),
-      fetch(`${API_BASE_URL}/models?gateway=portkey`, {
+      fetch(`${baseUrl}/api/models?gateway=portkey`, {
         next: { revalidate: 600 }
       }),
-      fetch(`${API_BASE_URL}/models?gateway=featherless`, {
+      fetch(`${baseUrl}/api/models?gateway=featherless`, {
         next: { revalidate: 600 }
       })
     ]);
