@@ -31,7 +31,12 @@
       "Read(//c/Users/vaughn.v/Downloads/**)",
       "Bash(npm i:*)",
       "Bash(ls:*)",
-      "Bash(/dev/null)"
+      "Bash(/dev/null)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npx tsc:*)",
+      "Bash(timeout:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)"
     ],
     "deny": [],
     "ask": []
