@@ -2,8 +2,7 @@
 
 import { PrivyProvider } from '@privy-io/react-auth';
 import { base } from 'viem/chains';
-import { ReactNode, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { ReactNode, useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/lib/config';
 import { RateLimitHandler } from '@/components/auth/rate-limit-handler';
 
@@ -13,7 +12,6 @@ interface PrivyProviderWrapperProps {
 
 export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
-  const router = useRouter();
   const [showRateLimit, setShowRateLimit] = useState(false);
 
   if (!appId) {
@@ -63,9 +61,9 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
         }));
       }
 
-      // Redirect new users to onboarding or existing users to chat
+      // Redirect new users to chat
       if (isNewUser) {
-        router.push('/chat');
+        window.location.href = '/chat';
       }
     } catch (error) {
       console.error('Error during login:', error);
