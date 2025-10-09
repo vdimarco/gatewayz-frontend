@@ -724,7 +724,7 @@ function ChatPageContent() {
     }, [shouldAutoSend, activeSessionId, message, selectedModel, loading]);
 
     useEffect(() => {
-        // Load sessions from API when authenticated
+        // Load sessions from API when authenticated and API key is available
         if (!ready) {
             console.log('Session loading - Privy not ready yet');
             return;
@@ -733,6 +733,19 @@ function ChatPageContent() {
         if (!authenticated) {
             console.log('Session loading - User not authenticated');
             return;
+        }
+
+        // Wait for API key to be saved to localStorage after authentication
+        const apiKey = getApiKey();
+        const userData = getUserData();
+        if (!apiKey || !userData?.privy_user_id) {
+            console.log('Session loading - Waiting for API key and user data...');
+            // Retry after a short delay
+            const timer = setTimeout(() => {
+                // Trigger re-render by setting a dummy state
+                setSessions(prev => [...prev]);
+            }, 500);
+            return () => clearTimeout(timer);
         }
 
         console.log('Session loading - Starting to load sessions...');
@@ -775,7 +788,7 @@ function ChatPageContent() {
         };
 
         loadSessions();
-    }, [ready, authenticated]);
+    }, [ready, authenticated, sessions.length]);
 
     // Note: In a real app, you would save sessions to backend API here
     // useEffect(() => {
