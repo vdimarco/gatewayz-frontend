@@ -121,12 +121,19 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
       // Fetch from all gateways to get all models
       setLoading(true);
       try {
+        console.log('Fetching models from API proxy...');
         // Fetch from OpenRouter, Portkey, and Featherless separately via frontend API proxy
         const [openrouterRes, portkeyRes, featherlessRes] = await Promise.all([
           fetch(`/api/models?gateway=openrouter`),
           fetch(`/api/models?gateway=portkey`),
           fetch(`/api/models?gateway=featherless`)
         ]);
+
+        console.log('Fetch responses:', {
+          openrouter: openrouterRes.status,
+          portkey: portkeyRes.status,
+          featherless: featherlessRes.status
+        });
 
         const [openrouterData, portkeyData, featherlessData] = await Promise.all([
           openrouterRes.json(),
