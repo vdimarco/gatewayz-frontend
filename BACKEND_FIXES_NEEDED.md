@@ -1,6 +1,58 @@
 # Backend Fixes Needed
 
-## Issue: Activity Log Not Being Saved to Database
+## Issue 1: Models API Endpoint Missing
+
+### Problem
+The `/models?gateway=X` endpoint returns 404 Not Found. This breaks:
+- Model dropdown in chat interface
+- Individual model detail pages at `/models/[name]`
+- Model browser functionality
+
+### Root Cause
+Backend does not implement the `/models` endpoint with gateway parameter support.
+
+### What Needs to be Fixed (Backend)
+
+#### Implement GET /models Endpoint
+- Accept `gateway` query parameter: `openrouter`, `portkey`, or `featherless`
+- Return models from the specified gateway
+- Response format:
+```json
+{
+  "data": [
+    {
+      "id": "openai/gpt-4",
+      "name": "GPT-4",
+      "description": "Most capable GPT-4 model",
+      "context_length": 128000,
+      "pricing": {
+        "prompt": "0.03",
+        "completion": "0.06"
+      },
+      "architecture": {
+        "input_modalities": ["text", "image"]
+      },
+      "supported_parameters": ["temperature", "top_p", "tools"],
+      "provider_slug": "openai"
+    }
+  ]
+}
+```
+
+### Current Workaround
+Created `/api/models` proxy endpoint that will call backend once it's implemented.
+
+### Testing
+After implementing the backend endpoint:
+```bash
+curl "https://api.gatewayz.ai/models?gateway=openrouter"
+curl "https://api.gatewayz.ai/models?gateway=portkey"
+curl "https://api.gatewayz.ai/models?gateway=featherless"
+```
+
+---
+
+## Issue 2: Activity Log Not Being Saved to Database
 
 ### Problem
 The `activity` table in the database is empty because the backend is not logging user activity.

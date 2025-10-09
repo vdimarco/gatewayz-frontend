@@ -178,11 +178,11 @@ export default function ModelProfilePage() {
                     }
                 }
 
-                // Fetch from all gateways to get all models
+                // Fetch from all gateways to get all models via frontend API proxy
                 const [openrouterRes, portkeyRes, featherlessRes] = await Promise.all([
-                    fetch(`${API_BASE_URL}/models?gateway=openrouter`),
-                    fetch(`${API_BASE_URL}/models?gateway=portkey`),
-                    fetch(`${API_BASE_URL}/models?gateway=featherless`)
+                    fetch(`/api/models?gateway=openrouter`),
+                    fetch(`/api/models?gateway=portkey`),
+                    fetch(`/api/models?gateway=featherless`)
                 ]);
 
                 const [openrouterData, portkeyData, featherlessData] = await Promise.all([
