@@ -7,7 +7,12 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { PrivyProviderWrapper } from '@/components/providers/privy-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Inter } from 'next/font/google';
-import { GTM } from '@/components/analytics/gtm';
+import dynamic from 'next/dynamic';
+
+// Load GTM dynamically with no SSR to prevent layout router mounting issues
+const GTM = dynamic(() => import('@/components/analytics/gtm').then(mod => ({ default: mod.GTM })), {
+  ssr: false
+});
 
 const inter = Inter({ subsets: ['latin'] });
 
