@@ -207,11 +207,22 @@ export default function ModelProfilePage() {
                 });
                 models = Array.from(uniqueModelsMap.values());
 
-                // Cache the result
-                localStorage.setItem(CACHE_KEY, JSON.stringify({
-                    data: models,
-                    timestamp: Date.now()
-                }));
+                // Try to cache the result, but don't fail if quota exceeded
+                try {
+                    localStorage.setItem(CACHE_KEY, JSON.stringify({
+                        data: models,
+                        timestamp: Date.now()
+                    }));
+                } catch (e) {
+                    console.log('Failed to cache models (storage quota exceeded):', e);
+                    // Clear old cache to free up space
+                    try {
+                        localStorage.removeItem(CACHE_KEY);
+                        localStorage.removeItem('gatewayz_models_cache'); // Old cache key
+                    } catch (clearError) {
+                        console.log('Failed to clear cache:', clearError);
+                    }
+                }
 
                 setAllModels(models);
                 const foundModel = models.find((m: Model) => m.id === modelId);

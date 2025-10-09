@@ -177,11 +177,22 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
         });
         setModels(modelOptions);
 
-        // Cache the results
-        localStorage.setItem(CACHE_KEY, JSON.stringify({
-          data: modelOptions,
-          timestamp: Date.now()
-        }));
+        // Try to cache the results, but don't fail if quota exceeded
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({
+            data: modelOptions,
+            timestamp: Date.now()
+          }));
+          console.log('Model options cached:', modelOptions.length);
+        } catch (e) {
+          console.log('Failed to cache models (storage quota exceeded), clearing old cache');
+          try {
+            localStorage.removeItem(CACHE_KEY);
+            localStorage.removeItem('gatewayz_models_cache');
+          } catch (clearError) {
+            console.log('Failed to clear cache:', clearError);
+          }
+        }
         console.log('Model options set:', modelOptions.length);
       } catch (error) {
         console.log('Failed to fetch models:', error);
