@@ -96,7 +96,7 @@ const FeaturedModelCard = ({
           <p className={`text-lg font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
             {model.growth}
           </p>
-          <p className="text-[10px] text-gray-600 leading-tight">Weekly Growth</p>
+          <p className="text-[10px] text-muted-foreground leading-tight">Weekly Growth</p>
         </div>
       </div>
 
@@ -131,25 +131,25 @@ const FeaturedModelCard = ({
               )}
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base text-black">{model.name}</h3>
-              <span className="text-xs sm:text-sm">By</span><span className="text-xs sm:text-sm text-blue-600"> {model.by.charAt(0).toUpperCase() + model.by.slice(1)}</span>
+              <h3 className="font-bold text-sm sm:text-base">{model.name}</h3>
+              <span className="text-xs sm:text-sm text-muted-foreground">By</span><span className="text-xs sm:text-sm text-blue-600 dark:text-blue-400"> {model.by.charAt(0).toUpperCase() + model.by.slice(1)}</span>
             </div>
           </div>
 
         <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <div className="text-center">
-            <p className="text-lg sm:text-xl md:text-2xl font-bold text-black">{model.tokens}</p>
-            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">Tokens/Sec</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold">{model.tokens}</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Tokens/Sec</p>
           </div>
           <div className="text-center">
-            <p className="text-lg sm:text-xl md:text-2xl font-bold text-black">{model.latency}</p>
-            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">Latency</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold">{model.latency}</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Latency</p>
           </div>
           <div className="text-center">
             <p className={`text-lg sm:text-xl md:text-2xl font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
               {model.growth}
             </p>
-            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">Weekly Growth</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Weekly Growth</p>
           </div>
         </div>
       </div>
