@@ -344,9 +344,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">
-                  {debouncedSearchTerm && filteredModels.length !== searchFilteredModels.length
-                    ? `${filteredModels.length} of ${searchFilteredModels.length} models`
-                    : `${filteredModels.length} models`}
+                  {`${filteredModels.length} / ${deduplicatedModels.length} models`}
                 </span>
                 {hasActiveFilters && (
                   <Button variant="ghost" size="sm" onClick={resetFilters}>Clear All Filters</Button>
