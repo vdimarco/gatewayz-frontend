@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -222,12 +222,14 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
       const outputFormatMatch = selectedOutputFormats.length === 0 || selectedOutputFormats.every(m =>
         model.architecture?.output_modalities?.some(om => om.toLowerCase() === m.toLowerCase())
       );
-      // Include models with context_length of 0 (pending metadata sync)
+      // Include models with context_length of 0 (pending metadata sync) or within range
       const contextMatch = model.context_length === 0 ||
+        (contextLengthRange[0] === 0 && contextLengthRange[1] === 1024) || // No filter applied
         (model.context_length >= contextLengthRange[0] * 1000 && model.context_length <= contextLengthRange[1] * 1000);
       const isFree = parseFloat(model.pricing?.prompt || '0') === 0 && parseFloat(model.pricing?.completion || '0') === 0;
       const avgPrice = (parseFloat(model.pricing?.prompt || '0') + parseFloat(model.pricing?.completion || '0')) / 2;
-      const priceMatch = isFree ||
+      const priceMatch = (promptPricingRange[0] === 0 && promptPricingRange[1] === 10) || // No filter applied
+        isFree ||
         (avgPrice >= promptPricingRange[0] / 1000000 && avgPrice <= promptPricingRange[1] / 1000000);
       const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => (model.supported_parameters || []).includes(p));
       const developerMatch = selectedDevelopers.length === 0 || selectedDevelopers.includes(model.provider_slug);
@@ -585,7 +587,7 @@ const FilterSlider = ({ label, value, onValueChange, min, max, step, unit }: { l
     );
 };
 
-const FilterRangeSlider = ({ label, value, onValueChange, min, max, step, unit }: { label: string, value: [number, number], onValueChange: (value: [number, number]) => void, min: number, max: number, step: number, unit: string }) => {
+const FilterRangeSlider = React.memo(({ label, value, onValueChange, min, max, step, unit }: { label: string, value: [number, number], onValueChange: (value: [number, number]) => void, min: number, max: number, step: number, unit: string }) => {
     return (
         <SidebarGroup>
             <SidebarGroupLabel>{label}</SidebarGroupLabel>
@@ -597,7 +599,7 @@ const FilterRangeSlider = ({ label, value, onValueChange, min, max, step, unit }
             </div>
         </SidebarGroup>
     );
-};
+});
 
 const FilterDropdown = ({ label, items, icon, selectedItems, onSelectionChange }: { label: string, items: { value: string, count: number }[], icon: React.ReactNode, selectedItems: string[], onSelectionChange: (value: string, checked: boolean) => void }) => {
   const [isOpen, setIsOpen] = useState(true);
