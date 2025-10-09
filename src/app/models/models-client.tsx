@@ -115,8 +115,14 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchParams.get('search') || "");
   const [selectedInputFormats, setSelectedInputFormats] = useState<string[]>(searchParams.get('inputFormats')?.split(',').filter(Boolean) || []);
   const [selectedOutputFormats, setSelectedOutputFormats] = useState<string[]>(searchParams.get('outputFormats')?.split(',').filter(Boolean) || []);
-  const [contextLength, setContextLength] = useState(parseInt(searchParams.get('contextLength') || '1024'));
-  const [promptPricing, setPromptPricing] = useState(parseFloat(searchParams.get('promptPricing') || '10'));
+  const [contextLengthRange, setContextLengthRange] = useState<[number, number]>([
+    parseInt(searchParams.get('contextLengthMin') || '0'),
+    parseInt(searchParams.get('contextLengthMax') || '1024')
+  ]);
+  const [promptPricingRange, setPromptPricingRange] = useState<[number, number]>([
+    parseFloat(searchParams.get('promptPricingMin') || '0'),
+    parseFloat(searchParams.get('promptPricingMax') || '10')
+  ]);
   const [selectedParameters, setSelectedParameters] = useState<string[]>(searchParams.get('parameters')?.split(',').filter(Boolean) || []);
   const [selectedDevelopers, setSelectedDevelopers] = useState<string[]>(searchParams.get('developers')?.split(',').filter(Boolean) || []);
   const [selectedGateways, setSelectedGateways] = useState<string[]>(searchParams.get('gateways')?.split(',').filter(Boolean) || []);
@@ -139,8 +145,10 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     if (searchTerm) params.set('search', searchTerm);
     if (selectedInputFormats.length > 0) params.set('inputFormats', selectedInputFormats.join(','));
     if (selectedOutputFormats.length > 0) params.set('outputFormats', selectedOutputFormats.join(','));
-    if (contextLength !== 1024) params.set('contextLength', contextLength.toString());
-    if (promptPricing !== 10) params.set('promptPricing', promptPricing.toString());
+    if (contextLengthRange[0] !== 0) params.set('contextLengthMin', contextLengthRange[0].toString());
+    if (contextLengthRange[1] !== 1024) params.set('contextLengthMax', contextLengthRange[1].toString());
+    if (promptPricingRange[0] !== 0) params.set('promptPricingMin', promptPricingRange[0].toString());
+    if (promptPricingRange[1] !== 10) params.set('promptPricingMax', promptPricingRange[1].toString());
     if (selectedParameters.length > 0) params.set('parameters', selectedParameters.join(','));
     if (selectedDevelopers.length > 0) params.set('developers', selectedDevelopers.join(','));
     if (selectedGateways.length > 0) params.set('gateways', selectedGateways.join(','));
@@ -149,7 +157,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
     const queryString = params.toString();
     router.replace(queryString ? `?${queryString}` : '/models', { scroll: false });
-  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy, router]);
+  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy, router]);
 
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (value: string, checked: boolean) => {
     setter(prev => checked ? [...prev, value] : prev.filter(v => v !== value));
@@ -176,8 +184,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     setDebouncedSearchTerm("");
     setSelectedInputFormats([]);
     setSelectedOutputFormats([]);
-    setContextLength(1024);
-    setPromptPricing(10);
+    setContextLengthRange([0, 1024]);
+    setPromptPricingRange([0, 10]);
     setSelectedParameters([]);
     setSelectedDevelopers([]);
     setSelectedGateways([]);
@@ -187,7 +195,9 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
   // Check if any filters are active
   const hasActiveFilters = searchTerm || selectedInputFormats.length > 0 || selectedOutputFormats.length > 0 ||
-    contextLength !== 1024 || promptPricing !== 10 || selectedParameters.length > 0 ||
+    contextLengthRange[0] !== 0 || contextLengthRange[1] !== 1024 ||
+    promptPricingRange[0] !== 0 || promptPricingRange[1] !== 10 ||
+    selectedParameters.length > 0 ||
     selectedDevelopers.length > 0 || selectedGateways.length > 0 || selectedModelSeries.length > 0 || sortBy !== 'tokens-desc';
 
   // Calculate search matches separately from other filters
@@ -213,10 +223,12 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
         model.architecture?.output_modalities?.some(om => om.toLowerCase() === m.toLowerCase())
       );
       // Include models with context_length of 0 (pending metadata sync)
-      const contextMatch = model.context_length === 0 || model.context_length >= contextLength * 1000;
+      const contextMatch = model.context_length === 0 ||
+        (model.context_length >= contextLengthRange[0] * 1000 && model.context_length <= contextLengthRange[1] * 1000);
       const isFree = parseFloat(model.pricing?.prompt || '0') === 0 && parseFloat(model.pricing?.completion || '0') === 0;
       const avgPrice = (parseFloat(model.pricing?.prompt || '0') + parseFloat(model.pricing?.completion || '0')) / 2;
-      const priceMatch = avgPrice <= promptPricing / 1000000 || isFree;
+      const priceMatch = isFree ||
+        (avgPrice >= promptPricingRange[0] / 1000000 && avgPrice <= promptPricingRange[1] / 1000000);
       const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => (model.supported_parameters || []).includes(p));
       const developerMatch = selectedDevelopers.length === 0 || selectedDevelopers.includes(model.provider_slug);
       const gatewayMatch = selectedGateways.length === 0 || selectedGateways.includes(model.source_gateway || '');
@@ -243,10 +255,31 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     });
 
     return sorted;
-  }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy, getModelSeries]);
+  }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, sortBy, getModelSeries]);
 
-  const allInputFormats = useMemo(() => Array.from(new Set(deduplicatedModels.flatMap(m => m.architecture?.input_modalities || []))).filter(Boolean), [deduplicatedModels]);
-  const allOutputFormats = useMemo(() => Array.from(new Set(deduplicatedModels.flatMap(m => m.architecture?.output_modalities || []))).filter(Boolean), [deduplicatedModels]);
+  const allInputFormatsWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    deduplicatedModels.forEach(m => {
+      (m.architecture?.input_modalities || []).forEach(format => {
+        if (format) counts[format] = (counts[format] || 0) + 1;
+      });
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([format, count]) => ({ value: format, count }));
+  }, [deduplicatedModels]);
+
+  const allOutputFormatsWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    deduplicatedModels.forEach(m => {
+      (m.architecture?.output_modalities || []).forEach(format => {
+        if (format) counts[format] = (counts[format] || 0) + 1;
+      });
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([format, count]) => ({ value: format, count }));
+  }, [deduplicatedModels]);
 
   const allParametersWithCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -308,21 +341,24 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
             <SidebarGroup>
               <SidebarGroupLabel>Input Formats</SidebarGroupLabel>
               <div className="flex flex-col gap-2">
-                {allInputFormats.map((format) => {
-                  const icon = format.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
-                               format.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
-                               format.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> :
-                               format.toLowerCase() === 'audio' ? <Music className="w-4 h-4"/> : null;
+                {allInputFormatsWithCounts.map((item) => {
+                  const icon = item.value.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
+                               item.value.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
+                               item.value.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> :
+                               item.value.toLowerCase() === 'audio' ? <Music className="w-4 h-4"/> : null;
                   return (
-                    <div key={format} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`input-${format.toLowerCase()}`}
-                        checked={selectedInputFormats.includes(format)}
-                        onCheckedChange={(c) => handleCheckboxChange(setSelectedInputFormats)(format, !!c)}
-                      />
-                      <Label htmlFor={`input-${format.toLowerCase()}`} className="flex items-center gap-2 font-normal capitalize">
-                        {icon}{format}
-                      </Label>
+                    <div key={item.value} className="flex items-center justify-between space-x-2">
+                      <div className="flex items-center space-x-2 flex-1 min-w-0">
+                        <Checkbox
+                          id={`input-${item.value.toLowerCase()}`}
+                          checked={selectedInputFormats.includes(item.value)}
+                          onCheckedChange={(c) => handleCheckboxChange(setSelectedInputFormats)(item.value, !!c)}
+                        />
+                        <Label htmlFor={`input-${item.value.toLowerCase()}`} className="flex items-center gap-2 font-normal capitalize cursor-pointer">
+                          {icon}{item.value}
+                        </Label>
+                      </div>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">({item.count})</span>
                     </div>
                   );
                 })}
@@ -332,29 +368,32 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
             <SidebarGroup>
               <SidebarGroupLabel>Output Formats</SidebarGroupLabel>
               <div className="flex flex-col gap-2">
-                {allOutputFormats.map((format) => {
-                  const icon = format.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
-                               format.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
-                               format.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> :
-                               format.toLowerCase() === 'audio' ? <Music className="w-4 h-4"/> : null;
+                {allOutputFormatsWithCounts.map((item) => {
+                  const icon = item.value.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
+                               item.value.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
+                               item.value.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> :
+                               item.value.toLowerCase() === 'audio' ? <Music className="w-4 h-4"/> : null;
                   return (
-                    <div key={format} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`output-${format.toLowerCase()}`}
-                        checked={selectedOutputFormats.includes(format)}
-                        onCheckedChange={(c) => handleCheckboxChange(setSelectedOutputFormats)(format, !!c)}
-                      />
-                      <Label htmlFor={`output-${format.toLowerCase()}`} className="flex items-center gap-2 font-normal capitalize">
-                        {icon}{format}
-                      </Label>
+                    <div key={item.value} className="flex items-center justify-between space-x-2">
+                      <div className="flex items-center space-x-2 flex-1 min-w-0">
+                        <Checkbox
+                          id={`output-${item.value.toLowerCase()}`}
+                          checked={selectedOutputFormats.includes(item.value)}
+                          onCheckedChange={(c) => handleCheckboxChange(setSelectedOutputFormats)(item.value, !!c)}
+                        />
+                        <Label htmlFor={`output-${item.value.toLowerCase()}`} className="flex items-center gap-2 font-normal capitalize cursor-pointer">
+                          {icon}{item.value}
+                        </Label>
+                      </div>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">({item.count})</span>
                     </div>
                   );
                 })}
               </div>
             </SidebarGroup>
 
-            <FilterSlider label="Context Length" value={contextLength} onValueChange={setContextLength} min={4} max={1024} step={4} unit="K" />
-            <FilterSlider label="Prompt Pricing" value={promptPricing} onValueChange={setPromptPricing} min={0} max={10} step={0.1} unit="$" />
+            <FilterRangeSlider label="Context Length" value={contextLengthRange} onValueChange={setContextLengthRange} min={4} max={1024} step={4} unit="K" />
+            <FilterRangeSlider label="Prompt Pricing" value={promptPricingRange} onValueChange={setPromptPricingRange} min={0} max={10} step={0.1} unit="$" />
 
             <FilterDropdown
               label="Available Parameters"
@@ -541,6 +580,20 @@ const FilterSlider = ({ label, value, onValueChange, min, max, step, unit }: { l
                 <span>{min}{unit}</span>
                 <span>{value}{unit}</span>
                 <span>{max}{unit}+</span>
+            </div>
+        </SidebarGroup>
+    );
+};
+
+const FilterRangeSlider = ({ label, value, onValueChange, min, max, step, unit }: { label: string, value: [number, number], onValueChange: (value: [number, number]) => void, min: number, max: number, step: number, unit: string }) => {
+    return (
+        <SidebarGroup>
+            <SidebarGroupLabel>{label}</SidebarGroupLabel>
+            <Slider value={value} min={min} max={max} step={step} onValueChange={onValueChange} />
+            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>{value[0]}{unit}</span>
+                <span>to</span>
+                <span>{value[1]}{unit}{value[1] === max ? '+' : ''}</span>
             </div>
         </SidebarGroup>
     );
