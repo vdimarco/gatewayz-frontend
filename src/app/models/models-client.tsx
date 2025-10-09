@@ -385,11 +385,11 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
   return (
     <SidebarProvider>
-      <div className="relative flex h-[calc(100vh-theme(spacing.14))] justify-center">
+      <div className="relative flex min-h-[calc(100vh-theme(spacing.14))] justify-center">
         <Sidebar
           variant="sidebar"
           collapsible="icon"
-          className="hidden lg:flex"
+          className="hidden lg:flex fixed left-0 top-14 h-[calc(100vh-theme(spacing.14))]"
         >
           <SidebarContent className="p-4">
             <SidebarGroup>
@@ -494,7 +494,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
           </SidebarContent>
         </Sidebar>
 
-        <SidebarInset className="flex-1 overflow-auto">
+        <SidebarInset className="flex-1">
           <div className="max-w-[1600px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           <div className="flex flex-col gap-3 mb-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
