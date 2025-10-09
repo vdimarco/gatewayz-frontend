@@ -568,7 +568,7 @@ console.log(completion.choices[0].message);`,
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 md:gap-12 items-center justify-items-center max-w-5xl mx-auto">
                 <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-full max-w-[140px] dark:invert" />
-                <img src="/anthropic-logo.svg" alt="Anthropic" className="w-full max-w-[140px] dark:invert" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Anthropic_logo.svg" alt="Anthropic" className="w-full max-w-[140px] dark:invert" />
                 <img src="/Google_Logo-black.svg" alt="Google" className="w-full max-w-[140px] dark:invert" />
                 <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" className="w-full max-w-[140px] dark:invert" />
                 <img src="/Meta_Logo-black.svg" alt="Meta" className="w-full max-w-[140px] dark:invert" />
