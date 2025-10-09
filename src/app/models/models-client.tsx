@@ -321,6 +321,20 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
       .map(([format, count]) => ({ value: format, count }));
   }, [deduplicatedModels]);
 
+  const pricingCounts = useMemo(() => {
+    let freeCount = 0;
+    let paidCount = 0;
+    deduplicatedModels.forEach(m => {
+      const isFree = parseFloat(m.pricing?.prompt || '0') === 0 && parseFloat(m.pricing?.completion || '0') === 0;
+      if (isFree) {
+        freeCount++;
+      } else {
+        paidCount++;
+      }
+    });
+    return { free: freeCount, paid: paidCount, all: deduplicatedModels.length };
+  }, [deduplicatedModels]);
+
   const allParametersWithCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     deduplicatedModels.forEach(m => {
@@ -439,9 +453,9 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                   <SelectValue placeholder="All models" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All models</SelectItem>
-                  <SelectItem value="free">Free only</SelectItem>
-                  <SelectItem value="paid">Paid only</SelectItem>
+                  <SelectItem value="all">All models ({pricingCounts.all})</SelectItem>
+                  <SelectItem value="free">Free only ({pricingCounts.free})</SelectItem>
+                  <SelectItem value="paid">Paid only ({pricingCounts.paid})</SelectItem>
                 </SelectContent>
               </Select>
             </SidebarGroup>
