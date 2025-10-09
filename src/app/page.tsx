@@ -566,8 +566,9 @@ console.log(completion.choices[0].message);`,
               <div className="mb-8">
                 <h2 className="text-xl sm:text-2xl font-bold text-center">Connect To 1000+ AI Models</h2>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 md:gap-12 items-center justify-items-center max-w-4xl mx-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 md:gap-12 items-center justify-items-center max-w-5xl mx-auto">
                 <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-full max-w-[140px] dark:invert" />
+                <img src="https://cdn.prod.website-files.com/67ce28cfec624e2b733f8a52/68309ab48369f7ad9b4a40e1_open-graph.jpg" alt="Partner" className="w-full max-w-[140px] rounded-lg" />
                 <img src="/Google_Logo-black.svg" alt="Google" className="w-full max-w-[140px] dark:invert" />
                 <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" className="w-full max-w-[140px] dark:invert" />
                 <img src="/Meta_Logo-black.svg" alt="Meta" className="w-full max-w-[140px] dark:invert" />
