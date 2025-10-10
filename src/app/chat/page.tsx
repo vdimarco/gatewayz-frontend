@@ -1665,7 +1665,10 @@ function ChatPageContent() {
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        handleSendMessage();
+                        // Only send if user has actually typed something
+                        if (userHasTyped && message.trim()) {
+                          handleSendMessage();
+                        }
                       }
                     }}
                     onInput={() => {
