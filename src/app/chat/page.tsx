@@ -683,6 +683,9 @@ function ChatPageContent() {
     // Track if we're currently creating a session to prevent race conditions
     const creatingSessionRef = useRef(false);
 
+    // Trigger for forcing session reload after API key becomes available
+    const [authReady, setAuthReady] = useState(false);
+
     // Handle model and message from URL parameters
     useEffect(() => {
         const modelParam = searchParams.get('model');
@@ -758,8 +761,8 @@ function ChatPageContent() {
                 if (key && data?.privy_user_id) {
                     console.log('Session loading - API key and user data now available!');
                     clearInterval(checkInterval);
-                    // Force effect to re-run by triggering state update
-                    setSessions(prev => [...prev]);
+                    // Trigger auth ready state to force effect to re-run
+                    setAuthReady(true);
                 }
             }, 100);
 
@@ -808,7 +811,7 @@ function ChatPageContent() {
         };
 
         loadSessions();
-    }, [ready, authenticated]);
+    }, [ready, authenticated, authReady]);
 
     // Note: In a real app, you would save sessions to backend API here
     // useEffect(() => {
