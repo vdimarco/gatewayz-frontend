@@ -661,6 +661,7 @@ function ChatPageContent() {
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [isStreamingResponse, setIsStreamingResponse] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState('');
     const [selectedModel, setSelectedModel] = useState<ModelOption | null>({
@@ -733,11 +734,19 @@ function ChatPageContent() {
 
     // Auto-send message from URL parameter when session is ready
     useEffect(() => {
-        if (shouldAutoSend && activeSessionId && message.trim() && selectedModel && !loading && !creatingSessionRef.current) {
+        if (
+            shouldAutoSend &&
+            activeSessionId &&
+            message.trim() &&
+            selectedModel &&
+            !loading &&
+            !creatingSessionRef.current &&
+            !isStreamingResponse
+        ) {
             setShouldAutoSend(false); // Reset flag to prevent re-sending
             handleSendMessage();
         }
-    }, [shouldAutoSend, activeSessionId, message, selectedModel, loading]);
+    }, [shouldAutoSend, activeSessionId, message, selectedModel, loading, isStreamingResponse]);
 
     useEffect(() => {
         // Load sessions from API when authenticated and API key is available
@@ -1058,6 +1067,15 @@ function ChatPageContent() {
             return;
         }
 
+        if (isStreamingResponse) {
+            toast({
+                title: "Please wait",
+                description: "We're still finishing the previous response. Try again in a moment.",
+                variant: 'default'
+            });
+            return;
+        }
+
         // Check authentication first
         const apiKey = getApiKey();
         const userData = getUserData();
@@ -1180,6 +1198,7 @@ function ChatPageContent() {
                 return session;
             });
             setSessions(streamingSessions);
+            setIsStreamingResponse(true);
             setLoading(false); // Stop loading spinner, but message is still streaming
 
             try {
@@ -1258,6 +1277,8 @@ function ChatPageContent() {
                 }
 
                 // Use the accumulated content instead of reading from stale state
+                setIsStreamingResponse(false);
+
                 const finalContent = accumulatedContent;
 
                 // Update session title in API if this is the first message
@@ -1279,6 +1300,7 @@ function ChatPageContent() {
                 }
 
             } catch (streamError) {
+                setIsStreamingResponse(false);
                 console.error('Streaming error:', streamError);
 
                 // Remove streaming message and show error
@@ -1319,6 +1341,7 @@ function ChatPageContent() {
                 });
             }
         } catch (error) {
+            setIsStreamingResponse(false);
             console.error('Send message error:', error);
 
             toast({
@@ -1666,7 +1689,7 @@ function ChatPageContent() {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         // Only send if user has actually typed something
-                        if (userHasTyped && message.trim()) {
+                        if (userHasTyped && message.trim() && !isStreamingResponse) {
                           handleSendMessage();
                         }
                       }
@@ -1679,16 +1702,22 @@ function ChatPageContent() {
                     autoComplete="off"
                     className="border-0 bg-transparent focus-visible:ring-0 text-base text-foreground flex-1"
                   />
-                  {(!ready || !authenticated) && (
+                  {(!ready || !authenticated || isStreamingResponse) && (
                     <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
                   )}
                   <Button
                     size="icon"
                     variant="ghost"
                     onClick={handleSendMessage}
-                    disabled={loading || !message.trim() || !ready || !authenticated}
+                    disabled={loading || isStreamingResponse || !message.trim() || !ready || !authenticated}
                     className="h-8 w-8"
-                    title={!ready ? "Waiting for authentication..." : !authenticated ? "Please log in" : "Send message"}
+                    title={!ready
+                      ? "Waiting for authentication..."
+                      : !authenticated
+                        ? "Please log in"
+                        : isStreamingResponse
+                          ? "Please wait for the current response to finish"
+                          : "Send message"}
                   >
                      <img src="/Frame 13.svg" alt="Send" width={34} height={34} />
                   </Button>

@@ -155,6 +155,7 @@ export default function ModelProfilePage() {
     useEffect(() => {
         const CACHE_KEY = 'gatewayz_models_cache_v4_all_gateways';
         const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+        let mounted = true;
 
         const fetchModels = async () => {
             try {
@@ -167,10 +168,12 @@ export default function ModelProfilePage() {
                         const { data, timestamp } = JSON.parse(cached);
                         if (Date.now() - timestamp < CACHE_DURATION) {
                             models = data;
-                            setAllModels(models);
-                            const foundModel = models.find((m: Model) => m.id === modelId);
-                            setModel(foundModel || null);
-                            setLoading(false);
+                            if (mounted) {
+                                setAllModels(models);
+                                const foundModel = models.find((m: Model) => m.id === modelId);
+                                setModel(foundModel || null);
+                                setLoading(false);
+                            }
                             return;
                         }
                     } catch (e) {
@@ -200,7 +203,8 @@ export default function ModelProfilePage() {
                         try {
                             const data = await result.value.json();
                             return data.data || [];
-                        } catch {
+                        } catch (e) {
+                            console.log('Error parsing gateway response:', e);
                             return [];
                         }
                     }
@@ -246,16 +250,25 @@ export default function ModelProfilePage() {
                     }
                 }
 
-                setAllModels(models);
-                const foundModel = models.find((m: Model) => m.id === modelId);
-                setModel(foundModel || null);
+                if (mounted) {
+                    setAllModels(models);
+                    const foundModel = models.find((m: Model) => m.id === modelId);
+                    setModel(foundModel || null);
+                }
             } catch (error) {
                 console.log('Failed to fetch models:', error);
             } finally {
-                setLoading(false);
+                if (mounted) {
+                    setLoading(false);
+                }
             }
         };
+
         fetchModels();
+
+        return () => {
+            mounted = false;
+        };
     }, [modelId]);
 
     const relatedModels = useMemo(() => {
