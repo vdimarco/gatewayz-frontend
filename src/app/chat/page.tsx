@@ -809,6 +809,8 @@ function ChatPageContent() {
                     );
                     if (firstNewChat) {
                         console.log('Session loading - Setting active session:', firstNewChat.id);
+                        // Clear any stale message from the input field for new empty chats
+                        setMessage('');
                         // Directly set active session ID instead of calling switchToSession
                         // since setSessions hasn't completed yet
                         setActiveSessionId(firstNewChat.id);
@@ -1063,6 +1065,7 @@ function ChatPageContent() {
             selectedModel: selectedModel?.value,
             hasMessage: !!message.trim()
         });
+        console.trace('handleSendMessage call stack');
 
         // Check authentication first
         const apiKey = getApiKey();
