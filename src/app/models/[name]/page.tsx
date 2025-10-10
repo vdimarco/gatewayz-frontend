@@ -20,6 +20,7 @@ import ReactMarkdown from "react-markdown";
 import { cn } from '@/lib/utils';
 import { stringToColor } from '@/lib/utils';
 import { API_BASE_URL } from '@/lib/config';
+import { models as staticModels } from '@/lib/models-data';
 
 // Lazy load heavy components
 const TopAppsTable = lazy(() => import('@/components/dashboard/top-apps-table'));
@@ -139,6 +140,25 @@ const ChartCard = ({ modelName, title, dataKey, yAxisFormatter }: { modelName: s
 
 type TabType = 'Overview' | 'Providers' | 'Apps' | 'Activity' | 'Uptime' | 'API';
 
+// Transform static model to API format
+function transformStaticModel(staticModel: typeof staticModels[0]): Model {
+    return {
+        id: `${staticModel.developer}/${staticModel.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+        name: staticModel.name,
+        description: staticModel.description,
+        context_length: staticModel.context * 1000,
+        pricing: {
+            prompt: staticModel.inputCost.toString(),
+            completion: staticModel.outputCost.toString()
+        },
+        architecture: {
+            input_modalities: staticModel.modalities.map(m => m.toLowerCase())
+        },
+        supported_parameters: staticModel.supportedParameters,
+        provider_slug: staticModel.developer
+    };
+}
+
 export default function ModelProfilePage() {
     const params = useParams();
     const [model, setModel] = useState<Model | null>(null);
@@ -157,6 +177,16 @@ export default function ModelProfilePage() {
         const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
         let mounted = true;
 
+        // Load static data immediately for instant page render
+        const staticModelsTransformed = staticModels.map(transformStaticModel);
+        const staticFoundModel = staticModelsTransformed.find((m: Model) => m.id === modelId);
+
+        if (staticFoundModel && mounted) {
+            setModel(staticFoundModel);
+            setAllModels(staticModelsTransformed);
+            setLoading(false);
+        }
+
         const fetchModels = async () => {
             try {
                 // Check cache first
@@ -171,7 +201,9 @@ export default function ModelProfilePage() {
                             if (mounted) {
                                 setAllModels(models);
                                 const foundModel = models.find((m: Model) => m.id === modelId);
-                                setModel(foundModel || null);
+                                if (foundModel) {
+                                    setModel(foundModel);
+                                }
                                 setLoading(false);
                             }
                             return;
@@ -253,17 +285,18 @@ export default function ModelProfilePage() {
                 if (mounted) {
                     setAllModels(models);
                     const foundModel = models.find((m: Model) => m.id === modelId);
-                    setModel(foundModel || null);
+                    // Only update if we found a better/newer model from API
+                    if (foundModel) {
+                        setModel(foundModel);
+                    }
                 }
             } catch (error) {
                 console.log('Failed to fetch models:', error);
-            } finally {
-                if (mounted) {
-                    setLoading(false);
-                }
             }
+            // Don't set loading to false here since we already did it with static data
         };
 
+        // Fetch API data in background (non-blocking)
         fetchModels();
 
         return () => {
