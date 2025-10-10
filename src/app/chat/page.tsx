@@ -1657,13 +1657,20 @@ function ChatPageContent() {
                     value={message}
                     onChange={(e) => {
                       setMessage(e.target.value);
-                      setUserHasTyped(true); // Mark that user has typed
+                      // Only mark as typed if there's actual content
+                      if (e.target.value.trim()) {
+                        setUserHasTyped(true);
+                      }
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         handleSendMessage();
                       }
+                    }}
+                    onInput={() => {
+                      // Mark as typed on any input event (actual typing)
+                      setUserHasTyped(true);
                     }}
                     disabled={!ready || !authenticated}
                     autoComplete="off"
