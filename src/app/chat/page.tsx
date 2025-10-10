@@ -728,7 +728,7 @@ function ChatPageContent() {
 
     // Auto-send message from URL parameter when session is ready
     useEffect(() => {
-        if (shouldAutoSend && activeSessionId && message.trim() && selectedModel && !loading) {
+        if (shouldAutoSend && activeSessionId && message.trim() && selectedModel && !loading && !creatingSessionRef.current) {
             setShouldAutoSend(false); // Reset flag to prevent re-sending
             handleSendMessage();
         }
@@ -863,9 +863,15 @@ function ChatPageContent() {
     };
 
     const createNewChat = async () => {
+        // Prevent duplicate session creation
+        if (creatingSessionRef.current) {
+            console.log('Session creation already in progress');
+            return;
+        }
+
         // Check if there's already a new/empty chat session
-        const existingNewChat = sessions.find(session => 
-            session.messages.length === 0 && 
+        const existingNewChat = sessions.find(session =>
+            session.messages.length === 0 &&
             session.title === 'Untitled Chat'
         );
 
@@ -876,11 +882,14 @@ function ChatPageContent() {
         }
 
         try {
+            creatingSessionRef.current = true;
             // Create new session using API helper
             const newSession = await apiHelpers.createChatSession('Untitled Chat', selectedModel?.value);
             setSessions(prev => [newSession, ...prev]);
             switchToSession(newSession.id);
+            creatingSessionRef.current = false;
         } catch (error) {
+            creatingSessionRef.current = false;
             console.error('Failed to create new chat session:', error);
             toast({
                 title: "Error",
@@ -1057,38 +1066,16 @@ function ChatPageContent() {
             return;
         }
 
-        // Auto-create session if none exists
+        // Check if session exists - if not, don't auto-create, just show error
         let currentSessionId = activeSessionId;
         if (!currentSessionId) {
-            // Prevent duplicate session creation
-            if (creatingSessionRef.current) {
-                console.log('Session creation already in progress, waiting...');
-                toast({
-                    title: "Please wait",
-                    description: "Setting up your chat session...",
-                    variant: 'default'
-                });
-                return;
-            }
-
-            try {
-                creatingSessionRef.current = true;
-                console.log('No active session, creating one...');
-                const newSession = await apiHelpers.createChatSession('Untitled Chat', selectedModel?.value);
-                setSessions(prev => [newSession, ...prev]);
-                currentSessionId = newSession.id;
-                setActiveSessionId(newSession.id);
-                creatingSessionRef.current = false;
-            } catch (error) {
-                creatingSessionRef.current = false;
-                console.error('Failed to create chat session:', error);
-                toast({
-                    title: "Error",
-                    description: "Failed to create chat session. Please try again.",
-                    variant: 'destructive'
-                });
-                return;
-            }
+            console.log('No active session - user needs to wait for session creation to complete');
+            toast({
+                title: "Please wait",
+                description: "Your chat session is being created...",
+                variant: 'default'
+            });
+            return;
         }
 
         const isFirstMessage = messages.length === 0;
