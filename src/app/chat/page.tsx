@@ -1355,25 +1355,9 @@ function ChatPageContent() {
        
         
         {/* Header with title and model selector */}
-        <header className="relative z-10 w-full flex items-center justify-between gap-2 lg:gap-4 p-4 lg:p-6 max-w-7xl mx-auto overflow-hidden">
-          <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-            <div className="lg:hidden flex-shrink-0">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon"><Menu/></Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-[300px] p-0">
-                  <ChatSidebar
-                    sessions={sessions}
-                    activeSessionId={activeSessionId}
-                    switchToSession={switchToSession}
-                    createNewChat={createNewChat}
-                    onDeleteSession={handleDeleteSession}
-                    onRenameSession={handleRenameSession}
-                  />
-                </SheetContent>
-              </Sheet>
-            </div>
+        <header className="relative z-10 w-full p-4 lg:p-6 max-w-7xl mx-auto overflow-hidden">
+          {/* Desktop Layout - Side by side */}
+          <div className="hidden lg:flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
               {isEditingTitle ? (
                 <Input
@@ -1397,15 +1381,15 @@ function ChatPageContent() {
                     }
                   }}
                   autoFocus
-                  className="text-lg lg:text-2xl font-semibold h-auto px-2 py-1 min-w-0 flex-1"
+                  className="text-2xl font-semibold h-auto px-2 py-1 min-w-0 flex-1"
                 />
               ) : (
                 <>
-                  <h1 className="text-lg lg:text-2xl font-semibold truncate min-w-0 flex-1 max-w-full">{activeSession?.title || 'Untitled Chat'}</h1>
+                  <h1 className="text-2xl font-semibold truncate min-w-0 flex-1 max-w-full">{activeSession?.title || 'Untitled Chat'}</h1>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 flex-shrink-0 hidden sm:flex"
+                    className="h-6 w-6 flex-shrink-0"
                     onClick={() => {
                       setEditedTitle(activeSession?.title || '');
                       setIsEditingTitle(true);
@@ -1416,9 +1400,64 @@ function ChatPageContent() {
                 </>
               )}
             </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <ModelSelect selectedModel={selectedModel} onSelectModel={setSelectedModel} />
+            </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <ModelSelect selectedModel={selectedModel} onSelectModel={setSelectedModel} />
+
+          {/* Mobile Layout - Title above, Model below */}
+          <div className="flex lg:hidden flex-col gap-3">
+            <div className="flex items-center gap-2 w-full">
+              <div className="flex-shrink-0">
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon"><Menu/></Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-[300px] p-0">
+                    <ChatSidebar
+                      sessions={sessions}
+                      activeSessionId={activeSessionId}
+                      switchToSession={switchToSession}
+                      createNewChat={createNewChat}
+                      onDeleteSession={handleDeleteSession}
+                      onRenameSession={handleRenameSession}
+                    />
+                  </SheetContent>
+                </Sheet>
+              </div>
+              <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                {isEditingTitle ? (
+                  <Input
+                    type="text"
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    onBlur={() => {
+                      if (editedTitle.trim() && editedTitle !== activeSession?.title && activeSessionId) {
+                        handleRenameSession(activeSessionId, editedTitle.trim());
+                      }
+                      setIsEditingTitle(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        if (editedTitle.trim() && editedTitle !== activeSession?.title && activeSessionId) {
+                          handleRenameSession(activeSessionId, editedTitle.trim());
+                        }
+                        setIsEditingTitle(false);
+                      } else if (e.key === 'Escape') {
+                        setIsEditingTitle(false);
+                      }
+                    }}
+                    autoFocus
+                    className="text-lg font-semibold h-auto px-2 py-1 min-w-0 flex-1"
+                  />
+                ) : (
+                  <h1 className="text-lg font-semibold truncate min-w-0 flex-1">{activeSession?.title || 'Untitled Chat'}</h1>
+                )}
+              </div>
+            </div>
+            <div className="w-full">
+              <ModelSelect selectedModel={selectedModel} onSelectModel={setSelectedModel} />
+            </div>
           </div>
         </header>
 
