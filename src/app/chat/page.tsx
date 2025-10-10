@@ -662,6 +662,7 @@ function ChatPageContent() {
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [isStreamingResponse, setIsStreamingResponse] = useState(false);
+    const [rateLimitCountdown, setRateLimitCountdown] = useState<number>(0);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState('');
     const [selectedModel, setSelectedModel] = useState<ModelOption | null>({
@@ -829,6 +830,22 @@ function ChatPageContent() {
         loadSessions();
     }, [ready, authenticated, authReady]);
 
+    // Handle rate limit countdown timer
+    useEffect(() => {
+        if (rateLimitCountdown > 0) {
+            const timer = setInterval(() => {
+                setRateLimitCountdown(prev => {
+                    if (prev <= 1) {
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+
+            return () => clearInterval(timer);
+        }
+    }, [rateLimitCountdown]);
+
     // Note: In a real app, you would save sessions to backend API here
     // useEffect(() => {
     //     // Save sessions to backend API whenever they change
@@ -930,6 +947,7 @@ function ChatPageContent() {
     const handleExamplePromptClick = (promptText: string) => {
         // Set the message input to the clicked prompt
         setMessage(promptText);
+        setUserHasTyped(true);
         // Focus on the input
         setTimeout(() => {
             messageInputRef.current?.focus();
@@ -1160,7 +1178,7 @@ function ChatPageContent() {
             // Get current session to find API session ID
             const currentSession = sessions.find(s => s.id === currentSessionId);
             const sessionIdParam = currentSession?.apiSessionId ? `&session_id=${currentSession.apiSessionId}` : '';
-            const url = `${apiBaseUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(privyUserId)}${sessionIdParam}`;
+            const url = `${apiBaseUrl}/v1/responses?privy_user_id=${encodeURIComponent(privyUserId)}${sessionIdParam}`;
 
             console.log('Sending chat request to:', url);
             console.log('API Key:', apiKey.substring(0, 10) + '...');
@@ -1175,6 +1193,42 @@ function ChatPageContent() {
                     { type: 'image_url', image_url: { url: userImage } }
                 ];
             }
+
+            const mapToResponsesContent = (content: any): any[] => {
+                if (typeof content === 'string') {
+                    return [{ type: 'input_text', text: content }];
+                }
+
+                if (Array.isArray(content)) {
+                    return content.map(item => {
+                        if (!item || typeof item !== 'object') {
+                            return { type: 'input_text', text: String(item ?? '') };
+                        }
+                        if (item.type === 'text' || item.type === 'input_text') {
+                            return { type: 'input_text', text: item.text ?? '' };
+                        }
+                        if (item.type === 'image_url' || item.type === 'input_image_url') {
+                            return {
+                                type: 'input_image_url',
+                                image_url: item.image_url,
+                            };
+                        }
+                        if (item.type === 'input_audio') {
+                            return item;
+                        }
+                        if (typeof item.content === 'string') {
+                            return { type: 'input_text', text: item.content };
+                        }
+                        return { type: 'input_text', text: JSON.stringify(item) };
+                    });
+                }
+
+                if (content && typeof content === 'object' && 'text' in content) {
+                    return [{ type: 'input_text', text: (content as { text: string }).text }];
+                }
+
+                return [{ type: 'input_text', text: String(content ?? '') }];
+            };
 
             // Initialize assistant message with streaming flag
             const assistantMessage: Message = {
@@ -1238,6 +1292,28 @@ function ChatPageContent() {
                 console.log('Source Gateway:', selectedModel.sourceGateway);
                 console.log('Portkey Provider:', portkeyProvider);
 
+                const requestBody: any = {
+                    model: modelValue,
+                    input: [
+                        {
+                            role: 'user',
+                            content: mapToResponsesContent(messageContent)
+                        }
+                    ],
+                    stream: true
+                };
+
+                if (portkeyProvider) {
+                    requestBody.portkey_provider = portkeyProvider;
+                }
+
+                if (currentSession?.apiSessionId) {
+                    requestBody.metadata = {
+                        ...(requestBody.metadata || {}),
+                        session_id: currentSession.apiSessionId
+                    };
+                }
+
                 // Accumulate content locally to avoid state closure issues
                 let accumulatedContent = '';
                 let accumulatedReasoning = '';
@@ -1245,19 +1321,12 @@ function ChatPageContent() {
                 for await (const chunk of streamChatResponse(
                     url,
                     apiKey,
-                    modelValue,
-                    [{ role: 'user', content: messageContent }],
-                    portkeyProvider
+                    requestBody
                 )) {
                     if (chunk.status === 'rate_limit_retry') {
                         const waitSeconds = Math.max(1, Math.ceil((chunk.retryAfterMs ?? 0) / 1000));
-                        const retryMessage = `Rate limit reached. Retrying in ${waitSeconds} seconds...`;
-                        console.log(retryMessage);
-                        toast({
-                            title: "Rate limit hit",
-                            description: retryMessage,
-                            variant: 'default'
-                        });
+                        setRateLimitCountdown(waitSeconds);
+                        console.log(`Rate limit reached. Retrying in ${waitSeconds} seconds...`);
                         continue;
                     }
 
@@ -1672,6 +1741,13 @@ function ChatPageContent() {
                     >
                       <X className="h-4 w-4" />
                     </Button>
+                  </div>
+                )}
+                {rateLimitCountdown > 0 && (
+                  <div className="mb-2 px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-center">
+                    <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                      Rate limit reached. Retrying in <span className="font-bold">{rateLimitCountdown}</span> second{rateLimitCountdown !== 1 ? 's' : ''}...
+                    </p>
                   </div>
                 )}
                 <div className="flex items-center gap-1 px-2 py-2 bg-muted/20 dark:bg-muted/40 rounded-xl border border-border">
