@@ -40,7 +40,7 @@ export default function SettingsPage() {
   // State management
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
-  const [lowBalanceNotifications, setLowBalanceNotifications] = useState(false);
+  const [lowBalanceNotifications, setLowBalanceNotifications] = useState(true);
   const [alwaysEnforce, setAlwaysEnforce] = useState(false);
   const [allowedProviders, setAllowedProviders] = useState<string[]>([]);
   const [ignoredProviders, setIgnoredProviders] = useState<string[]>([]);
