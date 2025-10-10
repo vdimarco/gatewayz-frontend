@@ -731,7 +731,16 @@ function ChatPageContent() {
 
     // Auto-send message from URL parameter when session is ready
     useEffect(() => {
+        console.log('Auto-send effect check:', {
+            shouldAutoSend,
+            activeSessionId,
+            hasMessage: !!message.trim(),
+            selectedModel: selectedModel?.value,
+            loading,
+            creatingSession: creatingSessionRef.current
+        });
         if (shouldAutoSend && activeSessionId && message.trim() && selectedModel && !loading && !creatingSessionRef.current) {
+            console.log('Auto-sending message from URL parameter');
             setShouldAutoSend(false); // Reset flag to prevent re-sending
             handleSendMessage();
         }
@@ -1048,6 +1057,13 @@ function ChatPageContent() {
     };
 
     const handleSendMessage = async () => {
+        console.log('handleSendMessage called with:', {
+            message: message?.substring(0, 50) + '...',
+            activeSessionId,
+            selectedModel: selectedModel?.value,
+            hasMessage: !!message.trim()
+        });
+
         // Check authentication first
         const apiKey = getApiKey();
         const userData = getUserData();
