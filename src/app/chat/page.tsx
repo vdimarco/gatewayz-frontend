@@ -751,12 +751,21 @@ function ChatPageContent() {
         const userData = getUserData();
         if (!apiKey || !userData?.privy_user_id) {
             console.log('Session loading - Waiting for API key and user data...');
-            // Retry after a short delay
-            const timer = setTimeout(() => {
-                // Trigger re-render by setting a dummy state
-                setSessions(prev => [...prev]);
-            }, 500);
-            return () => clearTimeout(timer);
+            // Retry with increasing intervals until we have the API key
+            const checkInterval = setInterval(() => {
+                const key = getApiKey();
+                const data = getUserData();
+                if (key && data?.privy_user_id) {
+                    console.log('Session loading - API key and user data now available!');
+                    clearInterval(checkInterval);
+                    // Force effect to re-run by triggering state update
+                    setSessions(prev => [...prev]);
+                }
+            }, 100);
+
+            // Clean up after 10 seconds
+            setTimeout(() => clearInterval(checkInterval), 10000);
+            return () => clearInterval(checkInterval);
         }
 
         console.log('Session loading - Starting to load sessions...');
@@ -799,7 +808,7 @@ function ChatPageContent() {
         };
 
         loadSessions();
-    }, [ready, authenticated]);
+    }, [ready, authenticated, sessions]);
 
     // Note: In a real app, you would save sessions to backend API here
     // useEffect(() => {
