@@ -1533,37 +1533,39 @@ function ChatPageContent() {
 
           {/* Welcome screen when no messages */}
           {messages.length === 0 && !loading && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-4 lg:p-6 w-full">
-              <h1 className="text-2xl lg:text-4xl font-bold mb-6 lg:mb-8">What's On Your Mind?</h1>
+            <div className="flex-1 flex flex-col items-center justify-start text-center p-4 lg:p-6 w-full overflow-y-auto">
+              <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0">
+                <h1 className="text-2xl lg:text-4xl font-bold mb-6 lg:mb-8">What's On Your Mind?</h1>
 
-              {/* Suggested prompts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full max-w-4xl">
-                <ExamplePrompt 
-                  title="What model is better for coding?" 
-                  subtitle="Compare different AI models for programming tasks"
-                  onClick={() => handleExamplePromptClick("What model is better for coding?")}
-                />
-                <ExamplePrompt 
-                  title="How long would it take to walk to the moon?" 
-                  subtitle="Calculate travel time and distance to the moon"
-                  onClick={() => handleExamplePromptClick("How long would it take to walk to the moon?")}
-                />
-                <ExamplePrompt 
-                  title="When did England last win the world cup?" 
-                  subtitle="Get the latest football world cup information"
-                  onClick={() => handleExamplePromptClick("When did England last win the world cup?")}
-                />
-                <ExamplePrompt 
-                  title="Which athlete has won the most gold medals?" 
-                  subtitle="Find Olympic and sports statistics"
-                  onClick={() => handleExamplePromptClick("Which athlete has won the most gold medals?")}
-                />
+                {/* Suggested prompts */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full max-w-4xl">
+                  <ExamplePrompt
+                    title="What model is better for coding?"
+                    subtitle="Compare different AI models for programming tasks"
+                    onClick={() => handleExamplePromptClick("What model is better for coding?")}
+                  />
+                  <ExamplePrompt
+                    title="How long would it take to walk to the moon?"
+                    subtitle="Calculate travel time and distance to the moon"
+                    onClick={() => handleExamplePromptClick("How long would it take to walk to the moon?")}
+                  />
+                  <ExamplePrompt
+                    title="When did England last win the world cup?"
+                    subtitle="Get the latest football world cup information"
+                    onClick={() => handleExamplePromptClick("When did England last win the world cup?")}
+                  />
+                  <ExamplePrompt
+                    title="Which athlete has won the most gold medals?"
+                    subtitle="Find Olympic and sports statistics"
+                    onClick={() => handleExamplePromptClick("Which athlete has won the most gold medals?")}
+                  />
+                </div>
               </div>
             </div>
           )}
 
           {/* Message input area - fixed at bottom */}
-          <div className="w-full p-4 lg:p-6 max-w-4xl mx-auto">
+          <div className="w-full p-4 lg:p-6 max-w-4xl mx-auto flex-shrink-0">
             <div className="w-full">
               <div className="relative">
                 {/* Image preview */}
