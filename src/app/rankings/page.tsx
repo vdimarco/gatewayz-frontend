@@ -16,6 +16,8 @@ export interface ModelData {
   rank: number;
   model_name: string;
   author: string;
+  category?: string;
+  provider?: string;
   tokens: string;
   trend_percentage: string;
   trend_direction: "up" | "down";
@@ -102,10 +104,25 @@ export default function RankingsPage() {
   },[]);
 
   const filteredModels = useMemo(() => {
-    return models
-    .filter((model) => model.time_period === selectedTimeRangeForModels)
-    .sort((a, b) => a.rank - b.rank) // ascending order
-    .slice(0, selectedTopModelsCount);
+    // Deduplicate by model_name and filter by time period
+    const uniqueModels = models
+      .filter((model) => model.time_period === selectedTimeRangeForModels)
+      .reduce((acc, current) => {
+        const existingIndex = acc.findIndex(m => m.model_name === current.model_name);
+        if (existingIndex === -1) {
+          acc.push(current);
+        } else {
+          // Keep the one with lower rank (better ranking)
+          if (current.rank < acc[existingIndex].rank) {
+            acc[existingIndex] = current;
+          }
+        }
+        return acc;
+      }, [] as ModelData[]);
+
+    return uniqueModels
+      .sort((a, b) => a.rank - b.rank) // ascending order
+      .slice(0, selectedTopModelsCount);
   }, [selectedTopModelsCount, selectedTimeRangeForModels, models])
 
   const filteredApps = useMemo(() => {
