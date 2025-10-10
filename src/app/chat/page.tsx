@@ -657,6 +657,7 @@ function ChatPageContent() {
     const searchParams = useSearchParams();
     const { login, authenticated, ready } = usePrivy();
     const [message, setMessage] = useState('');
+    const [userHasTyped, setUserHasTyped] = useState(false);
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -719,6 +720,7 @@ function ChatPageContent() {
         // Set the message from URL parameter and flag for auto-send
         if (messageParam) {
             setMessage(decodeURIComponent(messageParam));
+            setUserHasTyped(true); // Allow auto-send from URL
             setShouldAutoSend(true);
         }
     }, [searchParams]);
@@ -811,6 +813,7 @@ function ChatPageContent() {
                         console.log('Session loading - Setting active session:', firstNewChat.id);
                         // Clear any stale message from the input field for new empty chats
                         setMessage('');
+                        setUserHasTyped(false); // Reset typing flag
                         // Directly set active session ID instead of calling switchToSession
                         // since setSessions hasn't completed yet
                         setActiveSessionId(firstNewChat.id);
@@ -1063,9 +1066,16 @@ function ChatPageContent() {
             message: message?.substring(0, 50) + '...',
             activeSessionId,
             selectedModel: selectedModel?.value,
-            hasMessage: !!message.trim()
+            hasMessage: !!message.trim(),
+            userHasTyped
         });
         console.trace('handleSendMessage call stack');
+
+        // Prevent sending if user hasn't actually typed anything
+        if (!userHasTyped) {
+            console.log('Blocking send - user has not typed anything yet');
+            return;
+        }
 
         // Check authentication first
         const apiKey = getApiKey();
@@ -1664,7 +1674,10 @@ function ChatPageContent() {
                     ref={messageInputRef}
                     placeholder={!ready ? "Authenticating..." : !authenticated ? "Please log in..." : "Start A Message"}
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    onChange={(e) => {
+                      setMessage(e.target.value);
+                      setUserHasTyped(true); // Mark that user has typed
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
