@@ -272,7 +272,7 @@ export function AppHeader() {
                           className="transition-colors hover:text-foreground/80 text-foreground/60 py-2 px-2 rounded-md hover:bg-accent"
                           onClick={() => setMobileMenuOpen(false)}
                         >
-                          Account Settings
+                          Account
                         </Link>
                         <Link
                           href="/settings/credits"
@@ -293,7 +293,7 @@ export function AppHeader() {
                           className="transition-colors hover:text-foreground/80 text-foreground/60 py-2 px-2 rounded-md hover:bg-accent"
                           onClick={() => setMobileMenuOpen(false)}
                         >
-                          API Keys
+                          Keys
                         </Link>
                         <Link
                           href="/settings/activity"
@@ -301,6 +301,34 @@ export function AppHeader() {
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           Activity
+                        </Link>
+                        <Link
+                          href="/settings/presets"
+                          className="transition-colors hover:text-foreground/80 text-foreground/60 py-2 px-2 rounded-md hover:bg-accent"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          Presets
+                        </Link>
+                        <Link
+                          href="/settings/provisioning"
+                          className="transition-colors hover:text-foreground/80 text-foreground/60 py-2 px-2 rounded-md hover:bg-accent"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          Provisioning Keys
+                        </Link>
+                        <Link
+                          href="/settings/integrations"
+                          className="transition-colors hover:text-foreground/80 text-foreground/60 py-2 px-2 rounded-md hover:bg-accent"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          Integrations (BYOK)
+                        </Link>
+                        <Link
+                          href="/settings/privacy"
+                          className="transition-colors hover:text-foreground/80 text-foreground/60 py-2 px-2 rounded-md hover:bg-accent"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          Privacy
                         </Link>
                         <Link
                           href="/settings"

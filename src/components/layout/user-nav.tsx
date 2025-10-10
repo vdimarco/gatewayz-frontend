@@ -134,10 +134,21 @@ export function UserNav({ user }: UserNavProps) {
           <Link href="/settings/activity">
             <DropdownMenuItem>Activity</DropdownMenuItem>
           </Link>
+          <Link href="/settings/presets">
+            <DropdownMenuItem>Presets</DropdownMenuItem>
+          </Link>
+          <Link href="/settings/provisioning">
+            <DropdownMenuItem>Provisioning Keys</DropdownMenuItem>
+          </Link>
+          <Link href="/settings/integrations">
+            <DropdownMenuItem>Integrations (BYOK)</DropdownMenuItem>
+          </Link>
+          <Link href="/settings/privacy">
+            <DropdownMenuItem>Privacy</DropdownMenuItem>
+          </Link>
           <Link href="/settings">
             <DropdownMenuItem>Settings</DropdownMenuItem>
           </Link>
-          <DropdownMenuItem>Enterprise</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
