@@ -796,7 +796,7 @@ function ChatPageContent() {
         };
 
         loadSessions();
-    }, [ready, authenticated, sessions.length]);
+    }, [ready, authenticated]);
 
     // Note: In a real app, you would save sessions to backend API here
     // useEffect(() => {
@@ -1045,13 +1045,33 @@ function ChatPageContent() {
             return;
         }
 
-        if (!message.trim() || !selectedModel || !activeSessionId) {
+        if (!message.trim() || !selectedModel) {
             toast({
                 title: "Cannot send message",
-                description: !selectedModel ? "Please select a model first." : !activeSessionId ? "No active chat." : "Please enter a message.",
+                description: !selectedModel ? "Please select a model first." : "Please enter a message.",
                 variant: 'destructive'
             });
             return;
+        }
+
+        // Auto-create session if none exists
+        let currentSessionId = activeSessionId;
+        if (!currentSessionId) {
+            try {
+                console.log('No active session, creating one...');
+                const newSession = await apiHelpers.createChatSession('Untitled Chat', selectedModel?.value);
+                setSessions(prev => [newSession, ...prev]);
+                currentSessionId = newSession.id;
+                setActiveSessionId(newSession.id);
+            } catch (error) {
+                console.error('Failed to create chat session:', error);
+                toast({
+                    title: "Error",
+                    description: "Failed to create chat session. Please try again.",
+                    variant: 'destructive'
+                });
+                return;
+            }
         }
 
         const isFirstMessage = messages.length === 0;
@@ -1065,7 +1085,7 @@ function ChatPageContent() {
         }];
 
         const updatedSessions = sessions.map(session => {
-            if (session.id === activeSessionId) {
+            if (session.id === currentSessionId) {
                 return {
                     ...session,
                     title: isFirstMessage ? userMessage : session.title,
@@ -1093,7 +1113,7 @@ function ChatPageContent() {
             const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
 
             // Get current session to find API session ID
-            const currentSession = sessions.find(s => s.id === activeSessionId);
+            const currentSession = sessions.find(s => s.id === currentSessionId);
             const sessionIdParam = currentSession?.apiSessionId ? `&session_id=${currentSession.apiSessionId}` : '';
             const url = `${apiBaseUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(userData.privy_user_id)}${sessionIdParam}`;
 
@@ -1122,7 +1142,7 @@ function ChatPageContent() {
             // Add streaming message to UI
             // Use updatedSessions to preserve the title update from line 1051
             const streamingSessions = updatedSessions.map(session => {
-                if (session.id === activeSessionId) {
+                if (session.id === currentSessionId) {
                     return {
                         ...session,
                         messages: [...updatedMessages, assistantMessage],
@@ -1189,7 +1209,7 @@ function ChatPageContent() {
 
                     // Update the assistant message with streamed content
                     setSessions(prev => prev.map(session => {
-                        if (session.id === activeSessionId) {
+                        if (session.id === currentSessionId) {
                             const messages = [...session.messages];
                             const lastMessage = messages[messages.length - 1];
 
@@ -1235,7 +1255,7 @@ function ChatPageContent() {
 
                 // Remove streaming message and show error
                 setSessions(prev => prev.map(session => {
-                    if (session.id === activeSessionId) {
+                    if (session.id === currentSessionId) {
                         return {
                             ...session,
                             messages: [...updatedMessages, {
@@ -1281,7 +1301,7 @@ function ChatPageContent() {
 
             // Revert message update on error
             setSessions(prev => prev.map(session => {
-                if (session.id === activeSessionId) {
+                if (session.id === currentSessionId) {
                     return { ...session, messages };
                 }
                 return session;
