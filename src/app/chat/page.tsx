@@ -1435,7 +1435,7 @@ function ChatPageContent() {
           )}
           {messages.length > 0 && (
             <div ref={chatContainerRef} className="flex-1 flex flex-col gap-4 lg:gap-6 overflow-y-auto p-4 lg:p-6 max-w-4xl mx-auto w-full">
-              {messages.map((msg, index) => {
+              {messages.filter(msg => msg && msg.role).map((msg, index) => {
                 // Show thinking loader for streaming messages with no content
                 if (msg.role === 'assistant' && msg.isStreaming && !msg.content) {
                   return <ThinkingLoader key={index} modelName={selectedModel?.label} />;

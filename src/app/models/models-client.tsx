@@ -57,18 +57,18 @@ const ModelCard = ({ model }: { model: Model }) => {
   const contextK = model.context_length > 0 ? Math.round(model.context_length / 1000) : 0;
 
   return (
-    <Link href={`/models/${encodeURIComponent(model.id)}`} className="h-full">
-      <Card className="p-5 flex flex-col h-full hover:border-primary transition-colors">
-        <div className="flex justify-between items-start gap-3 mb-3">
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold flex items-center gap-2 flex-wrap mb-2">
-              <span className="truncate">{model.name}</span> {isFree && <Badge className="text-xs">Free</Badge>}
+    <Link href={`/models/${encodeURIComponent(model.id)}`} className="h-full block">
+      <Card className="p-5 flex flex-col h-full hover:border-primary transition-colors overflow-hidden">
+        <div className="flex justify-between items-start gap-3 mb-3 min-w-0">
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <h3 className="text-base font-semibold flex items-center gap-2 flex-wrap mb-2 min-w-0">
+              <span className="truncate break-words min-w-0">{model.name}</span> {isFree && <Badge className="text-xs flex-shrink-0">Free</Badge>}
             </h3>
-            <Badge variant="outline" className="text-xs" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
+            <Badge variant="outline" className="text-xs truncate max-w-full" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
           </div>
           <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0 font-medium">{contextK > 0 ? `${contextK}K` : 'Pending'}</div>
         </div>
-        <div className="text-muted-foreground text-sm flex-grow line-clamp-2 mb-4">
+        <div className="text-muted-foreground text-sm flex-grow line-clamp-2 mb-4 overflow-hidden break-words">
           <ReactMarkdown
             components={{
               a: ({ children, ...props }) => (
@@ -81,7 +81,7 @@ const ModelCard = ({ model }: { model: Model }) => {
             {model.description || 'No description available'}
           </ReactMarkdown>
         </div>
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-3 border-t">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-3 border-t min-w-0">
           <span className="whitespace-nowrap">{contextK > 0 ? `${contextK}K context` : 'Pending sync'}</span>
           <span className="whitespace-nowrap">${inputCost}/M in</span>
           <span className="whitespace-nowrap">${outputCost}/M out</span>
@@ -403,7 +403,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
 
   return (
     <SidebarProvider>
-      <div className="relative flex min-h-[calc(100vh-theme(spacing.14))] justify-center">
+      <div className="relative flex min-h-[calc(100vh-theme(spacing.14))] justify-center overflow-x-hidden">
         <Sidebar
           variant="sidebar"
           collapsible="offcanvas"
@@ -527,8 +527,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
           </SidebarContent>
         </Sidebar>
 
-        <SidebarInset className="flex-1">
-          <div className="max-w-[1600px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <SidebarInset className="flex-1 overflow-x-hidden">
+          <div className="max-w-[1600px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-x-hidden">
           <div className="flex flex-col gap-3 mb-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
               <div className="flex items-center gap-3">
@@ -675,8 +675,8 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
           <div
             className={
               layout === 'grid'
-                ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6'
-                : 'flex flex-col gap-4 lg:gap-6 max-w-5xl'
+                ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 overflow-x-hidden'
+                : 'flex flex-col gap-4 lg:gap-6 max-w-5xl overflow-x-hidden'
             }
             key={`models-${filteredModels.length}-${debouncedSearchTerm}`}
           >

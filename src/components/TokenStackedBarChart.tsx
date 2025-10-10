@@ -12,6 +12,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { ModelData } from '@/app/rankings/page';
+import { useState, useEffect } from 'react';
 
 ChartJS.register(
   BarElement,
@@ -30,7 +31,27 @@ const TokenStackedBarChart = ({ rankingData }: TokenStackedBarChartProps) => {
   // If we have ranking data, use it; otherwise fall back to mock data
   const useRankingData = rankingData && rankingData.length > 0;
 
-  const labels = rankingData ? rankingData.slice(0, 10).map(model => model.model_name.split(' ').slice(0, 2).join(' ')) : [];
+  // Track if we're on mobile
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Truncate model names more aggressively on mobile
+  const labels = rankingData ? rankingData.slice(0, 10).map(model => {
+    const name = model.model_name;
+    if (isMobile) {
+      // On mobile, show only first word or up to 8 characters
+      const firstWord = name.split(' ')[0];
+      return firstWord.length > 8 ? firstWord.substring(0, 8) : firstWord;
+    }
+    // On desktop, show first 2 words
+    return name.split(' ').slice(0, 2).join(' ');
+  }) : [];
 
   // Helper function to parse token values from strings like "4.8T tokens", "2.35T tokens", etc.
   const parseTokenValue = (tokenStr: string): number => {
@@ -99,9 +120,9 @@ const TokenStackedBarChart = ({ rankingData }: TokenStackedBarChartProps) => {
         type: 'category',
         stacked: !useRankingData, // Only stack for mock data
         ticks: {
-          font: { size: 9 },
-          maxRotation: 0,
-          minRotation: 0,
+          font: { size: isMobile ? 8 : 9 },
+          maxRotation: isMobile ? 45 : 0,
+          minRotation: isMobile ? 45 : 0,
           autoSkip: false,
         },
         grid: {
