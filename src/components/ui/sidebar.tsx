@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetOverlay } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
@@ -196,10 +196,11 @@ const Sidebar = React.forwardRef<
     if (isMobile) {
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
+          <SheetOverlay className="top-[65px]" />
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-background p-0 text-foreground [&>button]:hidden"
+            className="w-[--sidebar-width] bg-background p-0 text-foreground [&>button]:hidden top-[65px] h-[calc(100vh-65px)]"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
