@@ -179,23 +179,45 @@ export default function ModelProfilePage() {
                 }
 
                 // Fetch from all gateways to get all models via frontend API proxy
-                const [openrouterRes, portkeyRes, featherlessRes] = await Promise.all([
-                    fetch(`/api/models?gateway=openrouter`),
-                    fetch(`/api/models?gateway=portkey`),
-                    fetch(`/api/models?gateway=featherless`)
+                // Add timeout to prevent hanging
+                const fetchWithTimeout = (url: string, timeout = 10000) => {
+                    return Promise.race([
+                        fetch(url),
+                        new Promise<Response>((_, reject) =>
+                            setTimeout(() => reject(new Error('Request timeout')), timeout)
+                        )
+                    ]);
+                };
+
+                const [openrouterRes, portkeyRes, featherlessRes] = await Promise.allSettled([
+                    fetchWithTimeout(`/api/models?gateway=openrouter`),
+                    fetchWithTimeout(`/api/models?gateway=portkey`),
+                    fetchWithTimeout(`/api/models?gateway=featherless`)
                 ]);
 
+                const getData = async (result: PromiseSettledResult<Response>) => {
+                    if (result.status === 'fulfilled') {
+                        try {
+                            const data = await result.value.json();
+                            return data.data || [];
+                        } catch {
+                            return [];
+                        }
+                    }
+                    return [];
+                };
+
                 const [openrouterData, portkeyData, featherlessData] = await Promise.all([
-                    openrouterRes.json(),
-                    portkeyRes.json(),
-                    featherlessRes.json()
+                    getData(openrouterRes),
+                    getData(portkeyRes),
+                    getData(featherlessRes)
                 ]);
 
                 // Combine models from all gateways
                 const allModels = [
-                    ...(openrouterData.data || []),
-                    ...(portkeyData.data || []),
-                    ...(featherlessData.data || [])
+                    ...openrouterData,
+                    ...portkeyData,
+                    ...featherlessData
                 ];
 
                 // Deduplicate models by ID - keep the first occurrence

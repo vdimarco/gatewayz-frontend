@@ -793,14 +793,16 @@ function ChatPageContent() {
                     console.log('Session loading - Creating new chat');
                     createNewChat();
                 } else {
-                    // Set the first new chat as active
+                    // Set the first new chat as active - use local data instead of state
                     const firstNewChat = sessionsData.find(session =>
                         session.messages.length === 0 &&
                         session.title === 'Untitled Chat'
                     );
                     if (firstNewChat) {
                         console.log('Session loading - Setting active session:', firstNewChat.id);
-                        switchToSession(firstNewChat.id);
+                        // Directly set active session ID instead of calling switchToSession
+                        // since setSessions hasn't completed yet
+                        setActiveSessionId(firstNewChat.id);
                     }
                 }
             } catch (error) {
