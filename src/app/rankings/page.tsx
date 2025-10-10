@@ -148,14 +148,14 @@ export default function RankingsPage() {
              <div className="mb-2">
                <h3 className="text-base font-semibold">Top 10 Models - Tokens Generated</h3>
              </div>
-             <TokenStackedBarChart rankingData={models} />
+             <TokenStackedBarChart rankingData={filteredModels} />
            </Card>
          </div>
 
          {/* Category Stacked Area Chart */}
          <div className="mb-12">
            <Card className="p-6">
-             <CategoryStackedAreaChart rankingData={models} />
+             <CategoryStackedAreaChart rankingData={filteredModels} />
            </Card>
          </div>
 
