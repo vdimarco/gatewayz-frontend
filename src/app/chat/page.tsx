@@ -1685,6 +1685,7 @@ function ChatPageContent() {
                       }
                     }}
                     disabled={!ready || !authenticated}
+                    autoComplete="off"
                     className="border-0 bg-transparent focus-visible:ring-0 text-base text-foreground flex-1"
                   />
                   {(!ready || !authenticated) && (
