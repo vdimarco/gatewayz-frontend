@@ -808,7 +808,7 @@ function ChatPageContent() {
         };
 
         loadSessions();
-    }, [ready, authenticated, sessions]);
+    }, [ready, authenticated]);
 
     // Note: In a real app, you would save sessions to backend API here
     // useEffect(() => {
