@@ -6,6 +6,8 @@ export interface StreamChunk {
   content?: string;
   reasoning?: string;
   done?: boolean;
+  status?: 'rate_limit_retry';
+  retryAfterMs?: number;
 }
 
 // Helper function to wait/sleep
@@ -54,13 +56,34 @@ export async function* streamChatResponse(
     if (response.status === 429) {
       // Retry with exponential backoff for rate limits
       if (retryCount < maxRetries) {
-        const waitTime = Math.min(1000 * Math.pow(2, retryCount), 8000); // Max 8 seconds
+        const retryAfterHeader = response.headers.get('retry-after');
+        let waitTime = Math.min(1000 * Math.pow(2, retryCount), 8000); // Fallback cap
+
+        if (retryAfterHeader) {
+          const numericRetry = Number(retryAfterHeader);
+          if (!Number.isNaN(numericRetry) && numericRetry > 0) {
+            waitTime = Math.max(waitTime, numericRetry * 1000);
+          } else {
+            const retryDate = Date.parse(retryAfterHeader);
+            if (!Number.isNaN(retryDate)) {
+              const headerWait = retryDate - Date.now();
+              if (headerWait > 0) {
+                waitTime = Math.max(waitTime, headerWait);
+              }
+            }
+          }
+        }
+
+        waitTime = Math.max(waitTime, 1000); // Ensure a minimum delay
+        const jitter = Math.floor(Math.random() * 250);
+        waitTime += jitter;
+
         console.log(`Rate limit hit, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${maxRetries})...`);
 
-        // Yield a special chunk to notify UI about retry
+        // Yield a signal chunk so UI can react without showing text in the transcript
         yield {
-          content: `⏳ Rate limit reached. Retrying in ${Math.round(waitTime / 1000)} seconds...`,
-          done: false
+          status: 'rate_limit_retry',
+          retryAfterMs: waitTime
         };
 
         await sleep(waitTime);

@@ -1250,6 +1250,25 @@ function ChatPageContent() {
                     [{ role: 'user', content: messageContent }],
                     portkeyProvider
                 )) {
+                    if (chunk.status === 'rate_limit_retry') {
+                        const waitSeconds = Math.max(1, Math.ceil((chunk.retryAfterMs ?? 0) / 1000));
+                        const retryMessage = `Rate limit reached. Retrying in ${waitSeconds} seconds...`;
+                        console.log(retryMessage);
+                        toast({
+                            title: "Rate limit hit",
+                            description: retryMessage,
+                            variant: 'default'
+                        });
+                        continue;
+                    }
+
+                    const hasContent = !!chunk.content;
+                    const hasReasoning = !!chunk.reasoning;
+
+                    if (!hasContent && !hasReasoning) {
+                        continue;
+                    }
+
                     // Accumulate content locally
                     accumulatedContent += chunk.content || '';
                     accumulatedReasoning += chunk.reasoning || '';
