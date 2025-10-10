@@ -406,8 +406,7 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
       <div className="relative flex min-h-[calc(100vh-theme(spacing.14))] justify-center">
         <Sidebar
           variant="sidebar"
-          collapsible="icon"
-          className="hidden lg:flex fixed left-0 top-14 h-[calc(100vh-theme(spacing.14))]"
+          collapsible="offcanvas"
         >
           <SidebarContent className="p-4">
             <SidebarGroup>
