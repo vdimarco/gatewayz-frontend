@@ -2,6 +2,8 @@
  * Utility for handling streaming responses from chat API
  */
 
+import { removeApiKey, requestAuthRefresh } from '@/lib/api';
+
 export interface StreamChunk {
   content?: string;
   reasoning?: string;
@@ -16,23 +18,10 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export async function* streamChatResponse(
   url: string,
   apiKey: string,
-  model: string,
-  messages: any[],
-  portkeyProvider?: string,
+  requestBody: Record<string, unknown>,
   retryCount = 0,
-  maxRetries = 3
+  maxRetries = 5
 ): AsyncGenerator<StreamChunk> {
-  const requestBody: any = {
-    model,
-    messages,
-    stream: true,
-  };
-
-  // Add portkey_provider if specified (required for DeepInfra and other providers)
-  if (portkeyProvider) {
-    requestBody.portkey_provider = portkeyProvider;
-  }
-
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -54,10 +43,20 @@ export async function* streamChatResponse(
     }
 
     if (response.status === 429) {
+      const detailMessage: string =
+        (typeof errorData.detail === 'string' && errorData.detail) ||
+        (typeof errorData.message === 'string' && errorData.message) ||
+        (typeof errorData.error?.message === 'string' && errorData.error?.message) ||
+        '';
+
       // Retry with exponential backoff for rate limits
       if (retryCount < maxRetries) {
         const retryAfterHeader = response.headers.get('retry-after');
-        let waitTime = Math.min(1000 * Math.pow(2, retryCount), 8000); // Fallback cap
+        const isConcurrencyLimit = detailMessage.toLowerCase().includes('concurrency');
+        const baseDelay = isConcurrencyLimit ? 4000 : 1000;
+        const maxDelay = isConcurrencyLimit ? 20000 : 8000;
+
+        let waitTime = Math.min(baseDelay * Math.pow(2, retryCount), maxDelay);
 
         if (retryAfterHeader) {
           const numericRetry = Number(retryAfterHeader);
@@ -79,6 +78,9 @@ export async function* streamChatResponse(
         waitTime += jitter;
 
         console.log(`Rate limit hit, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${maxRetries})...`);
+        if (detailMessage) {
+          console.log('Rate limit detail:', detailMessage);
+        }
 
         // Yield a signal chunk so UI can react without showing text in the transcript
         yield {
@@ -89,17 +91,21 @@ export async function* streamChatResponse(
         await sleep(waitTime);
 
         // Recursive retry
-        yield* streamChatResponse(url, apiKey, model, messages, portkeyProvider, retryCount + 1, maxRetries);
+        yield* streamChatResponse(url, apiKey, requestBody, retryCount + 1, maxRetries);
         return;
       }
 
+      removeApiKey();
+      requestAuthRefresh();
       throw new Error(
-        errorData.detail || errorData.error?.message ||
+        detailMessage ||
         'Rate limit exceeded. Please wait a moment and try again.'
       );
     }
 
     if (response.status === 401) {
+      removeApiKey();
+      requestAuthRefresh();
       throw new Error(
         'Authentication failed. Please check your API key or log in again.'
       );
@@ -147,27 +153,84 @@ export async function* streamChatResponse(
             const jsonStr = trimmedLine.slice(6);
             const data = JSON.parse(jsonStr);
 
-            const delta = data.choices?.[0]?.delta;
-            if (!delta) continue;
+            let chunk: StreamChunk | null = null;
+            const choice = data.choices?.[0];
 
-            const chunk: StreamChunk = {};
-
-            // Handle content
-            if (delta.content) {
-              chunk.content = delta.content;
+            if (choice?.delta) {
+              const delta = choice.delta;
+              chunk = {};
+              if (delta.content) {
+                chunk.content = delta.content;
+              }
+              if (delta.reasoning) {
+                chunk.reasoning = delta.reasoning;
+              }
+              if (choice.finish_reason) {
+                chunk.done = true;
+              }
+            } else if (choice?.finish_reason) {
+              chunk = { done: true };
+            } else if (typeof data.type === 'string') {
+              const eventType = data.type;
+              switch (eventType) {
+                case 'response.output_text.delta': {
+                  const delta = data.delta;
+                  const deltaText =
+                    typeof delta === 'string'
+                      ? delta
+                      : typeof delta?.text === 'string'
+                        ? delta.text
+                        : '';
+                  const reasoningText =
+                    typeof delta === 'object' && typeof delta?.reasoning === 'string'
+                      ? delta.reasoning
+                      : undefined;
+                  if (deltaText || reasoningText) {
+                    chunk = {};
+                    if (deltaText) {
+                      chunk.content = deltaText;
+                    }
+                    if (reasoningText) {
+                      chunk.reasoning = reasoningText;
+                    }
+                  }
+                  break;
+                }
+                case 'response.reasoning.delta':
+                case 'response.output_reasoning.delta':
+                case 'response.reflection.delta': {
+                  const reasoningText =
+                    typeof data.delta === 'string'
+                      ? data.delta
+                      : typeof data.delta?.text === 'string'
+                        ? data.delta.text
+                        : undefined;
+                  if (reasoningText) {
+                    chunk = { reasoning: reasoningText };
+                  }
+                  break;
+                }
+                case 'response.output_text.done':
+                case 'response.completed':
+                case 'response.message.completed':
+                case 'response.stop':
+                  chunk = { done: true };
+                  break;
+                case 'response.error': {
+                  const errorMessage =
+                    (typeof data.error?.message === 'string' && data.error.message) ||
+                    (typeof data.message === 'string' && data.message) ||
+                    'Response stream error';
+                  throw new Error(errorMessage);
+                }
+                default:
+                  break;
+              }
             }
 
-            // Handle reasoning (for models that support it)
-            if (delta.reasoning) {
-              chunk.reasoning = delta.reasoning;
+            if (chunk) {
+              yield chunk;
             }
-
-            // Check if this is the last chunk
-            if (data.choices?.[0]?.finish_reason) {
-              chunk.done = true;
-            }
-
-            yield chunk;
           } catch (error) {
             console.error('Error parsing SSE data:', error, trimmedLine);
           }

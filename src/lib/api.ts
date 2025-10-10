@@ -3,6 +3,8 @@
 const API_KEY_STORAGE_KEY = 'gatewayz_api_key';
 const USER_DATA_STORAGE_KEY = 'gatewayz_user_data';
 
+export const AUTH_REFRESH_EVENT = 'gatewayz:refresh-auth';
+
 export interface AuthResponse {
   success: boolean;
   message: string;
@@ -46,6 +48,12 @@ export const removeApiKey = (): void => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(API_KEY_STORAGE_KEY);
     localStorage.removeItem(USER_DATA_STORAGE_KEY);
+  }
+};
+
+export const requestAuthRefresh = (): void => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(AUTH_REFRESH_EVENT));
   }
 };
 
