@@ -8,12 +8,17 @@ export interface StreamChunk {
   done?: boolean;
 }
 
+// Helper function to wait/sleep
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export async function* streamChatResponse(
   url: string,
   apiKey: string,
   model: string,
   messages: any[],
-  portkeyProvider?: string
+  portkeyProvider?: string,
+  retryCount = 0,
+  maxRetries = 3
 ): AsyncGenerator<StreamChunk> {
   const requestBody: any = {
     model,
@@ -47,9 +52,27 @@ export async function* streamChatResponse(
     }
 
     if (response.status === 429) {
+      // Retry with exponential backoff for rate limits
+      if (retryCount < maxRetries) {
+        const waitTime = Math.min(1000 * Math.pow(2, retryCount), 8000); // Max 8 seconds
+        console.log(`Rate limit hit, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${maxRetries})...`);
+
+        // Yield a special chunk to notify UI about retry
+        yield {
+          content: `⏳ Rate limit reached. Retrying in ${Math.round(waitTime / 1000)} seconds...`,
+          done: false
+        };
+
+        await sleep(waitTime);
+
+        // Recursive retry
+        yield* streamChatResponse(url, apiKey, model, messages, portkeyProvider, retryCount + 1, maxRetries);
+        return;
+      }
+
       throw new Error(
         errorData.detail || errorData.error?.message ||
-        'Rate limit exceeded: Burst limit exceeded'
+        'Rate limit exceeded. Please wait a moment and try again.'
       );
     }
 
