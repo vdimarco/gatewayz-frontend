@@ -680,6 +680,9 @@ function ChatPageContent() {
     // Track if we should auto-send the message from URL
     const [shouldAutoSend, setShouldAutoSend] = useState(false);
 
+    // Track if we're currently creating a session to prevent race conditions
+    const creatingSessionRef = useRef(false);
+
     // Handle model and message from URL parameters
     useEffect(() => {
         const modelParam = searchParams.get('model');
@@ -1057,13 +1060,27 @@ function ChatPageContent() {
         // Auto-create session if none exists
         let currentSessionId = activeSessionId;
         if (!currentSessionId) {
+            // Prevent duplicate session creation
+            if (creatingSessionRef.current) {
+                console.log('Session creation already in progress, waiting...');
+                toast({
+                    title: "Please wait",
+                    description: "Setting up your chat session...",
+                    variant: 'default'
+                });
+                return;
+            }
+
             try {
+                creatingSessionRef.current = true;
                 console.log('No active session, creating one...');
                 const newSession = await apiHelpers.createChatSession('Untitled Chat', selectedModel?.value);
                 setSessions(prev => [newSession, ...prev]);
                 currentSessionId = newSession.id;
                 setActiveSessionId(newSession.id);
+                creatingSessionRef.current = false;
             } catch (error) {
+                creatingSessionRef.current = false;
                 console.error('Failed to create chat session:', error);
                 toast({
                     title: "Error",
