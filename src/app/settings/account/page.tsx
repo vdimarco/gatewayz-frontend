@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, type LinkedAccountWithMetadata, type EmailWithMetadata, type GoogleOAuthWithMetadata, type GithubOAuthWithMetadata } from '@privy-io/react-auth';
 import { getUserData } from '@/lib/api';
 
 interface StripePaymentMethod {
@@ -65,23 +65,35 @@ export default function AccountPage() {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
+  const isEmailAccount = (account: LinkedAccountWithMetadata): account is EmailWithMetadata =>
+    account.type === 'email';
+
+  const isGoogleAccount = (account: LinkedAccountWithMetadata): account is GoogleOAuthWithMetadata =>
+    account.type === 'google_oauth';
+
+  const isGithubAccount = (account: LinkedAccountWithMetadata): account is GithubOAuthWithMetadata =>
+    account.type === 'github_oauth';
+
+  const isGoogleOrGithubAccount = (
+    account: LinkedAccountWithMetadata
+  ): account is GoogleOAuthWithMetadata | GithubOAuthWithMetadata =>
+    isGoogleAccount(account) || isGithubAccount(account);
+
   const getUserEmail = () => {
-    const emailAccount = privyUser?.linkedAccounts?.find((account: any) => account.type === 'email');
-    const googleAccount = privyUser?.linkedAccounts?.find((account: any) => account.type === 'google_oauth');
+    const emailAccount = privyUser?.linkedAccounts?.find(isEmailAccount);
+    const googleAccount = privyUser?.linkedAccounts?.find(isGoogleAccount);
     return emailAccount?.address || googleAccount?.email || 'No email';
   };
 
   const getUserName = () => {
-    const googleAccount = privyUser?.linkedAccounts?.find((account: any) => account.type === 'google_oauth');
+    const googleAccount = privyUser?.linkedAccounts?.find(isGoogleAccount);
     const userData = getUserData();
     return googleAccount?.name || userData?.display_name || 'User';
   };
 
   const getConnectedAccounts = () => {
     if (!privyUser?.linkedAccounts) return [];
-    return privyUser.linkedAccounts.filter((account: any) =>
-      account.type === 'google_oauth' || account.type === 'github_oauth'
-    );
+    return privyUser.linkedAccounts.filter(isGoogleOrGithubAccount);
   };
 
   if (!mounted) {
@@ -238,7 +250,7 @@ export default function AccountPage() {
           <div className="w-1/3 text-base font-medium">Connected Accounts</div>
           <div className="w-1/3 flex flex-col items-center justify-center gap-1">
             {connectedAccounts.length > 0 ? (
-              connectedAccounts.map((account: any, index: number) => (
+              connectedAccounts.map((account, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded text-white text-xs flex items-center justify-center font-bold">
                     {account.type === 'google_oauth' && <img src="/ri_google-fill.svg" alt="Google" className="w-6 h-6" />}

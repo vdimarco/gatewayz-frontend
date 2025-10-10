@@ -1080,7 +1080,7 @@ function ChatPageContent() {
         const apiKey = getApiKey();
         const userData = getUserData();
 
-        if (!apiKey || !userData?.privy_user_id) {
+        if (!apiKey || !userData || typeof userData.privy_user_id !== 'string') {
             toast({
                 title: "Authentication required",
                 description: "Please wait for authentication to complete or log in.",
@@ -1152,8 +1152,7 @@ function ChatPageContent() {
 
         try {
             // Auth is already checked at the beginning of handleSendMessage
-            const apiKey = getApiKey();
-            const userData = getUserData();
+            const privyUserId = userData.privy_user_id;
 
             // Call backend API directly with privy_user_id and session_id query parameters
             const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
@@ -1161,7 +1160,7 @@ function ChatPageContent() {
             // Get current session to find API session ID
             const currentSession = sessions.find(s => s.id === currentSessionId);
             const sessionIdParam = currentSession?.apiSessionId ? `&session_id=${currentSession.apiSessionId}` : '';
-            const url = `${apiBaseUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(userData.privy_user_id)}${sessionIdParam}`;
+            const url = `${apiBaseUrl}/v1/chat/completions?privy_user_id=${encodeURIComponent(privyUserId)}${sessionIdParam}`;
 
             console.log('Sending chat request to:', url);
             console.log('API Key:', apiKey.substring(0, 10) + '...');
@@ -1305,9 +1304,8 @@ function ChatPageContent() {
                 // The title was already updated locally in updatedSessions (line 1051)
                 if (isFirstMessage && currentSession?.apiSessionId) {
                     try {
-                        const apiKey = getApiKey();
                         if (apiKey) {
-                            const chatAPI = new ChatHistoryAPI(apiKey, undefined, getUserData()?.privy_user_id);
+                            const chatAPI = new ChatHistoryAPI(apiKey, undefined, userData.privy_user_id);
                             // Truncate title if too long (max 100 chars)
                             const newTitle = userMessage.length > 100 ? userMessage.substring(0, 100) + '...' : userMessage;
                             console.log('Updating session title in API:', { oldTitle: 'Untitled Chat', newTitle, sessionId: currentSession.apiSessionId });

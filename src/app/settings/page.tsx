@@ -334,7 +334,7 @@ export default function SettingsPage() {
           <SelectContent>
             <SelectItem value="auto-router">Auto Router</SelectItem>
             {models.slice(0, 20).map(model => (
-              <SelectItem key={model.id} value={model.id}>
+              <SelectItem key={model.name} value={model.name}>
                 {model.name}
               </SelectItem>
             ))}
