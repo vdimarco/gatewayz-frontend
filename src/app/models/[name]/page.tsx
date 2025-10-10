@@ -265,20 +265,32 @@ export default function ModelProfilePage() {
                 });
                 models = Array.from(uniqueModelsMap.values());
 
-                // Try to cache the result, but don't fail if quota exceeded
+                // Try to cache the result with compression (only essential fields)
                 try {
+                    // Only cache essential fields to reduce size
+                    const compactModels = models.map((m: Model) => ({
+                        id: m.id,
+                        name: m.name,
+                        description: m.description.substring(0, 200), // Truncate descriptions
+                        context_length: m.context_length,
+                        pricing: m.pricing,
+                        architecture: m.architecture,
+                        supported_parameters: m.supported_parameters,
+                        provider_slug: m.provider_slug
+                    }));
+
                     localStorage.setItem(CACHE_KEY, JSON.stringify({
-                        data: models,
+                        data: compactModels,
                         timestamp: Date.now()
                     }));
                 } catch (e) {
-                    console.log('Failed to cache models (storage quota exceeded):', e);
-                    // Clear old cache to free up space
+                    // If still too large, don't cache at all (we have static fallback)
+                    console.log('Cache skipped (storage quota), using static data fallback');
                     try {
                         localStorage.removeItem(CACHE_KEY);
                         localStorage.removeItem('gatewayz_models_cache'); // Old cache key
                     } catch (clearError) {
-                        console.log('Failed to clear cache:', clearError);
+                        // Ignore cleanup errors
                     }
                 }
 
