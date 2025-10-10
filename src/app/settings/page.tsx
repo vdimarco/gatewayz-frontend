@@ -41,6 +41,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
   const [lowBalanceNotifications, setLowBalanceNotifications] = useState(true);
+  const [lowBalanceThreshold, setLowBalanceThreshold] = useState(5.00);
   const [alwaysEnforce, setAlwaysEnforce] = useState(false);
   const [allowedProviders, setAllowedProviders] = useState<string[]>([]);
   const [ignoredProviders, setIgnoredProviders] = useState<string[]>([]);
@@ -74,6 +75,7 @@ export default function SettingsPage() {
 
           // Populate settings from backend
           setLowBalanceNotifications(data.low_balance_notifications || false);
+          setLowBalanceThreshold(data.low_balance_threshold || 5.00);
           setAlwaysEnforce(data.always_enforce_providers || false);
           setAllowedProviders(data.allowed_providers || []);
           setIgnoredProviders(data.ignored_providers || []);
@@ -190,10 +192,15 @@ export default function SettingsPage() {
         description="Send me emails"
         descriptionDetail={userEmail ? `Alert notifications will be sent to ${userEmail}` : "No email address found"}
       >
-        <Switch
-          checked={lowBalanceNotifications}
-          onCheckedChange={setLowBalanceNotifications}
-        />
+        <div className="space-y-2">
+          <Switch
+            checked={lowBalanceNotifications}
+            onCheckedChange={setLowBalanceNotifications}
+          />
+          <p className="text-xs text-muted-foreground">
+            You'll receive an email when your balance drops below ${lowBalanceThreshold.toFixed(2)}
+          </p>
+        </div>
       </SettingsSection>
 
       <Separator />
