@@ -177,7 +177,7 @@ export default function ModelProfilePage() {
         const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
         let mounted = true;
 
-        // Load static data immediately for instant page render
+        // Load static data immediately for instant page render (only if found)
         const staticModelsTransformed = staticModels.map(transformStaticModel);
         const staticFoundModel = staticModelsTransformed.find((m: Model) => m.id === modelId);
 
@@ -186,6 +186,7 @@ export default function ModelProfilePage() {
             setAllModels(staticModelsTransformed);
             setLoading(false);
         }
+        // If not found in static data, keep loading=true until API data arrives
 
         const fetchModels = async () => {
             try {
@@ -297,15 +298,21 @@ export default function ModelProfilePage() {
                 if (mounted) {
                     setAllModels(models);
                     const foundModel = models.find((m: Model) => m.id === modelId);
-                    // Only update if we found a better/newer model from API
+                    // Update if found, or set to null if not found (after API fetch completes)
                     if (foundModel) {
                         setModel(foundModel);
+                    } else if (!staticFoundModel) {
+                        // Model not in static data and not in API - show "not found"
+                        setModel(null);
                     }
+                    setLoading(false);
                 }
             } catch (error) {
                 console.log('Failed to fetch models:', error);
+                if (mounted && !staticFoundModel) {
+                    setLoading(false);
+                }
             }
-            // Don't set loading to false here since we already did it with static data
         };
 
         // Fetch API data in background (non-blocking)
