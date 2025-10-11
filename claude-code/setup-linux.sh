@@ -52,7 +52,21 @@ else
     exit 1
 fi
 
-# Step 2: Install Claude Code Router
+# Step 2: Install Claude Code
+echo ""
+print_step "Installing Claude Code..."
+if command -v claude &> /dev/null; then
+    print_success "Claude Code already installed"
+else
+    if sudo npm install -g @anthropic-ai/claude-code > /dev/null 2>&1; then
+        print_success "Claude Code installed"
+    else
+        print_error "Failed to install Claude Code"
+        exit 1
+    fi
+fi
+
+# Step 3: Install Claude Code Router
 echo ""
 print_step "Installing Claude Code Router..."
 if sudo npm install -g @musistudio/claude-code-router > /dev/null 2>&1; then
@@ -63,7 +77,7 @@ else
     exit 1
 fi
 
-# Step 3: Get API Key
+# Step 4: Get API Key
 echo ""
 print_step "Setting up GatewayZ API key..."
 
@@ -102,7 +116,7 @@ fi
 export GATEWAYZ_API_KEY="$API_KEY"
 print_success "API key configured"
 
-# Step 4: Create configuration
+# Step 5: Create configuration
 echo ""
 print_step "Creating router configuration..."
 
@@ -147,7 +161,7 @@ EOF
 
 print_success "Configuration created at: $CONFIG_FILE"
 
-# Step 5: Test connection
+# Step 6: Test connection
 echo ""
 print_step "Testing GatewayZ connection..."
 if curl -s -f -H "Authorization: Bearer $API_KEY" https://api.gatewayz.ai/ > /dev/null 2>&1; then

@@ -45,7 +45,31 @@ try {
     exit 1
 }
 
-# Step 2: Install Claude Code Router
+# Step 2: Install Claude Code
+Write-Host ""
+Write-Step "Installing Claude Code..."
+try {
+    # Check if claude command already exists
+    $claudePath = Get-Command claude -ErrorAction SilentlyContinue
+    if ($claudePath) {
+        Write-Success "Claude Code already installed"
+    } else {
+        npm install -g @anthropic-ai/claude-code 2>&1 | Out-Null
+        $claudePath = Get-Command claude -ErrorAction SilentlyContinue
+        if ($claudePath) {
+            Write-Success "Claude Code installed"
+        } else {
+            Write-Host "⚠ Claude Code package installed but 'claude' command not found" -ForegroundColor Yellow
+            Write-Host "You may need to restart your terminal" -ForegroundColor Yellow
+        }
+    }
+} catch {
+    Write-Error "Failed to install Claude Code"
+    Write-Host "Error: $_" -ForegroundColor Red
+    exit 1
+}
+
+# Step 3: Install Claude Code Router
 Write-Host ""
 Write-Step "Installing Claude Code Router..."
 try {
@@ -74,7 +98,7 @@ try {
     exit 1
 }
 
-# Step 3: Get API Key
+# Step 4: Get API Key
 Write-Host ""
 Write-Step "Setting up GatewayZ API key..."
 
@@ -115,7 +139,7 @@ if ($ApiKey -ne "YOUR_GATEWAYZ_API_KEY_HERE") {
     Write-Host "⚠ Skipping API key environment variable setup" -ForegroundColor Yellow
 }
 
-# Step 4: Create configuration
+# Step 5: Create configuration
 Write-Host ""
 Write-Step "Creating router configuration..."
 
@@ -161,7 +185,7 @@ $config = @{
 $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configFile -Encoding UTF8
 Write-Success "Configuration created at: $configFile"
 
-# Step 5: Test connection
+# Step 6: Test connection
 Write-Host ""
 Write-Step "Testing GatewayZ connection..."
 try {
