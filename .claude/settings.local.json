@@ -41,7 +41,18 @@
       "Bash(python3:*)",
       "Bash(PORT=4000 npm run dev)",
       "Bash(taskkill:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(mkdir:*)",
+      "Bash(pip install:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Read(//c/**)",
+      "Bash(find:*)",
+      "Bash(where ccr)",
+      "Bash(npm info:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

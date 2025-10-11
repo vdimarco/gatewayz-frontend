@@ -152,9 +152,9 @@ export default function IntegrationsPage() {
                 <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
                   <code className="flex-1 overflow-x-auto text-green-400">irm https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-windows.ps1 | iex</code>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-6 w-6 p-0 flex-shrink-0"
+                    className="h-7 px-2 flex-shrink-0 bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-200"
                     onClick={() => {
                       navigator.clipboard.writeText('irm https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-windows.ps1 | iex');
                     }}
@@ -172,9 +172,9 @@ export default function IntegrationsPage() {
                 <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
                   <code className="flex-1 overflow-x-auto text-green-400">bash &lt;(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-macos.sh)</code>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-6 w-6 p-0 flex-shrink-0"
+                    className="h-7 px-2 flex-shrink-0 bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-200"
                     onClick={() => {
                       navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-macos.sh)');
                     }}
@@ -192,9 +192,9 @@ export default function IntegrationsPage() {
                 <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
                   <code className="flex-1 overflow-x-auto text-green-400">bash &lt;(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-linux.sh)</code>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-6 w-6 p-0 flex-shrink-0"
+                    className="h-7 px-2 flex-shrink-0 bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-200"
                     onClick={() => {
                       navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-linux.sh)');
                     }}
