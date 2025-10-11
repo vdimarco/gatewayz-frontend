@@ -34,11 +34,28 @@ export async function* streamChatResponse(
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
 
+    // Log full error details for debugging
+    console.error('API Error Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      errorData,
+      url
+    });
+
     // Handle specific error cases with helpful messages
     if (response.status === 403) {
       throw new Error(
         errorData.detail || errorData.error?.message ||
         'API key validation failed. Your session may need to refresh. Please try logging out and back in.'
+      );
+    }
+
+    // Handle 500 Internal Server Error
+    if (response.status === 500) {
+      const errorMessage = errorData.detail || errorData.error?.message || errorData.message || 'Internal server error';
+      console.error('500 Internal Server Error details:', errorData);
+      throw new Error(
+        `Server error: ${errorMessage}. Please try again or contact support if the issue persists.`
       );
     }
 
