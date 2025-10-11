@@ -149,17 +149,18 @@ export default function IntegrationsPage() {
                   <Terminal className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs font-medium text-muted-foreground">Windows (PowerShell)</span>
                 </div>
-                <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
+                <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2 group">
                   <code className="flex-1 overflow-x-auto text-green-400">irm https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-windows.ps1 | iex</code>
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
-                    className="h-7 px-2 flex-shrink-0 bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-200"
+                    className="h-8 px-3 flex-shrink-0 hover:bg-primary hover:text-primary-foreground transition-colors"
                     onClick={() => {
                       navigator.clipboard.writeText('irm https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-windows.ps1 | iex');
                     }}
                   >
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-4 w-4 mr-1" />
+                    <span className="text-xs">Copy</span>
                   </Button>
                 </div>
               </div>
@@ -169,17 +170,18 @@ export default function IntegrationsPage() {
                   <Terminal className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs font-medium text-muted-foreground">macOS</span>
                 </div>
-                <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
+                <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2 group">
                   <code className="flex-1 overflow-x-auto text-green-400">bash &lt;(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-macos.sh)</code>
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
-                    className="h-7 px-2 flex-shrink-0 bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-200"
+                    className="h-8 px-3 flex-shrink-0 hover:bg-primary hover:text-primary-foreground transition-colors"
                     onClick={() => {
                       navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-macos.sh)');
                     }}
                   >
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-4 w-4 mr-1" />
+                    <span className="text-xs">Copy</span>
                   </Button>
                 </div>
               </div>
@@ -189,17 +191,18 @@ export default function IntegrationsPage() {
                   <Terminal className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs font-medium text-muted-foreground">Linux</span>
                 </div>
-                <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
+                <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2 group">
                   <code className="flex-1 overflow-x-auto text-green-400">bash &lt;(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-linux.sh)</code>
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
-                    className="h-7 px-2 flex-shrink-0 bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-200"
+                    className="h-8 px-3 flex-shrink-0 hover:bg-primary hover:text-primary-foreground transition-colors"
                     onClick={() => {
                       navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-linux.sh)');
                     }}
                   >
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-4 w-4 mr-1" />
+                    <span className="text-xs">Copy</span>
                   </Button>
                 </div>
               </div>
