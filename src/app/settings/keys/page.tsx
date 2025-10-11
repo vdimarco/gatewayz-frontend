@@ -162,6 +162,7 @@ export default function ApiKeysPage() {
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [hasLimitedPermissions, setHasLimitedPermissions] = useState(false);
   const { toast } = useToast();
   const { ready, authenticated, login } = usePrivy();
 
@@ -208,6 +209,9 @@ export default function ApiKeysPage() {
         console.log('Insufficient permissions - showing primary API key from localStorage');
         const errorData = await response.json().catch(() => ({}));
 
+        // Mark that user has limited permissions
+        setHasLimitedPermissions(true);
+
         // Create a mock API key entry from the one in localStorage
         const primaryKey: ApiKey = {
           id: 1,
@@ -235,7 +239,7 @@ export default function ApiKeysPage() {
         // Show informational toast (not an error)
         toast({
           title: "Limited Access",
-          description: "You can view your primary API key. Contact support to manage additional keys.",
+          description: "Your account has limited API key management permissions. Use your primary key to get started.",
           variant: "default",
         });
       } else {
@@ -341,8 +345,20 @@ export default function ApiKeysPage() {
         setIncludeBYOK(false);
         setDialogOpen(false);
 
+        // Clear limited permissions flag since creation worked
+        setHasLimitedPermissions(false);
+
         // Refresh the list
         await fetchApiKeys();
+      } else if (response.status === 403) {
+        // Permission denied for creating keys
+        const errorData = await response.json().catch(() => ({}));
+        toast({
+          title: "Permission Denied",
+          description: "Your account doesn't have permission to create additional API keys. Please use your primary key or contact support for access.",
+          variant: "destructive",
+        });
+        setDialogOpen(false);
       } else {
         const errorData = await response.json();
         toast({
@@ -420,10 +436,11 @@ export default function ApiKeysPage() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <h2 className="text-base sm:text-lg font-semibold">Your API Keys</h2>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 sm:h-12 px-6 sm:px-10 text-sm sm:text-base w-full sm:w-auto">Generate API Key</Button>
-            </DialogTrigger>
+          {!hasLimitedPermissions && (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 sm:h-12 px-6 sm:px-10 text-sm sm:text-base w-full sm:w-auto">Generate API Key</Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Create a Key</DialogTitle>
@@ -490,7 +507,8 @@ export default function ApiKeysPage() {
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          )}
         </div>
 
         {authenticating ? (
@@ -520,12 +538,14 @@ export default function ApiKeysPage() {
                 <p className="font-medium text-foreground">No API keys yet</p>
                 <p className="text-sm text-muted-foreground mt-1">Create your first API key to get started</p>
               </div>
-              <Button
-                className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={() => setDialogOpen(true)}
-              >
-                Generate API Key
-              </Button>
+              {!hasLimitedPermissions && (
+                <Button
+                  className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => setDialogOpen(true)}
+                >
+                  Generate API Key
+                </Button>
+              )}
             </div>
           </div>
         ) : (
