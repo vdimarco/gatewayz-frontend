@@ -155,10 +155,19 @@ export default function IntegrationsPage() {
 
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-medium text-muted-foreground">macOS / Linux</span>
+                  <span className="text-xs font-medium text-muted-foreground">macOS</span>
                 </div>
                 <div className="bg-muted/50 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
                   <code className="flex-1 overflow-x-auto">bash &lt;(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-macos.sh)</code>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-medium text-muted-foreground">Linux</span>
+                </div>
+                <div className="bg-muted/50 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
+                  <code className="flex-1 overflow-x-auto">bash &lt;(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-linux.sh)</code>
                 </div>
               </div>
             </div>
