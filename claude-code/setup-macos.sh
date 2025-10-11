@@ -184,15 +184,9 @@ echo ""
 echo -e "${YELLOW}Note: Restart your terminal or run:${NC}"
 echo -e "${WHITE}source $SHELL_CONFIG${NC}"
 echo ""
-read -p "Start now? (Y/n): " -n 1 -r
-echo
-
-if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z $REPLY ]]; then
-    echo ""
-    echo -e "${CYAN}Starting Claude Code Router...${NC}"
-    echo ""
-    ccr code
-else
-    echo ""
-    echo -e "${CYAN}Run 'ccr code' when ready!${NC}"
-fi
+echo -e "${CYAN}Next Steps:${NC}"
+echo -e "${WHITE}  1. Close and reopen your terminal (or run: source $SHELL_CONFIG)${NC}"
+echo -e "${WHITE}  2. Run: ${NC}${GREEN}ccr code${NC}"
+echo ""
+echo -e "${GRAY}Setup complete! Review the output above for any warnings.${NC}"
+echo ""

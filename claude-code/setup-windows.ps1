@@ -217,15 +217,10 @@ Write-Host "  • claude-3.7-sonnet (default)" -ForegroundColor White
 Write-Host "  • deepseek-chat (cost-effective)" -ForegroundColor White
 Write-Host "  • gpt-4, gemini-1.5-pro, and more..." -ForegroundColor White
 Write-Host ""
-Write-Host "Start now? (Y/n): " -NoNewline -ForegroundColor Yellow
-$response = Read-Host
-
-if ($response -eq "" -or $response -eq "Y" -or $response -eq "y") {
-    Write-Host ""
-    Write-Host "Starting Claude Code Router..." -ForegroundColor Cyan
-    Write-Host ""
-    ccr code
-} else {
-    Write-Host ""
-    Write-Host "Run 'ccr code' when ready!" -ForegroundColor Cyan
-}
+Write-Host "Next Steps:" -ForegroundColor Cyan
+Write-Host "  1. Close and reopen your terminal" -ForegroundColor White
+Write-Host "  2. Run: " -NoNewline -ForegroundColor White
+Write-Host "ccr code" -ForegroundColor Green
+Write-Host ""
+Write-Host "Press any key to exit..." -ForegroundColor Gray
+$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
