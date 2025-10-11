@@ -36,7 +36,12 @@
       "Bash(npx tsc:*)",
       "Bash(timeout:*)",
       "Bash(lsof:*)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(git reset:*)",
+      "Bash(python3:*)",
+      "Bash(PORT=4000 npm run dev)",
+      "Bash(taskkill:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

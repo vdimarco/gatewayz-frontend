@@ -691,6 +691,8 @@ function ChatPageContent() {
 
     // Handle model and message from URL parameters
     useEffect(() => {
+        if (!searchParams) return;
+
         const modelParam = searchParams.get('model');
         const messageParam = searchParams.get('message');
 
@@ -1750,7 +1752,7 @@ function ChatPageContent() {
                     </p>
                   </div>
                 )}
-                <div className="flex items-center gap-1 px-2 py-2 bg-muted/20 dark:bg-muted/40 rounded-xl border border-border">
+                <div className="flex items-center gap-1 px-2 py-2 bg-muted/20 dark:bg-muted/40 rounded-lg border border-border">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1803,7 +1805,7 @@ function ChatPageContent() {
                     variant="ghost"
                     onClick={handleSendMessage}
                     disabled={loading || isStreamingResponse || !message.trim() || !ready || !authenticated}
-                    className="h-8 w-8"
+                    className="h-8 w-8 bg-primary hover:bg-primary/90 text-primary-foreground"
                     title={!ready
                       ? "Waiting for authentication..."
                       : !authenticated
@@ -1812,7 +1814,7 @@ function ChatPageContent() {
                           ? "Please wait for the current response to finish"
                           : "Send message"}
                   >
-                     <img src="/Frame 13.svg" alt="Send" width={34} height={34} />
+                     <Send className="h-5 w-5" />
                   </Button>
                 </div>
               </div>

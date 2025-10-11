@@ -4,10 +4,15 @@
 import Link from 'next/link';
 import { Twitter } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 export function AppFooter() {
   const pathname = usePathname();
-  const isChatPage = pathname?.startsWith('/chat');
+  const [isChatPage, setIsChatPage] = useState(false);
+
+  useEffect(() => {
+    setIsChatPage(pathname?.startsWith('/chat') ?? false);
+  }, [pathname]);
 
   // Hide footer on mobile for chat page
   if (isChatPage) {
