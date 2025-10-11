@@ -203,6 +203,41 @@ export default function ApiKeysPage() {
       if (response.ok) {
         const data = await response.json();
         setApiKeys(data.keys || []);
+      } else if (response.status === 403) {
+        // Permission denied - show primary key from localStorage as fallback
+        console.log('Insufficient permissions - showing primary API key from localStorage');
+        const errorData = await response.json().catch(() => ({}));
+
+        // Create a mock API key entry from the one in localStorage
+        const primaryKey: ApiKey = {
+          id: 1,
+          api_key: apiKey,
+          key_name: 'Primary API Key',
+          environment_tag: 'live',
+          scope_permissions: {},
+          is_active: true,
+          is_primary: true,
+          expiration_date: null,
+          days_remaining: null,
+          max_requests: null,
+          requests_used: 0,
+          requests_remaining: null,
+          usage_percentage: null,
+          ip_allowlist: [],
+          domain_referrers: [],
+          created_at: null,
+          updated_at: null,
+          last_used_at: null,
+        };
+
+        setApiKeys([primaryKey]);
+
+        // Show informational toast (not an error)
+        toast({
+          title: "Limited Access",
+          description: "You can view your primary API key. Contact support to manage additional keys.",
+          variant: "default",
+        });
       } else {
         const errorData = await response.json();
         toast({
