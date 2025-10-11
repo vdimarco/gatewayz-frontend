@@ -200,7 +200,7 @@ Track your API usage at:
 ## 📚 Resources
 
 - **GatewayZ**: https://gatewayz.ai
-- **Claude Code Router**: https://github.com/musistudio/claude-code-router
+- **Claude Code Router**: https://github.com/Alpaca-Network/claude-code-router
 - **Documentation**: https://gatewayz.ai/docs
 - **Support**: https://github.com/Alpaca-Network/gatewayz-frontend/issues
 

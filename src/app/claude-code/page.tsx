@@ -207,14 +207,15 @@ export default function ClaudeCodePage() {
           {/* Install Command */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-1">
+              <Terminal className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground">
                 {selectedOS === 'windows' && 'PowerShell (Run as Administrator)'}
                 {selectedOS === 'macos' && 'Terminal'}
                 {selectedOS === 'linux' && 'Terminal'}
               </span>
             </div>
-            <div className="bg-muted/50 rounded-md p-4 font-mono text-sm flex items-center justify-between gap-4">
-              <code className="flex-1 overflow-x-auto">{installCommands[selectedOS]}</code>
+            <div className="bg-slate-950 dark:bg-slate-900 border-2 border-slate-800 rounded-lg p-4 font-mono text-sm flex items-center justify-between gap-4 shadow-lg">
+              <code className="flex-1 overflow-x-auto text-green-400">{installCommands[selectedOS]}</code>
               <CopyButton text={installCommands[selectedOS]} id={`install-${selectedOS}`} />
             </div>
           </div>
@@ -272,20 +273,20 @@ export default function ClaudeCodePage() {
           <p className="text-muted-foreground">
             After setup completes, start Claude Code:
           </p>
-          <div className="bg-muted/50 rounded-md p-4 font-mono text-sm flex items-center justify-between">
-            <code>ccr code</code>
+          <div className="bg-slate-950 dark:bg-slate-900 border-2 border-slate-800 rounded-lg p-4 font-mono text-sm flex items-center justify-between shadow-lg">
+            <code className="text-green-400">ccr code</code>
             <CopyButton text="ccr code" id="start-command" />
           </div>
 
           <div className="space-y-2">
             <p className="text-sm font-medium">Switch models on-the-fly:</p>
-            <div className="bg-muted/50 rounded-md p-4 font-mono text-xs space-y-2">
+            <div className="bg-slate-950 dark:bg-slate-900 border-2 border-slate-800 rounded-lg p-4 font-mono text-xs space-y-2 shadow-lg">
               <div className="flex items-center justify-between">
-                <code>/model gatewayz,openai/gpt-4</code>
+                <code className="text-green-400">/model gatewayz,openai/gpt-4</code>
                 <CopyButton text="/model gatewayz,openai/gpt-4" id="model-gpt4" />
               </div>
               <div className="flex items-center justify-between">
-                <code>/model gatewayz,deepseek/deepseek-chat</code>
+                <code className="text-green-400">/model gatewayz,deepseek/deepseek-chat</code>
                 <CopyButton text="/model gatewayz,deepseek/deepseek-chat" id="model-deepseek" />
               </div>
             </div>
@@ -331,7 +332,7 @@ export default function ClaudeCodePage() {
               Setup Guide
             </Button>
           </Link>
-          <Link href="https://github.com/musistudio/claude-code-router" target="_blank">
+          <Link href="https://github.com/Alpaca-Network/claude-code-router" target="_blank">
             <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2">
               <Code2 className="h-4 w-4" />
               Claude Code Router

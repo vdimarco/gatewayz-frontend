@@ -50,7 +50,24 @@ Write-Host ""
 Write-Step "Installing Claude Code Router..."
 try {
     npm install -g @musistudio/claude-code-router 2>&1 | Out-Null
-    Write-Success "Claude Code Router installed"
+
+    # Verify installation
+    $ccrPath = Get-Command ccr -ErrorAction SilentlyContinue
+    if ($ccrPath) {
+        Write-Success "Claude Code Router installed"
+    } else {
+        Write-Host "⚠ Package installed but 'ccr' command not found. Trying to fix..." -ForegroundColor Yellow
+        npm uninstall -g @musistudio/claude-code-router 2>&1 | Out-Null
+        npm install -g @musistudio/claude-code-router 2>&1 | Out-Null
+
+        $ccrPath = Get-Command ccr -ErrorAction SilentlyContinue
+        if ($ccrPath) {
+            Write-Success "Claude Code Router installed (fixed)"
+        } else {
+            Write-Error "Installation completed but 'ccr' command not available"
+            Write-Host "You may need to restart your terminal" -ForegroundColor Yellow
+        }
+    }
 } catch {
     Write-Error "Failed to install Claude Code Router"
     Write-Host "Error: $_" -ForegroundColor Red
@@ -70,18 +87,33 @@ if (-not $ApiKey) {
     Write-Host "Get your API key at: " -NoNewline -ForegroundColor Cyan
     Write-Host "https://gatewayz.ai/settings/keys" -ForegroundColor White
     Write-Host ""
-    $ApiKey = Read-Host "Enter your GatewayZ API key"
+
+    # Check if running interactively
+    if ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected) {
+        $ApiKey = Read-Host "Enter your GatewayZ API key"
+    }
 
     if (-not $ApiKey) {
-        Write-Error "No API key provided"
-        exit 1
+        Write-Host ""
+        Write-Host "No API key found. Please set it manually:" -ForegroundColor Yellow
+        Write-Host "  1. Get your API key from https://gatewayz.ai/settings/keys" -ForegroundColor White
+        Write-Host "  2. Run in PowerShell:" -ForegroundColor White
+        Write-Host "     [System.Environment]::SetEnvironmentVariable('GATEWAYZ_API_KEY', 'your-key-here', 'User')" -ForegroundColor Cyan
+        Write-Host "  3. Restart PowerShell and run: ccr code" -ForegroundColor White
+        Write-Host ""
+        Write-Host "Setup will continue with placeholder configuration..." -ForegroundColor Yellow
+        $ApiKey = "YOUR_GATEWAYZ_API_KEY_HERE"
     }
 }
 
-# Set environment variable
-[System.Environment]::SetEnvironmentVariable('GATEWAYZ_API_KEY', $ApiKey, 'User')
-$env:GATEWAYZ_API_KEY = $ApiKey
-Write-Success "API key configured"
+# Set environment variable (only if not placeholder)
+if ($ApiKey -ne "YOUR_GATEWAYZ_API_KEY_HERE") {
+    [System.Environment]::SetEnvironmentVariable('GATEWAYZ_API_KEY', $ApiKey, 'User')
+    $env:GATEWAYZ_API_KEY = $ApiKey
+    Write-Success "API key configured"
+} else {
+    Write-Host "⚠ Skipping API key environment variable setup" -ForegroundColor Yellow
+}
 
 # Step 4: Create configuration
 Write-Host ""

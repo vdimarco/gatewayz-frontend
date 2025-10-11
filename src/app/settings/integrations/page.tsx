@@ -146,28 +146,31 @@ export default function IntegrationsPage() {
             <div className="space-y-2">
               <div>
                 <div className="flex items-center gap-2 mb-1">
+                  <Terminal className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs font-medium text-muted-foreground">Windows (PowerShell)</span>
                 </div>
-                <div className="bg-muted/50 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
-                  <code className="flex-1 overflow-x-auto">irm https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-windows.ps1 | iex</code>
+                <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
+                  <code className="flex-1 overflow-x-auto text-green-400">irm https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-windows.ps1 | iex</code>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center gap-2 mb-1">
+                  <Terminal className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs font-medium text-muted-foreground">macOS</span>
                 </div>
-                <div className="bg-muted/50 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
-                  <code className="flex-1 overflow-x-auto">bash &lt;(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-macos.sh)</code>
+                <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
+                  <code className="flex-1 overflow-x-auto text-green-400">bash &lt;(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-macos.sh)</code>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center gap-2 mb-1">
+                  <Terminal className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs font-medium text-muted-foreground">Linux</span>
                 </div>
-                <div className="bg-muted/50 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
-                  <code className="flex-1 overflow-x-auto">bash &lt;(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-linux.sh)</code>
+                <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2">
+                  <code className="flex-1 overflow-x-auto text-green-400">bash &lt;(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-linux.sh)</code>
                 </div>
               </div>
             </div>
@@ -184,7 +187,7 @@ export default function IntegrationsPage() {
                 </Button>
               </Link>
               <Link
-                href="https://github.com/musistudio/claude-code-router"
+                href="https://github.com/Alpaca-Network/claude-code-router"
                 target="_blank"
                 rel="noopener noreferrer"
               >
