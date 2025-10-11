@@ -171,23 +171,44 @@ export async function* streamChatResponse(
             const data = JSON.parse(jsonStr);
 
             let chunk: StreamChunk | null = null;
-            const choice = data.choices?.[0];
 
-            if (choice?.delta) {
-              const delta = choice.delta;
+            // Handle backend response format with "output" array
+            const output = data.output?.[0];
+            if (output && typeof output === 'object') {
               chunk = {};
-              if (delta.content) {
-                chunk.content = delta.content;
+              if (output.content) {
+                chunk.content = output.content;
               }
-              if (delta.reasoning) {
-                chunk.reasoning = delta.reasoning;
+              if (output.reasoning) {
+                chunk.reasoning = output.reasoning;
               }
-              if (choice.finish_reason) {
+              if (output.finish_reason) {
                 chunk.done = true;
               }
-            } else if (choice?.finish_reason) {
-              chunk = { done: true };
-            } else if (typeof data.type === 'string') {
+            }
+            // Handle OpenAI-style "choices" format
+            else {
+              const choice = data.choices?.[0];
+
+              if (choice?.delta) {
+                const delta = choice.delta;
+                chunk = {};
+                if (delta.content) {
+                  chunk.content = delta.content;
+                }
+                if (delta.reasoning) {
+                  chunk.reasoning = delta.reasoning;
+                }
+                if (choice.finish_reason) {
+                  chunk.done = true;
+                }
+              } else if (choice?.finish_reason) {
+                chunk = { done: true };
+              }
+            }
+
+            // Handle event-based streaming formats
+            if (!chunk && typeof data.type === 'string') {
               const eventType = data.type;
               switch (eventType) {
                 case 'response.output_text.delta': {

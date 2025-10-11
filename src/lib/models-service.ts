@@ -38,16 +38,22 @@ export async function getModelsForGateway(gateway: string) {
       headers: {
         'Content-Type': 'application/json'
       },
-      signal: AbortSignal.timeout(5000) // 5 second timeout
+      signal: AbortSignal.timeout(15000) // 15 second timeout - increased for better reliability
     });
 
     if (response.ok) {
       const data = await response.json();
       console.log(`Models Service - Backend success: ${data.data?.length || 0} models from ${gateway} gateway`);
-      return data;
-    }
 
-    console.log(`Models Service - Backend returned ${response.status}, using fallback`);
+      // Validate that we got actual data
+      if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+        return data;
+      } else {
+        console.log(`Models Service - Backend returned empty data, using fallback`);
+      }
+    } else {
+      console.log(`Models Service - Backend returned ${response.status}, using fallback`);
+    }
   } catch (backendError) {
     console.log(`Models Service - Backend error:`, backendError);
     console.log(`Models Service - Using static fallback data`);

@@ -1,4 +1,5 @@
 // Chat History API Types and Interfaces
+import { API_BASE_URL } from './config';
 
 export interface ChatMessage {
   id: number;
@@ -69,9 +70,9 @@ export class ChatHistoryAPI {
   private baseUrl: string;
   private privyUserId?: string;
 
-  constructor(apiKey: string, baseUrl: string = 'https://api.gatewayz.ai/v1/chat', privyUserId?: string) {
+  constructor(apiKey: string, baseUrl?: string, privyUserId?: string) {
     this.apiKey = apiKey;
-    this.baseUrl = baseUrl;
+    this.baseUrl = baseUrl || `${API_BASE_URL}/v1/chat`;
     this.privyUserId = privyUserId;
   }
 
