@@ -394,9 +394,9 @@ const SessionListItem = ({
     const [menuOpen, setMenuOpen] = React.useState(false);
 
     return (
-        <li key={session.id} className="group relative min-w-0">
+        <li key={session.id} className="group relative min-w-0 w-full">
             <div
-                className="flex items-start gap-2 min-w-0"
+                className="flex items-start justify-between gap-2 w-full"
                 onContextMenu={(e) => {
                     e.preventDefault();
                     setMenuOpen(true);
@@ -431,7 +431,7 @@ const SessionListItem = ({
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 hover:bg-muted rounded-md shrink-0 self-center"
+                            className="h-7 w-7 hover:bg-muted rounded-md shrink-0 self-start mt-1"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setMenuOpen(true);
