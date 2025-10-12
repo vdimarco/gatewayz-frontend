@@ -394,9 +394,9 @@ const SessionListItem = ({
     const [menuOpen, setMenuOpen] = React.useState(false);
 
     return (
-        <li key={session.id} className="group relative min-w-0 max-w-full">
+        <li key={session.id} className="group relative min-w-0">
             <div
-                className="relative min-w-0 max-w-full overflow-hidden"
+                className="flex items-start gap-2 min-w-0"
                 onContextMenu={(e) => {
                     e.preventDefault();
                     setMenuOpen(true);
@@ -404,75 +404,71 @@ const SessionListItem = ({
             >
                 <Button
                     variant={activeSessionId === session.id ? "secondary" : "ghost"}
-                    className="w-full max-w-full justify-start items-start text-left flex flex-col h-auto py-1.5 pl-2 pr-10 rounded-lg min-w-0"
+                    className="flex-1 min-w-0 justify-start items-start text-left flex flex-col h-auto py-1.5 pl-2 pr-3 rounded-lg"
                     onClick={() => switchToSession(session.id)}
                 >
                     <span
-                        className="font-medium text-sm leading-[1.3] block break-words"
+                        className="font-medium text-sm leading-[1.3] block break-words w-full"
                         style={{
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical' as const,
                             overflow: 'hidden',
                             wordBreak: 'break-word',
-                            overflowWrap: 'break-word',
-                            maxWidth: 'calc(100% - 32px)',
-                            width: 'calc(100% - 32px)'
+                            overflowWrap: 'break-word'
                         }}
                     >
                         {session.title}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate leading-tight mt-0.5 block" style={{ maxWidth: 'calc(100% - 32px)', width: 'calc(100% - 32px)' }}>
+                    <span className="text-xs text-muted-foreground truncate leading-tight mt-0.5 block w-full">
                         {formatDistanceToNow(session.startTime, { addSuffix: true })}
                     </span>
                 </Button>
 
-                {/* Three dots menu - always visible */}
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 transition-opacity z-10">
-                    <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 hover:bg-muted rounded-md"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setMenuOpen(true);
-                                }}
-                            >
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    const newTitle = prompt('Rename chat:', session.title);
-                                    if (newTitle && newTitle.trim() && newTitle !== session.title) {
-                                        onRenameSession(session.id, newTitle.trim());
-                                    }
-                                    setMenuOpen(false);
-                                }}
-                            >
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Rename
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (confirm('Are you sure you want to delete this chat?')) {
-                                        onDeleteSession(session.id);
-                                    }
-                                    setMenuOpen(false);
-                                }}
-                                className="text-destructive focus:text-destructive"
-                            >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
+                {/* Three dots menu stays visible and aligned */}
+                <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:bg-muted rounded-md shrink-0 self-center"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setMenuOpen(true);
+                            }}
+                        >
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const newTitle = prompt('Rename chat:', session.title);
+                                if (newTitle && newTitle.trim() && newTitle !== session.title) {
+                                    onRenameSession(session.id, newTitle.trim());
+                                }
+                                setMenuOpen(false);
+                            }}
+                        >
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm('Are you sure you want to delete this chat?')) {
+                                    onDeleteSession(session.id);
+                                }
+                                setMenuOpen(false);
+                            }}
+                            className="text-destructive focus:text-destructive"
+                        >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </li>
     );
