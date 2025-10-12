@@ -394,9 +394,9 @@ const SessionListItem = ({
     const [menuOpen, setMenuOpen] = React.useState(false);
 
     return (
-        <li key={session.id} className="group relative min-w-0">
+        <li key={session.id} className="group relative min-w-0 max-w-full">
             <div
-                className="relative min-w-0"
+                className="relative min-w-0 max-w-full overflow-hidden"
                 onContextMenu={(e) => {
                     e.preventDefault();
                     setMenuOpen(true);
@@ -404,13 +404,13 @@ const SessionListItem = ({
             >
                 <Button
                     variant={activeSessionId === session.id ? "secondary" : "ghost"}
-                    className="w-full justify-start items-start text-left flex flex-col h-auto py-1.5 pl-2 pr-10 rounded-lg min-w-0 overflow-hidden"
+                    className="w-full max-w-full justify-start items-start text-left flex flex-col h-auto py-1.5 pl-2 pr-10 rounded-lg min-w-0"
                     onClick={() => switchToSession(session.id)}
                 >
-                    <span className="font-medium truncate text-sm leading-tight block" style={{ maxWidth: 'calc(100% - 32px)' }}>
+                    <span className="font-medium truncate text-sm leading-tight block w-full">
                         {session.title}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate leading-tight mt-0.5 block" style={{ maxWidth: 'calc(100% - 32px)' }}>
+                    <span className="text-xs text-muted-foreground truncate leading-tight mt-0.5 block w-full">
                         {formatDistanceToNow(session.startTime, { addSuffix: true })}
                     </span>
                 </Button>
