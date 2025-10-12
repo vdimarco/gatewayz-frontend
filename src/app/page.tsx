@@ -13,6 +13,7 @@ import { Check, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getApiKey } from '@/lib/api';
 import { API_BASE_URL } from '@/lib/config';
+import Image from 'next/image';
 
 interface FeaturedModel {
   name: string;
@@ -71,22 +72,22 @@ const FeaturedModelCard = ({
       >
         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-200 flex-shrink-0 p-1">
           {model.logo_url ? (
-            <img src={model.logo_url} alt={model.by} width="42" height="42" className="w-full h-full object-contain" />
+            <Image src={model.logo_url} alt={model.by} width={42} height={42} className="w-full h-full object-contain" loading="lazy" />
           ) : (
             <>
               {model.by === 'google' && (
                 <div className="flex w-full h-full">
-                  <img src="/Google_Logo-black.svg" alt="Google" className="w-full h-full object-contain" />
+                  <Image src="/Google_Logo-black.svg" alt="Google" width={42} height={42} className="w-full h-full object-contain" loading="lazy" />
                 </div>
               )}
               {model.by === 'openai' && (
                 <div className="flex w-full h-full">
-                  <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-full h-full object-contain" />
+                  <Image src="/OpenAI_Logo-black.svg" alt="OpenAI" width={42} height={42} className="w-full h-full object-contain" loading="lazy" />
                 </div>
               )}
               {model.by === 'anthropic' && (
                 <div className="flex w-full h-full">
-                  <img src="/anthropic-logo.svg" alt="Anthropic" className="w-full h-full object-contain" />
+                  <Image src="/anthropic-logo.svg" alt="Anthropic" width={42} height={42} className="w-full h-full object-contain" loading="lazy" />
                 </div>
               )}
             </>
@@ -109,22 +110,22 @@ const FeaturedModelCard = ({
         <div className="flex gap-2 sm:gap-3 mb-2 sm:mb-4">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-200 flex-shrink-0 p-1">
               {model.logo_url ? (
-                <img src={model.logo_url} alt={model.by} className="w-full h-full object-contain" />
+                <Image src={model.logo_url} alt={model.by} width={40} height={40} className="w-full h-full object-contain" loading="lazy" />
               ) : (
                 <>
                   {model.by === 'google' && (
                     <div className="flex w-full h-full">
-                      <img src="/Google_Logo-black.svg" alt="Google" className="w-full h-full object-contain" />
+                      <Image src="/Google_Logo-black.svg" alt="Google" width={40} height={40} className="w-full h-full object-contain" loading="lazy" />
                     </div>
                   )}
                   {model.by === 'openai' && (
                     <div className="flex w-full h-full">
-                      <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-full h-full object-contain" />
+                      <Image src="/OpenAI_Logo-black.svg" alt="OpenAI" width={40} height={40} className="w-full h-full object-contain" loading="lazy" />
                     </div>
                   )}
                   {model.by === 'anthropic' && (
                     <div className="flex w-full h-full">
-                      <img src="/anthropic-logo.svg" alt="Anthropic" className="w-full h-full object-contain" />
+                      <Image src="/anthropic-logo.svg" alt="Anthropic" width={40} height={40} className="w-full h-full object-contain" loading="lazy" />
                     </div>
                   )}
                 </>
@@ -178,7 +179,7 @@ const FeatureCard = ({ icon, title, description, linkText, linkHref }: { icon: s
   <Card className="p-6 text-center">
     <div className="flex justify-center mb-4">
       <div className="w-16 h-16 flex items-center justify-center rounded-2xl bg-muted">
-        <img src={`/${icon}.svg`} alt="Stats" width="100%" height="100%" />
+        <Image src={`/${icon}.svg`} alt={title} width={64} height={64} className="w-full h-full" loading="lazy" />
       </div>
     </div>
     <h3 className="text-lg font-bold mb-2">{title}</h3>
@@ -243,8 +244,8 @@ export default function Home() {
 
     window.addEventListener('storage', handleStorageChange);
 
-    // Also poll for changes every second to catch same-tab updates
-    const interval = setInterval(loadApiKey, 1000);
+    // Poll for changes every 5 seconds to catch same-tab updates (reduced from 1s for performance)
+    const interval = setInterval(loadApiKey, 5000);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -503,10 +504,13 @@ console.log(completion.choices[0].message);`,
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 " style={{position: 'relative'}}>
         {/* Hero Section */}
-        <img 
-          src="/logo_transparent.svg" 
-          alt="Stats" 
-          className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[450px] h-[450px] lg:w-[640px] lg:h-[640px] xl:w-[768px] xl:h-[768px]" 
+        <Image
+          src="/logo_transparent.svg"
+          alt="Background logo"
+          width={768}
+          height={768}
+          priority
+          className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[450px] h-[450px] lg:w-[640px] lg:h-[640px] xl:w-[768px] xl:h-[768px]"
         />
         
         <section className="grid md:grid-cols-1 gap-8 items-center py-8 md:py-[140px] mb-16 md:mb-32 max-w-5xl mx-auto px-4" >
@@ -568,11 +572,11 @@ console.log(completion.choices[0].message);`,
                 <h2 className="text-xl sm:text-2xl font-bold text-center">Connect To 1000+ AI Models</h2>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 md:gap-12 items-center justify-items-center max-w-5xl mx-auto">
-                <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-full max-w-[140px] dark:invert" />
-                <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Anthropic_logo.svg" alt="Anthropic" className="w-full max-w-[140px] dark:invert" />
-                <img src="/Google_Logo-black.svg" alt="Google" className="w-full max-w-[140px] dark:invert" />
-                <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" className="w-full max-w-[140px] dark:invert" />
-                <img src="/Meta_Logo-black.svg" alt="Meta" className="w-full max-w-[140px] dark:invert" />
+                <Image src="/OpenAI_Logo-black.svg" alt="OpenAI" width={140} height={40} className="w-full max-w-[140px] dark:invert" loading="lazy" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/7/78/Anthropic_logo.svg" alt="Anthropic" width={140} height={40} className="w-full max-w-[140px] dark:invert" loading="lazy" />
+                <Image src="/Google_Logo-black.svg" alt="Google" width={140} height={40} className="w-full max-w-[140px] dark:invert" loading="lazy" />
+                <Image src="/DeepSeek_Logo-black.svg" alt="DeepSeek" width={140} height={40} className="w-full max-w-[140px] dark:invert" loading="lazy" />
+                <Image src="/Meta_Logo-black.svg" alt="Meta" width={140} height={40} className="w-full max-w-[140px] dark:invert" loading="lazy" />
               </div>
             </section>
 
@@ -600,17 +604,17 @@ console.log(completion.choices[0].message);`,
           <div className="grid md:grid-cols-3 gap-12">
             <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
               <div className="flex items-center justify-between col-span-2" >
-                <img src="/sign-up-blue.svg" alt="Stats" width="100%" height="100%" />
+                <Image src="/sign-up-blue.svg" alt="Signup icon" width={100} height={100} className="w-full h-full" loading="lazy" />
               </div>
               <div className="flex items-center justify-between col-span-5" >
                 <HowItWorksStep number={1} title="Signup" description="Create An Account To Get Started Using Your Email Or A 3rd Party.">
                     <span></span>
                 </HowItWorksStep>
               </div>
-            </div>    
+            </div>
             <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
              <div className="flex items-center justify-between col-span-2" >
-                <img src="/coins-blue.svg" alt="Stats" width="100%" height="100%" />
+                <Image src="/coins-blue.svg" alt="Credits icon" width={100} height={100} className="w-full h-full" loading="lazy" />
               </div>
               <div className="flex items-center justify-between col-span-5" >
                 <HowItWorksStep number={2} title="Buy credits" description="Credits Can Be Purchased In Multiple Methods, And Used With Any Model Or Provider.">
@@ -620,7 +624,7 @@ console.log(completion.choices[0].message);`,
             </div>
             <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
               <div className="flex items-center justify-between col-span-2" >
-                <img src="/api-blue.svg" alt="Stats" width="100%" height="100%" />
+                <Image src="/api-blue.svg" alt="API key icon" width={100} height={100} className="w-full h-full" loading="lazy" />
               </div>
               <div className="flex items-center justify-between col-span-5" >
                 <HowItWorksStep number={3} title="Get your API key" description="Create An API Key And Start Making Requests In An Instance.">
