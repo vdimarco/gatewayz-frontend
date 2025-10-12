@@ -404,13 +404,13 @@ const SessionListItem = ({
             >
                 <Button
                     variant={activeSessionId === session.id ? "secondary" : "ghost"}
-                    className="w-full justify-start items-start text-left flex flex-col h-auto py-2 pl-3 pr-9 rounded-lg min-w-0 overflow-hidden"
+                    className="w-full justify-start items-start text-left flex flex-col h-auto py-1.5 pl-2 pr-8 rounded-lg min-w-0"
                     onClick={() => switchToSession(session.id)}
                 >
-                    <span className="font-medium truncate max-w-full block">
+                    <span className="font-medium truncate w-full text-sm leading-tight">
                         {session.title}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate max-w-full block">
+                    <span className="text-xs text-muted-foreground truncate w-full leading-tight mt-0.5">
                         {formatDistanceToNow(session.startTime, { addSuffix: true })}
                     </span>
                 </Button>
@@ -499,25 +499,25 @@ const ChatSidebar = ({ sessions, activeSessionId, switchToSession, createNewChat
     const groupedSessions = groupChatsByDate(sessions);
 
     return (
-    <aside className="flex flex-col gap-6 p-6 h-full w-full overflow-hidden">
+    <aside className="flex flex-col gap-4 p-4 h-full w-full overflow-hidden">
         <div className="flex items-center gap-2">
-            <h2 className="text-3xl font-bold">Chat</h2>
+            <h2 className="text-2xl font-bold">Chat</h2>
         </div>
-        
-        <Button 
+
+        <Button
             onClick={createNewChat}
-            className="w-full bg-foreground text-background hover:bg-foreground/90 h-12 font-medium flex justify-between items-center gap-2 text-left"
+            className="w-full bg-foreground text-background hover:bg-foreground/90 h-10 font-medium flex justify-between items-center gap-2 text-left text-sm"
         >
             <span>New Chat</span>
-            <img src="/uil_plus.svg" alt="Plus" width={24} height={24} />
+            <img src="/uil_plus.svg" alt="Plus" width={20} height={20} />
         </Button>
-        
+
         <div className="relative">
-            <Input placeholder="Search Chats" className="pl-3 rounded-lg" />
-            <img src="/material-symbols_search.svg" alt="Search" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" style={{ width: "24px", height: "24px" }} />
+            <Input placeholder="Search Chats" className="pl-3 rounded-lg h-9 text-sm" />
+            <img src="/material-symbols_search.svg" alt="Search" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" style={{ width: "20px", height: "20px" }} />
 
         </div>
-        
+
         <ScrollArea className="flex-grow overflow-hidden">
             {Object.keys(groupedSessions).length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-32 text-center">
@@ -527,8 +527,8 @@ const ChatSidebar = ({ sessions, activeSessionId, switchToSession, createNewChat
             ) : (
                 Object.entries(groupedSessions).map(([groupName, chatSessions]) => (
                     <div key={groupName} className="min-w-0">
-                        <h3 className="text-xs font-semibold text-muted-foreground uppercase my-2 px-3">{groupName}</h3>
-                        <ul className="space-y-1 min-w-0">
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase my-1.5 px-2">{groupName}</h3>
+                        <ul className="space-y-0.5 min-w-0">
                             {chatSessions.map(session => (
                                 <SessionListItem
                                     key={session.id}
