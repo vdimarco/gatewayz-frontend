@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CheckCircle2, Circle, ArrowRight, Code, MessageSquare, CreditCard, Sparkles, Terminal, Book, Copy, Check, Key } from "lucide-react";
 import Link from "next/link";
 import { getUserData, getApiKey } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/config';
 
 interface OnboardingTask {
   id: string;
@@ -63,14 +64,13 @@ export default function OnboardingPage() {
   const [showBanner, setShowBanner] = useState(true);
   const [selectedModel, setSelectedModel] = useState('openai/gpt-4');
   const [copiedCode, setCopiedCode] = useState(false);
-
-  const models = [
+  const [models, setModels] = useState<Array<{ id: string; name: string }>>([
     { id: 'openai/gpt-4', name: 'GPT-4' },
     { id: 'anthropic/claude-3-opus', name: 'Claude 3 Opus' },
     { id: 'google/gemini-pro', name: 'Gemini Pro' },
     { id: 'meta-llama/llama-3-70b', name: 'Llama 3 70B' },
     { id: 'mistralai/mistral-large', name: 'Mistral Large' },
-  ];
+  ]);
 
   useEffect(() => {
     // Check if user has already seen onboarding
@@ -101,6 +101,41 @@ export default function OnboardingPage() {
     if (userData) {
       markTaskComplete('welcome');
     }
+
+    // Fetch top models from rankings endpoint
+    const fetchTopModels = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/ranking/models`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          // Get top 5 models from "Top this month"
+          const topModels = result.data
+            .filter((model: any) => model.time_period === 'Top this month')
+            .sort((a: any, b: any) => a.rank - b.rank)
+            .slice(0, 5)
+            .map((model: any) => ({
+              id: model.model_name,
+              name: model.model_name
+            }));
+
+          if (topModels.length > 0) {
+            setModels(topModels);
+            setSelectedModel(topModels[0].id);
+          }
+        }
+      } catch (error) {
+        console.log('Failed to fetch top models:', error);
+        // Keep fallback models
+      }
+    };
+
+    fetchTopModels();
   }, [router]);
 
   const markTaskComplete = (taskId: string) => {
