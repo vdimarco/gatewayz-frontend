@@ -408,7 +408,7 @@ const SessionListItem = ({
                     onClick={() => switchToSession(session.id)}
                 >
                     <span
-                        className="font-medium text-sm leading-[1.3] block w-full break-words"
+                        className="font-medium text-sm leading-[1.3] block break-words"
                         style={{
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
@@ -416,12 +416,13 @@ const SessionListItem = ({
                             overflow: 'hidden',
                             wordBreak: 'break-word',
                             overflowWrap: 'break-word',
-                            maxWidth: '100%'
+                            maxWidth: 'calc(100% - 32px)',
+                            width: 'calc(100% - 32px)'
                         }}
                     >
                         {session.title}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate leading-tight mt-0.5 block w-full">
+                    <span className="text-xs text-muted-foreground truncate leading-tight mt-0.5 block" style={{ maxWidth: 'calc(100% - 32px)', width: 'calc(100% - 32px)' }}>
                         {formatDistanceToNow(session.startTime, { addSuffix: true })}
                     </span>
                 </Button>
