@@ -404,25 +404,25 @@ const SessionListItem = ({
             >
                 <Button
                     variant={activeSessionId === session.id ? "secondary" : "ghost"}
-                    className="w-full justify-start items-start text-left flex flex-col h-auto py-2 px-3 rounded-lg pr-10 min-w-0"
+                    className="w-full justify-start items-start text-left flex flex-col h-auto py-2 pl-3 pr-9 rounded-lg min-w-0 overflow-hidden"
                     onClick={() => switchToSession(session.id)}
                 >
-                    <span className="font-medium truncate w-full block overflow-hidden text-ellipsis whitespace-nowrap">
+                    <span className="font-medium truncate max-w-full block">
                         {session.title}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate w-full block overflow-hidden text-ellipsis whitespace-nowrap">
+                    <span className="text-xs text-muted-foreground truncate max-w-full block">
                         {formatDistanceToNow(session.startTime, { addSuffix: true })}
                     </span>
                 </Button>
 
-                {/* Three dots menu - visible on hover */}
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto z-10">
+                {/* Three dots menu - always shown on mobile, shown on hover for desktop */}
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity z-10">
                     <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                         <DropdownMenuTrigger asChild>
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 hover:bg-muted/50"
+                                className="h-7 w-7 hover:bg-muted rounded-md"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setMenuOpen(true);
