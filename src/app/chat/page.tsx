@@ -1320,7 +1320,7 @@ function ChatPageContent() {
 
             try {
                 // Use streaming API
-                const modelValue = selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-chat' : selectedModel.value;
+                const modelValue = selectedModel.value === 'gpt-4o mini' ? 'deepseek/deepseek-v3.1' : selectedModel.value;
 
                 // Detect the Portkey provider based on model characteristics
                 // Only set portkey_provider for Portkey gateway models
@@ -1461,18 +1461,18 @@ function ChatPageContent() {
                 const shouldFallback = is500Error || is404Error;
 
                 if (shouldFallback && selectedModel) {
-                    // Define fallback models in order of preference:
+                    // Define fallback models in order of preference (using top-ranked models):
                     // 1. Auto router (default)
-                    // 2. Most recent Claude model
-                    // 3. Most recent GPT model
-                    // 4. Fastest DeepSeek model
-                    // 5. Most recent Gemini model
+                    // 2. Claude Sonnet 4 (Rank #2)
+                    // 3. Claude Sonnet 4.5 (Rank #6)
+                    // 4. DeepSeek V3.1 (Rank #5)
+                    // 5. Gemini 2.5 Flash (Rank #4)
                     const fallbackModels: ModelOption[] = [
                         { value: 'openrouter/auto', label: 'Auto Router', category: 'Free' },
-                        { value: 'anthropic/claude-3.7-sonnet', label: 'Claude 3.7 Sonnet', category: 'Paid' },
-                        { value: 'openai/gpt-4o', label: 'GPT-4o', category: 'Paid' },
-                        { value: 'deepseek/deepseek-chat', label: 'DeepSeek Chat', category: 'Free' },
-                        { value: 'google/gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash', category: 'Free' }
+                        { value: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4', category: 'Paid' },
+                        { value: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5', category: 'Paid' },
+                        { value: 'deepseek/deepseek-v3.1', label: 'DeepSeek V3.1', category: 'Free' },
+                        { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', category: 'Free' }
                     ];
 
                     // Find the first fallback model that isn't the current model
