@@ -90,8 +90,8 @@ export function UserNav({ user }: UserNavProps) {
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal py-3">
+      <DropdownMenuContent className="w-64 mt-2" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal py-4">
           <div className="flex flex-col space-y-2">
             <div className="flex items-baseline gap-2 flex-wrap">
               <p className="text-sm font-medium leading-none">
