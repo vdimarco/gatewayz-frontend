@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import { redirectToCheckout } from '@/lib/stripe';
-import { getUserData } from '@/lib/api';
+import { getUserData, saveUserData, type UserData } from '@/lib/api';
 import {
   Dialog,
   DialogContent,
@@ -15,10 +16,40 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const isValidEmail = (value?: string | null): value is string =>
+  typeof value === 'string' && value.includes('@') && !value.startsWith('did:privy:');
+
 export function GetCreditsButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [amount, setAmount] = useState('10');
+  const { user } = usePrivy();
+
+  const resolvePrivyEmails = useMemo(() => {
+    const emails: string[] = [];
+
+    const primaryEmail = user?.email?.address;
+    if (isValidEmail(primaryEmail)) {
+      emails.push(primaryEmail);
+    }
+
+    (user?.linkedAccounts || []).forEach((account) => {
+      const emailFromAccount = (account as { email?: string }).email;
+      if (isValidEmail(emailFromAccount)) {
+        emails.push(emailFromAccount);
+        return;
+      }
+
+      if (account.type === 'email') {
+        const addressAsEmail = (account as { address?: string }).address;
+        if (isValidEmail(addressAsEmail)) {
+          emails.push(addressAsEmail);
+        }
+      }
+    });
+
+    return emails;
+  }, [user]);
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -44,7 +75,17 @@ export function GetCreditsButton() {
     try {
       // Get user data for checkout
       const userData = getUserData();
-      await redirectToCheckout(amountNum, userData?.email, userData?.user_id);
+
+      const userDataEmail = isValidEmail(userData?.email) ? userData?.email : undefined;
+
+      const resolvedEmail = resolvePrivyEmails.find(isValidEmail) || userDataEmail;
+
+      if (userData && resolvedEmail && userData.email !== resolvedEmail) {
+        const updatedUserData: UserData = { ...userData, email: resolvedEmail };
+        saveUserData(updatedUserData);
+      }
+
+      await redirectToCheckout(amountNum, resolvedEmail, userData?.user_id);
     } catch (error) {
       console.log('Checkout error:', error);
       alert('Failed to start checkout. Please try again.');

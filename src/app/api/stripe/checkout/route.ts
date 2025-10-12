@@ -4,6 +4,10 @@ export async function POST(req: NextRequest) {
   try {
     const { amount, userEmail, userId, apiKey } = await req.json();
 
+    const normalizedEmail = typeof userEmail === 'string' && userEmail.includes('@') && !userEmail.startsWith('did:privy:')
+      ? userEmail
+      : undefined;
+
     // Validate amount
     if (!amount || amount < 1) {
       return NextResponse.json(
@@ -32,7 +36,7 @@ export async function POST(req: NextRequest) {
       amount: amount * 100, // Convert dollars to cents
       currency: 'usd',
       description: `${amount} credits for Gatewayz AI platform`,
-      customer_email: userEmail,
+      customer_email: normalizedEmail,
       success_url: `${frontendUrl}/settings/credits?session_id={{CHECKOUT_SESSION_ID}}`,
       cancel_url: `${frontendUrl}/settings/credits`,
     };

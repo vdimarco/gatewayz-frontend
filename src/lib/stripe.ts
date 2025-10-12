@@ -15,9 +15,14 @@ export const redirectToCheckout = async (amount: number, userEmail?: string, use
     // Get API key from localStorage
     const apiKey = getApiKey();
 
+    const sanitizedEmail =
+      typeof userEmail === 'string' && !userEmail.startsWith('did:privy:') && userEmail.includes('@')
+        ? userEmail
+        : undefined;
+
     console.log('Checkout - API key exists:', !!apiKey);
     console.log('Checkout - Amount:', amount);
-    console.log('Checkout - User email:', userEmail);
+    console.log('Checkout - User email:', sanitizedEmail || 'not provided');
     console.log('Checkout - User ID:', userId);
 
     if (!apiKey) {
@@ -32,7 +37,7 @@ export const redirectToCheckout = async (amount: number, userEmail?: string, use
       },
       body: JSON.stringify({
         amount,
-        userEmail,
+        userEmail: sanitizedEmail,
         userId,
         apiKey, // Pass API key to the route handler
       }),
