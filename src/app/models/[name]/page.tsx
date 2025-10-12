@@ -204,10 +204,12 @@ export default function ModelProfilePage() {
                                 const foundModel = models.find((m: Model) => m.id === modelId);
                                 if (foundModel) {
                                     setModel(foundModel);
+                                    setLoading(false);
+                                    return; // Only return if model was found in cache
                                 }
-                                setLoading(false);
+                                // If model not found in cache, continue to fetch from API
+                                console.log(`Model ${modelId} not in cache, fetching from API...`);
                             }
-                            return;
                         }
                     } catch (e) {
                         console.log('Cache parse error:', e);
