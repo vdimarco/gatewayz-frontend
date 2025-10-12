@@ -206,6 +206,49 @@ function CreditsPageContent() {
       // Auto-hide success message after 10 seconds
       setTimeout(() => setShowSuccessMessage(false), 10000);
 
+      // Fetch fresh credits and transactions after successful payment
+      const fetchFreshData = async () => {
+        try {
+          // Fetch credits
+          const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/profile`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.credits !== undefined) {
+              setCredits(data.credits);
+              // Update localStorage with fresh credits
+              const userData = getUserData();
+              if (userData) {
+                localStorage.setItem('gatewayz_user', JSON.stringify({
+                  ...userData,
+                  credits: data.credits
+                }));
+              }
+            }
+          }
+
+          // Fetch transactions
+          const txnResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/user/credit-transactions?limit=50`);
+          if (txnResponse.ok) {
+            const txnData = await txnResponse.json();
+            if (Array.isArray(txnData.transactions)) {
+              const mappedTransactions = txnData.transactions.map((txn: any) => ({
+                id: txn.id,
+                amount: txn.amount,
+                transaction_type: txn.transaction_type,
+                created_at: txn.created_at,
+                description: txn.description,
+                balance: txn.balance_after
+              }));
+              setTransactions(mappedTransactions);
+            }
+          }
+        } catch (error) {
+          console.log('Could not fetch fresh data after payment');
+        }
+      };
+
+      fetchFreshData();
+
       // Clean up URL
       window.history.replaceState({}, '', '/settings/credits');
     }
