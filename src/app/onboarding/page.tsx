@@ -145,10 +145,15 @@ export default function OnboardingPage() {
             .filter((model: any) => model.time_period === 'Top this month')
             .sort((a: any, b: any) => a.rank - b.rank)
             .slice(0, 5)
-            .map((model: any) => ({
-              id: model.model_name,
-              name: model.model_name
-            }));
+            .map((model: any) => {
+              // Extract model ID from URL (e.g., "https://openrouter.ai/x-ai/grok-code-fast-1" -> "x-ai/grok-code-fast-1")
+              const urlParts = model.model_url.split('/');
+              const modelId = urlParts.slice(-2).join('/'); // Get last two parts (provider/model)
+              return {
+                id: modelId,
+                name: model.model_name
+              };
+            });
 
           if (topModels.length > 0) {
             setModels(topModels);
