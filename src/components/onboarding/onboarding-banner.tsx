@@ -116,7 +116,7 @@ export function OnboardingBanner() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="!bg-white/20 !text-white hover:!bg-white/30 hover:!text-white font-semibold border border-white/30"
+                  className="!bg-white/20 !text-black hover:!bg-white/30 hover:!text-white font-semibold border border-white/30"
                 >
                   {nextTask.title}
                   <ArrowRight className="ml-1 h-4 w-4" />
