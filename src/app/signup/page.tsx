@@ -100,7 +100,7 @@ function SignupContent() {
             <ul className="text-sm text-muted-foreground space-y-1">
               <li className="flex items-center gap-2">
                 <span className="text-green-600">✓</span>
-                Access to 300+ AI models
+                Access to 10,000+ AI models
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-green-600">✓</span>
