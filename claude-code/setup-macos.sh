@@ -65,7 +65,7 @@ fi
 # Step 3: Install Claude Code Router
 echo ""
 print_step "Installing Claude Code Router..."
-if npm install -g @musistudio/claude-code-router > /dev/null 2>&1; then
+if npm install -g @alpaca-network/claude-code-router > /dev/null 2>&1; then
     print_success "Claude Code Router installed"
 else
     print_error "Failed to install Claude Code Router"
