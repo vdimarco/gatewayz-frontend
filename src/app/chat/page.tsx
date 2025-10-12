@@ -394,9 +394,9 @@ const SessionListItem = ({
     const [menuOpen, setMenuOpen] = React.useState(false);
 
     return (
-        <li key={session.id} className="group relative">
+        <li key={session.id} className="group relative min-w-0">
             <div
-                className="relative"
+                className="relative min-w-0"
                 onContextMenu={(e) => {
                     e.preventDefault();
                     setMenuOpen(true);
@@ -526,9 +526,9 @@ const ChatSidebar = ({ sessions, activeSessionId, switchToSession, createNewChat
                 </div>
             ) : (
                 Object.entries(groupedSessions).map(([groupName, chatSessions]) => (
-                    <div key={groupName}>
+                    <div key={groupName} className="min-w-0">
                         <h3 className="text-xs font-semibold text-muted-foreground uppercase my-2 px-3">{groupName}</h3>
-                        <ul className="space-y-1">
+                        <ul className="space-y-1 min-w-0">
                             {chatSessions.map(session => (
                                 <SessionListItem
                                     key={session.id}
