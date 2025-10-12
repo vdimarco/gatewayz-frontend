@@ -141,8 +141,13 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
       }
 
       // Clear referral code after successful authentication
+      // Also set a flag to show bonus credits notification
       if (referralCode) {
         localStorage.removeItem('gatewayz_referral_code');
+        // Set flag to show referral bonus notification on chat page
+        if (authData.is_new_user ?? isNewUser) {
+          localStorage.setItem('gatewayz_show_referral_bonus', 'true');
+        }
         console.log('Referral code cleared from localStorage after successful auth');
       }
 

@@ -792,6 +792,27 @@ function ChatPageContent() {
         }
     }, [shouldAutoSend, activeSessionId, message, selectedModel, loading, isStreamingResponse]);
 
+    // Check for referral bonus notification flag
+    useEffect(() => {
+        if (!ready || !authenticated) return;
+
+        // Check if we should show referral bonus notification
+        const showReferralBonus = localStorage.getItem('gatewayz_show_referral_bonus');
+        if (showReferralBonus === 'true') {
+            // Remove the flag
+            localStorage.removeItem('gatewayz_show_referral_bonus');
+
+            // Show the bonus credits notification
+            setTimeout(() => {
+                toast({
+                    title: "Bonus Credits Added!",
+                    description: "An additional $10 in free credits has been added to your account from your referral. Start chatting!",
+                    duration: 8000,
+                });
+            }, 1000); // Delay to allow page to settle
+        }
+    }, [ready, authenticated, toast]);
+
     useEffect(() => {
         // Load sessions from API when authenticated and API key is available
         if (!ready) {
