@@ -407,10 +407,10 @@ const SessionListItem = ({
                     className="w-full justify-start items-start text-left flex flex-col h-auto py-1.5 pl-2 pr-8 rounded-lg min-w-0"
                     onClick={() => switchToSession(session.id)}
                 >
-                    <span className="font-medium truncate w-full text-sm leading-tight">
+                    <span className="font-medium truncate max-w-[80%] text-sm leading-tight block">
                         {session.title}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate w-full leading-tight mt-0.5">
+                    <span className="text-xs text-muted-foreground truncate max-w-[80%] leading-tight mt-0.5 block">
                         {formatDistanceToNow(session.startTime, { addSuffix: true })}
                     </span>
                 </Button>
