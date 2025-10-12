@@ -28,13 +28,9 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   // React optimization
   reactStrictMode: true,
-  // SWC minification
-  swcMinify: true,
   // Optimize power preference
   poweredByHeader: false,
   experimental: {
-    // Enable optimized CSS loading
-    optimizeCss: true,
     // Enable server-side chunking
     serverActions: {
       bodySizeLimit: '2mb',
