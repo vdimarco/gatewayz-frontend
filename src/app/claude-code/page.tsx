@@ -90,15 +90,20 @@ export default function ClaudeCodePage() {
 
   const CopyButton = ({ text, id }: { text: string; id: string }) => (
     <Button
-      variant="ghost"
       size="sm"
-      className="h-8 w-8 p-0"
+      className="h-8 px-3 flex-shrink-0 bg-white text-black hover:bg-gray-200 border border-gray-300"
       onClick={() => copyToClipboard(text, id)}
     >
       {copiedStates[id] ? (
-        <Check className="h-4 w-4 text-green-600" />
+        <>
+          <Check className="h-4 w-4 mr-1 text-green-600" />
+          <span className="text-xs font-medium">Copied!</span>
+        </>
       ) : (
-        <Copy className="h-4 w-4" />
+        <>
+          <Copy className="h-4 w-4 mr-1" />
+          <span className="text-xs font-medium">Copy</span>
+        </>
       )}
     </Button>
   );
