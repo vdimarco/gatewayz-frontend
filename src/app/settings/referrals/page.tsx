@@ -107,30 +107,29 @@ function ReferralsPageContent() {
 
       try {
         // Fetch referral code
-        const codeResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/user/referral-code`);
+        const codeResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/referral/code`);
         if (codeResponse.ok) {
           const codeData = await codeResponse.json();
           setReferralCode(codeData.referral_code || '');
           setReferralLink(`${window.location.origin}/signup?ref=${codeData.referral_code}`);
         }
 
-        // Fetch referral transactions
-        const referralsResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/user/referrals`);
-        if (referralsResponse.ok) {
-          const referralsData = await referralsResponse.json();
-          if (Array.isArray(referralsData.referrals)) {
-            setReferrals(referralsData.referrals);
+        // Fetch referral stats
+        const statsResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/referral/stats`);
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
 
-            // Calculate stats
-            const completed = referralsData.referrals.filter((r: ReferralTransaction) => r.status === 'completed');
-            const totalEarned = completed.reduce((sum: number, r: ReferralTransaction) => sum + r.reward_amount, 0);
-
-            setStats({
-              totalReferrals: referralsData.referrals.length,
-              completedReferrals: completed.length,
-              totalEarned
-            });
+          // Set referrals from stats response
+          if (Array.isArray(statsData.referrals)) {
+            setReferrals(statsData.referrals);
           }
+
+          // Set stats from response
+          setStats({
+            totalReferrals: statsData.total_uses || 0,
+            completedReferrals: statsData.referrals?.filter((r: any) => r.status === 'completed').length || 0,
+            totalEarned: statsData.total_earned || 0
+          });
         }
       } catch (error) {
         console.error('Error fetching referral data:', error);
