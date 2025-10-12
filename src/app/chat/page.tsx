@@ -666,8 +666,8 @@ function ChatPageContent() {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState('');
     const [selectedModel, setSelectedModel] = useState<ModelOption | null>({
-        value: 'switchpoint/router',
-        label: 'Switchpoint Router',
+        value: 'openrouter/auto',
+        label: 'Auto Router',
         category: 'Free'
     });
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -1406,7 +1406,7 @@ function ChatPageContent() {
                     // 4. Fastest DeepSeek model
                     // 5. Most recent Gemini model
                     const fallbackModels: ModelOption[] = [
-                        { value: 'switchpoint/router', label: 'Switchpoint Router', category: 'Free' },
+                        { value: 'openrouter/auto', label: 'Auto Router', category: 'Free' },
                         { value: 'anthropic/claude-3.7-sonnet', label: 'Claude 3.7 Sonnet', category: 'Paid' },
                         { value: 'openai/gpt-4o', label: 'GPT-4o', category: 'Paid' },
                         { value: 'deepseek/deepseek-chat', label: 'DeepSeek Chat', category: 'Free' },
