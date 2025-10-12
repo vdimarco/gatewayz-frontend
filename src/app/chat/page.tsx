@@ -439,63 +439,65 @@ const ChatSidebar = ({ sessions, activeSessionId, switchToSession, createNewChat
                 Object.entries(groupedSessions).map(([groupName, chatSessions]) => (
                     <div key={groupName}>
                         <h3 className="text-xs font-semibold text-muted-foreground uppercase my-2 px-3">{groupName}</h3>
-                        <ul className="overflow-hidden">
+                        <ul className="space-y-1">
                             {chatSessions.map(session => (
                                 <li key={session.id} className="group relative">
-                                    <Button
-                                        variant={activeSessionId === session.id ? "secondary" : "ghost"}
-                                        className="w-full justify-start items-start text-left flex flex-col h-auto py-2 rounded-lg pr-16"
-                                        onClick={() => switchToSession(session.id)}
-                                    >
-                                        <span className="font-medium truncate w-full block">
-                                            {session.title}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground truncate w-full block">
-                                            {formatDistanceToNow(session.startTime, { addSuffix: true })}
-                                        </span>
-                                    </Button>
-
-                                    {/* Three dots menu - only visible on hover */}
-                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon" 
-                                                    className="h-6 w-6 hover:bg-muted/50"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-48">
-                                                <DropdownMenuItem
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        const newTitle = prompt('Rename chat:', session.title);
-                                                        if (newTitle && newTitle.trim() && newTitle !== session.title) {
-                                                            onRenameSession(session.id, newTitle.trim());
-                                                        }
-                                                    }}
-                                                >
-                                                    <Pencil className="h-4 w-4 mr-2" />
-                                                    Rename
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem 
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (confirm('Are you sure you want to delete this chat?')) {
-                                                            onDeleteSession(session.id);
-                                                        }
-                                                    }}
-                                                    className="text-destructive focus:text-destructive"
-                                                >
-                                                    <Trash2 className="h-4 w-4 mr-2" />
-                                                    Delete
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </div>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant={activeSessionId === session.id ? "secondary" : "ghost"}
+                                                className="w-full justify-start items-start text-left flex flex-col h-auto py-2 px-3 rounded-lg"
+                                                onClick={() => switchToSession(session.id)}
+                                                onContextMenu={(e) => {
+                                                    e.preventDefault();
+                                                }}
+                                            >
+                                                <span className="font-medium truncate w-full block pr-8">
+                                                    {session.title}
+                                                </span>
+                                                <span className="text-xs text-muted-foreground truncate w-full block">
+                                                    {formatDistanceToNow(session.startTime, { addSuffix: true })}
+                                                </span>
+                                                {/* Three dots menu - visible on hover */}
+                                                <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto">
+                                                    <div
+                                                        className="h-6 w-6 flex items-center justify-center hover:bg-muted/50 rounded"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                        }}
+                                                    >
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </div>
+                                                </div>
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-48">
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const newTitle = prompt('Rename chat:', session.title);
+                                                    if (newTitle && newTitle.trim() && newTitle !== session.title) {
+                                                        onRenameSession(session.id, newTitle.trim());
+                                                    }
+                                                }}
+                                            >
+                                                <Pencil className="h-4 w-4 mr-2" />
+                                                Rename
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (confirm('Are you sure you want to delete this chat?')) {
+                                                        onDeleteSession(session.id);
+                                                    }
+                                                }}
+                                                className="text-destructive focus:text-destructive"
+                                            >
+                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </li>
                             ))}
                         </ul>
