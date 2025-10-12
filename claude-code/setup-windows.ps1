@@ -89,8 +89,8 @@ try {
 Write-Host ""
 Write-Step "Installing Claude Code Router..."
 try {
-    Write-Host "Running: npm install -g @alpaca-network/claude-code-router" -ForegroundColor Gray
-    $installOutput = npm install -g @alpaca-network/claude-code-router 2>&1
+    Write-Host "Running: npm install -g @musistudio/claude-code-router" -ForegroundColor Gray
+    $installOutput = npm install -g @musistudio/claude-code-router 2>&1
     $installExitCode = $LASTEXITCODE
 
     # Show output if there were errors
@@ -111,8 +111,8 @@ try {
 
         # Try reinstalling
         Write-Host "Uninstalling and reinstalling..." -ForegroundColor Yellow
-        npm uninstall -g @alpaca-network/claude-code-router 2>&1 | Out-Null
-        $reinstallOutput = npm install -g @alpaca-network/claude-code-router 2>&1
+        npm uninstall -g @musistudio/claude-code-router 2>&1 | Out-Null
+        $reinstallOutput = npm install -g @musistudio/claude-code-router 2>&1
 
         $ccrPath = Get-Command ccr -ErrorAction SilentlyContinue
         if ($ccrPath) {
@@ -145,7 +145,7 @@ try {
     Write-Host "Error: $_" -ForegroundColor Red
     Write-Host ""
     Write-Host "Manual installation command:" -ForegroundColor Yellow
-    Write-Host "  npm install -g @alpaca-network/claude-code-router" -ForegroundColor Cyan
+    Write-Host "  npm install -g @musistudio/claude-code-router" -ForegroundColor Cyan
     Write-Host ""
     exit 1
 }
