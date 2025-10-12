@@ -90,29 +90,60 @@ Write-Host ""
 Write-Step "Installing Claude Code Router..."
 try {
     Write-Host "Running: npm install -g @alpaca-network/claude-code-router" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "DEBUG INFO:" -ForegroundColor Cyan
+    Write-Host "  NPM version: $(npm --version)" -ForegroundColor Gray
+    Write-Host "  NPM global prefix: $(npm config get prefix)" -ForegroundColor Gray
+    Write-Host "  Current PATH contains: $env:PATH" -ForegroundColor Gray
+    Write-Host ""
+
     $installOutput = npm install -g @alpaca-network/claude-code-router 2>&1
     $installExitCode = $LASTEXITCODE
 
+    # Always show npm output for debugging
+    Write-Host "NPM Install Output:" -ForegroundColor Cyan
+    Write-Host $installOutput -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "Exit code: $installExitCode" -ForegroundColor $(if ($installExitCode -eq 0) { "Green" } else { "Red" })
+    Write-Host ""
+
     # Show output if there were errors
     if ($installExitCode -ne 0) {
-        Write-Host "NPM output:" -ForegroundColor Yellow
-        Write-Host $installOutput -ForegroundColor Gray
         throw "npm install failed with exit code $installExitCode"
     }
 
     # Verify installation
+    Write-Host "Verifying installation..." -ForegroundColor Cyan
     $ccrPath = Get-Command ccr -ErrorAction SilentlyContinue
     if ($ccrPath) {
         Write-Success "Claude Code Router installed at: $($ccrPath.Source)"
     } else {
         Write-Host "⚠ Package installed but 'ccr' command not found. Trying to fix..." -ForegroundColor Yellow
-        Write-Host "NPM install output:" -ForegroundColor Gray
-        Write-Host $installOutput -ForegroundColor Gray
+        Write-Host ""
+
+        # Check where npm actually installed it
+        Write-Host "DEBUG: Checking npm global installation..." -ForegroundColor Cyan
+        $npmRoot = npm root -g 2>&1
+        Write-Host "  NPM global root: $npmRoot" -ForegroundColor Gray
+
+        $npmList = npm list -g @alpaca-network/claude-code-router 2>&1
+        Write-Host "  NPM list output:" -ForegroundColor Gray
+        Write-Host "  $npmList" -ForegroundColor Gray
+        Write-Host ""
 
         # Try reinstalling
-        Write-Host "Uninstalling and reinstalling..." -ForegroundColor Yellow
-        npm uninstall -g @alpaca-network/claude-code-router 2>&1 | Out-Null
+        Write-Host "Attempting fix: Uninstalling and reinstalling..." -ForegroundColor Yellow
+        $uninstallOutput = npm uninstall -g @alpaca-network/claude-code-router 2>&1
+        Write-Host "Uninstall output: $uninstallOutput" -ForegroundColor Gray
+
         $reinstallOutput = npm install -g @alpaca-network/claude-code-router 2>&1
+        Write-Host "Reinstall output:" -ForegroundColor Gray
+        Write-Host $reinstallOutput -ForegroundColor Gray
+        Write-Host ""
+
+        # Refresh PATH
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+        Write-Host "Refreshed PATH environment variable" -ForegroundColor Cyan
 
         $ccrPath = Get-Command ccr -ErrorAction SilentlyContinue
         if ($ccrPath) {
@@ -125,16 +156,29 @@ try {
             Write-Host ""
             Write-Host "The package installed but 'ccr' command is not available." -ForegroundColor Yellow
             Write-Host ""
-            Write-Host "NPM global prefix: " -NoNewline -ForegroundColor White
-            Write-Host (npm config get prefix) -ForegroundColor Cyan
-            Write-Host ""
-            Write-Host "Reinstall output:" -ForegroundColor White
-            Write-Host $reinstallOutput -ForegroundColor Gray
+            Write-Host "DIAGNOSTIC INFO:" -ForegroundColor White
+            Write-Host "  NPM global prefix: $(npm config get prefix)" -ForegroundColor Cyan
+            Write-Host "  NPM global root: $(npm root -g)" -ForegroundColor Cyan
+
+            # Check if the bin directory exists
+            $npmPrefix = npm config get prefix
+            $binPath = "$npmPrefix"
+            Write-Host "  Expected bin directory: $binPath" -ForegroundColor Cyan
+            Write-Host "  Bin directory exists: $(Test-Path $binPath)" -ForegroundColor Cyan
+
+            if (Test-Path $binPath) {
+                Write-Host "  Contents of bin directory:" -ForegroundColor Cyan
+                Get-ChildItem $binPath -Filter "ccr*" | ForEach-Object {
+                    Write-Host "    - $($_.Name)" -ForegroundColor Gray
+                }
+            }
+
             Write-Host ""
             Write-Host "Possible solutions:" -ForegroundColor White
-            Write-Host "  1. Close and reopen PowerShell" -ForegroundColor White
-            Write-Host "  2. Add npm's bin directory to PATH" -ForegroundColor White
+            Write-Host "  1. Close and reopen PowerShell (PATH may not be updated)" -ForegroundColor White
+            Write-Host "  2. Add npm's bin directory to PATH: $binPath" -ForegroundColor White
             Write-Host "  3. Try: npm config set prefix $env:APPDATA\npm" -ForegroundColor White
+            Write-Host "  4. Manual install: npm install -g @alpaca-network/claude-code-router" -ForegroundColor White
             Write-Host ""
             throw "ccr command not available after installation"
         }
@@ -146,6 +190,9 @@ try {
     Write-Host ""
     Write-Host "Manual installation command:" -ForegroundColor Yellow
     Write-Host "  npm install -g @alpaca-network/claude-code-router" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "For more help, please report this issue with the DEBUG INFO above at:" -ForegroundColor Yellow
+    Write-Host "  https://github.com/Alpaca-Network/gatewayz-frontend/issues" -ForegroundColor Cyan
     Write-Host ""
     exit 1
 }
