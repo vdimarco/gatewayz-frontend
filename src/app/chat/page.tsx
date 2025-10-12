@@ -394,9 +394,9 @@ const SessionListItem = ({
     const [menuOpen, setMenuOpen] = React.useState(false);
 
     return (
-        <li key={session.id} className="group relative">
+        <li key={session.id} className="group relative overflow-hidden">
             <div
-                className="relative"
+                className="relative overflow-hidden"
                 onContextMenu={(e) => {
                     e.preventDefault();
                     setMenuOpen(true);
@@ -404,7 +404,7 @@ const SessionListItem = ({
             >
                 <Button
                     variant={activeSessionId === session.id ? "secondary" : "ghost"}
-                    className="w-full justify-start items-start text-left flex flex-col h-auto py-2 px-3 rounded-lg"
+                    className="w-full justify-start items-start text-left flex flex-col h-auto py-2 px-3 rounded-lg overflow-hidden"
                     onClick={() => switchToSession(session.id)}
                 >
                     <span className="font-medium truncate w-full block pr-8">
@@ -416,7 +416,7 @@ const SessionListItem = ({
                 </Button>
 
                 {/* Three dots menu - visible on hover */}
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto z-10">
                     <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                         <DropdownMenuTrigger asChild>
                             <Button
