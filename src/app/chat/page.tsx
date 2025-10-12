@@ -1399,10 +1399,16 @@ function ChatPageContent() {
                 const shouldFallback = is500Error || is404Error;
 
                 if (shouldFallback && selectedModel) {
-                    // Define fallback models in order of preference
+                    // Define fallback models in order of preference:
+                    // 1. Auto router (default)
+                    // 2. Most recent Claude model
+                    // 3. Most recent GPT model
+                    // 4. Fastest DeepSeek model
+                    // 5. Most recent Gemini model
                     const fallbackModels: ModelOption[] = [
-                        { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet', category: 'Paid' },
-                        { value: 'openai/gpt-4', label: 'GPT-4', category: 'Paid' },
+                        { value: 'switchpoint/router', label: 'Switchpoint Router', category: 'Free' },
+                        { value: 'anthropic/claude-3.7-sonnet', label: 'Claude 3.7 Sonnet', category: 'Paid' },
+                        { value: 'openai/gpt-4o', label: 'GPT-4o', category: 'Paid' },
                         { value: 'deepseek/deepseek-chat', label: 'DeepSeek Chat', category: 'Free' },
                         { value: 'google/gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash', category: 'Free' }
                     ];
