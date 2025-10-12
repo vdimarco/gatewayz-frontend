@@ -441,10 +441,10 @@ const ChatSidebar = ({ sessions, activeSessionId, switchToSession, createNewChat
                         <h3 className="text-xs font-semibold text-muted-foreground uppercase my-2 px-3">{groupName}</h3>
                         <ul className="overflow-hidden">
                             {chatSessions.map(session => (
-                                <li key={session.id} className="group relative overflow-hidden">
+                                <li key={session.id} className="group relative">
                                     <Button
                                         variant={activeSessionId === session.id ? "secondary" : "ghost"}
-                                        className="w-full justify-start items-start text-left flex flex-col h-auto py-2 rounded-lg pr-16 overflow-hidden"
+                                        className="w-full justify-start items-start text-left flex flex-col h-auto py-2 rounded-lg pr-16"
                                         onClick={() => switchToSession(session.id)}
                                     >
                                         <span className="font-medium truncate w-full block">
