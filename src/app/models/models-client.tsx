@@ -137,6 +137,23 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'tokens-desc');
   const [releaseDateFilter, setReleaseDateFilter] = useState<string>(searchParams.get('releaseDate') || 'all');
 
+  // Mark explore task as complete in onboarding when page loads
+  useEffect(() => {
+    try {
+      const savedTasks = localStorage.getItem('gatewayz_onboarding_tasks');
+      if (savedTasks) {
+        const taskState = JSON.parse(savedTasks);
+        if (!taskState.explore) {
+          taskState.explore = true;
+          localStorage.setItem('gatewayz_onboarding_tasks', JSON.stringify(taskState));
+          console.log('Onboarding - Explore task marked as complete');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update onboarding task:', error);
+    }
+  }, []); // Run once on mount
+
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {

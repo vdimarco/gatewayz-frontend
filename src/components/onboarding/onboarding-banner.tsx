@@ -114,9 +114,9 @@ export function OnboardingBanner() {
               <span className="text-sm">Next step:</span>
               <Link href={nextTask.path}>
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
-                  className="text-white hover:bg-white/20 hover:text-white font-semibold"
+                  className="bg-white/20 text-white hover:bg-white/30 hover:text-white font-semibold border border-white/30"
                 >
                   {nextTask.title}
                   <ArrowRight className="ml-1 h-4 w-4" />

@@ -1459,6 +1459,21 @@ function ChatPageContent() {
                     } catch (error) {
                         console.error('Failed to update session title in API:', error);
                     }
+
+                    // Mark chat task as complete in onboarding
+                    try {
+                        const savedTasks = localStorage.getItem('gatewayz_onboarding_tasks');
+                        if (savedTasks) {
+                            const taskState = JSON.parse(savedTasks);
+                            if (!taskState.chat) {
+                                taskState.chat = true;
+                                localStorage.setItem('gatewayz_onboarding_tasks', JSON.stringify(taskState));
+                                console.log('Onboarding - Chat task marked as complete');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Failed to update onboarding task:', error);
+                    }
                 }
 
             } catch (streamError) {
