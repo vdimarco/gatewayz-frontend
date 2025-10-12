@@ -78,6 +78,7 @@ export default function OnboardingPage() {
     if (hasSeenOnboarding) {
       // Redirect to chat if they've already completed onboarding
       router.push('/chat');
+      return;
     }
 
     // Load API key
@@ -98,8 +99,33 @@ export default function OnboardingPage() {
 
     // Auto-mark first task as complete
     const userData = getUserData();
-    if (userData) {
-      markTaskComplete('welcome');
+    if (userData && savedTasks) {
+      const parsedTasks = JSON.parse(savedTasks);
+      if (!parsedTasks.welcome) {
+        setTasks(prev => {
+          const updated = prev.map(task =>
+            task.id === 'welcome' ? { ...task, completed: true } : task
+          );
+          const taskState: Record<string, boolean> = {};
+          updated.forEach(task => {
+            taskState[task.id] = task.completed;
+          });
+          localStorage.setItem('gatewayz_onboarding_tasks', JSON.stringify(taskState));
+          return updated;
+        });
+      }
+    } else if (userData) {
+      // First time - create task state with welcome completed
+      const taskState: Record<string, boolean> = {
+        welcome: true,
+        chat: false,
+        explore: false,
+        credits: false
+      };
+      localStorage.setItem('gatewayz_onboarding_tasks', JSON.stringify(taskState));
+      setTasks(prev => prev.map(task =>
+        task.id === 'welcome' ? { ...task, completed: true } : task
+      ));
     }
 
     // Fetch top models from rankings endpoint
