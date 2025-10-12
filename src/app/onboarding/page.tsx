@@ -209,7 +209,7 @@ console.log(response.choices[0].message.content);`
                   <span className="font-semibold">Developers:</span>
                 </div>
                 <Link
-                  href="https://docs.gatewayz.ai/sdk"
+                  href="https://github.com/Alpaca-Network/gatewayz-python"
                   target="_blank"
                   className="flex items-center gap-2 hover:underline transition-all"
                 >
@@ -444,7 +444,7 @@ console.log(response.choices[0].message.content);`
                 <p className="text-sm text-muted-foreground">Learn how to use the platform</p>
               </Link>
               <Link
-                href="https://docs.gatewayz.ai/sdk"
+                href="https://github.com/Alpaca-Network/gatewayz-python"
                 target="_blank"
                 className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
               >
