@@ -152,15 +152,14 @@ export default function IntegrationsPage() {
                 <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2 group">
                   <code className="flex-1 overflow-x-auto text-green-400">irm https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-windows.ps1 | iex</code>
                   <Button
-                    variant="secondary"
                     size="sm"
-                    className="h-8 px-3 flex-shrink-0 hover:bg-primary hover:text-primary-foreground transition-colors"
+                    className="h-8 px-3 flex-shrink-0 bg-white text-black hover:bg-gray-200 border border-gray-300"
                     onClick={() => {
                       navigator.clipboard.writeText('irm https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-windows.ps1 | iex');
                     }}
                   >
                     <Copy className="h-4 w-4 mr-1" />
-                    <span className="text-xs">Copy</span>
+                    <span className="text-xs font-medium">Copy</span>
                   </Button>
                 </div>
               </div>
@@ -173,15 +172,14 @@ export default function IntegrationsPage() {
                 <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2 group">
                   <code className="flex-1 overflow-x-auto text-green-400">bash &lt;(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-macos.sh)</code>
                   <Button
-                    variant="secondary"
                     size="sm"
-                    className="h-8 px-3 flex-shrink-0 hover:bg-primary hover:text-primary-foreground transition-colors"
+                    className="h-8 px-3 flex-shrink-0 bg-white text-black hover:bg-gray-200 border border-gray-300"
                     onClick={() => {
                       navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-macos.sh)');
                     }}
                   >
                     <Copy className="h-4 w-4 mr-1" />
-                    <span className="text-xs">Copy</span>
+                    <span className="text-xs font-medium">Copy</span>
                   </Button>
                 </div>
               </div>
@@ -194,15 +192,14 @@ export default function IntegrationsPage() {
                 <div className="bg-slate-950 dark:bg-slate-900 border border-slate-800 rounded-md p-3 font-mono text-xs flex items-center justify-between gap-2 group">
                   <code className="flex-1 overflow-x-auto text-green-400">bash &lt;(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-linux.sh)</code>
                   <Button
-                    variant="secondary"
                     size="sm"
-                    className="h-8 px-3 flex-shrink-0 hover:bg-primary hover:text-primary-foreground transition-colors"
+                    className="h-8 px-3 flex-shrink-0 bg-white text-black hover:bg-gray-200 border border-gray-300"
                     onClick={() => {
                       navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-linux.sh)');
                     }}
                   >
                     <Copy className="h-4 w-4 mr-1" />
-                    <span className="text-xs">Copy</span>
+                    <span className="text-xs font-medium">Copy</span>
                   </Button>
                 </div>
               </div>
