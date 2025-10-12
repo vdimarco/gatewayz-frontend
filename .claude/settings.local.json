@@ -53,7 +53,11 @@
       "Bash(npm info:*)",
       "Bash(npm uninstall:*)",
       "Bash(npm install:*)",
-      "WebFetch(domain:pagespeed.web.dev)"
+      "WebFetch(domain:pagespeed.web.dev)",
+      "Bash(echo $env:GATEWAYZ_API_KEY)",
+      "Bash(git revert:*)",
+      "Bash(del nul)",
+      "Bash(del claude-codenul)"
     ],
     "deny": [],
     "ask": []

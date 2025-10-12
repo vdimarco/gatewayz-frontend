@@ -72,22 +72,22 @@ const FeaturedModelCard = ({
       >
         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-200 flex-shrink-0 p-1">
           {model.logo_url ? (
-            <Image src={model.logo_url} alt={model.by} width={42} height={42} className="w-full h-full object-contain" loading="lazy" />
+            <img src={model.logo_url} alt={model.by} width="42" height="42" className="w-full h-full object-contain" loading="lazy" />
           ) : (
             <>
               {model.by === 'google' && (
                 <div className="flex w-full h-full">
-                  <Image src="/Google_Logo-black.svg" alt="Google" width={42} height={42} className="w-full h-full object-contain" loading="lazy" />
+                  <img src="/Google_Logo-black.svg" alt="Google" width="42" height="42" className="w-full h-full object-contain" loading="lazy" />
                 </div>
               )}
               {model.by === 'openai' && (
                 <div className="flex w-full h-full">
-                  <Image src="/OpenAI_Logo-black.svg" alt="OpenAI" width={42} height={42} className="w-full h-full object-contain" loading="lazy" />
+                  <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="42" height="42" className="w-full h-full object-contain" loading="lazy" />
                 </div>
               )}
               {model.by === 'anthropic' && (
                 <div className="flex w-full h-full">
-                  <Image src="/anthropic-logo.svg" alt="Anthropic" width={42} height={42} className="w-full h-full object-contain" loading="lazy" />
+                  <img src="/anthropic-logo.svg" alt="Anthropic" width="42" height="42" className="w-full h-full object-contain" loading="lazy" />
                 </div>
               )}
             </>
@@ -110,22 +110,22 @@ const FeaturedModelCard = ({
         <div className="flex gap-2 sm:gap-3 mb-2 sm:mb-4">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-200 flex-shrink-0 p-1">
               {model.logo_url ? (
-                <Image src={model.logo_url} alt={model.by} width={40} height={40} className="w-full h-full object-contain" loading="lazy" />
+                <img src={model.logo_url} alt={model.by} width="40" height="40" className="w-full h-full object-contain" loading="lazy" />
               ) : (
                 <>
                   {model.by === 'google' && (
                     <div className="flex w-full h-full">
-                      <Image src="/Google_Logo-black.svg" alt="Google" width={40} height={40} className="w-full h-full object-contain" loading="lazy" />
+                      <img src="/Google_Logo-black.svg" alt="Google" width="40" height="40" className="w-full h-full object-contain" loading="lazy" />
                     </div>
                   )}
                   {model.by === 'openai' && (
                     <div className="flex w-full h-full">
-                      <Image src="/OpenAI_Logo-black.svg" alt="OpenAI" width={40} height={40} className="w-full h-full object-contain" loading="lazy" />
+                      <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="40" height="40" className="w-full h-full object-contain" loading="lazy" />
                     </div>
                   )}
                   {model.by === 'anthropic' && (
                     <div className="flex w-full h-full">
-                      <Image src="/anthropic-logo.svg" alt="Anthropic" width={40} height={40} className="w-full h-full object-contain" loading="lazy" />
+                      <img src="/anthropic-logo.svg" alt="Anthropic" width="40" height="40" className="w-full h-full object-contain" loading="lazy" />
                     </div>
                   )}
                 </>
@@ -179,7 +179,7 @@ const FeatureCard = ({ icon, title, description, linkText, linkHref }: { icon: s
   <Card className="p-6 text-center">
     <div className="flex justify-center mb-4">
       <div className="w-16 h-16 flex items-center justify-center rounded-2xl bg-muted">
-        <Image src={`/${icon}.svg`} alt={title} width={64} height={64} className="w-full h-full" loading="lazy" />
+        <img src={`/${icon}.svg`} alt={title} width="64" height="64" className="w-full h-full" loading="lazy" />
       </div>
     </div>
     <h3 className="text-lg font-bold mb-2">{title}</h3>
@@ -604,7 +604,7 @@ console.log(completion.choices[0].message);`,
           <div className="grid md:grid-cols-3 gap-12">
             <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
               <div className="flex items-center justify-between col-span-2" >
-                <Image src="/sign-up-blue.svg" alt="Signup icon" width={100} height={100} className="w-full h-full" loading="lazy" />
+                <img src="/sign-up-blue.svg" alt="Signup icon" width="100" height="100" className="w-full h-full" loading="lazy" />
               </div>
               <div className="flex items-center justify-between col-span-5" >
                 <HowItWorksStep number={1} title="Signup" description="Create An Account To Get Started Using Your Email Or A 3rd Party.">
@@ -614,7 +614,7 @@ console.log(completion.choices[0].message);`,
             </div>
             <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
              <div className="flex items-center justify-between col-span-2" >
-                <Image src="/coins-blue.svg" alt="Credits icon" width={100} height={100} className="w-full h-full" loading="lazy" />
+                <img src="/coins-blue.svg" alt="Credits icon" width="100" height="100" className="w-full h-full" loading="lazy" />
               </div>
               <div className="flex items-center justify-between col-span-5" >
                 <HowItWorksStep number={2} title="Buy credits" description="Credits Can Be Purchased In Multiple Methods, And Used With Any Model Or Provider.">
@@ -624,7 +624,7 @@ console.log(completion.choices[0].message);`,
             </div>
             <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
               <div className="flex items-center justify-between col-span-2" >
-                <Image src="/api-blue.svg" alt="API key icon" width={100} height={100} className="w-full h-full" loading="lazy" />
+                <img src="/api-blue.svg" alt="API key icon" width="100" height="100" className="w-full h-full" loading="lazy" />
               </div>
               <div className="flex items-center justify-between col-span-5" >
                 <HowItWorksStep number={3} title="Get your API key" description="Create An API Key And Start Making Requests In An Instance.">
