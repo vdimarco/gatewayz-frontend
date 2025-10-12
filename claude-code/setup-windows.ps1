@@ -52,20 +52,36 @@ try {
     # Check if claude command already exists
     $claudePath = Get-Command claude -ErrorAction SilentlyContinue
     if ($claudePath) {
-        Write-Success "Claude Code already installed"
+        Write-Success "Claude Code already installed at: $($claudePath.Source)"
     } else {
-        npm install -g @anthropic-ai/claude-code 2>&1 | Out-Null
+        Write-Host "Running: npm install -g @anthropic-ai/claude-code" -ForegroundColor Gray
+        $claudeInstall = npm install -g @anthropic-ai/claude-code 2>&1
+        $claudeExitCode = $LASTEXITCODE
+
+        if ($claudeExitCode -ne 0) {
+            Write-Host "NPM output:" -ForegroundColor Yellow
+            Write-Host $claudeInstall -ForegroundColor Gray
+            throw "npm install failed with exit code $claudeExitCode"
+        }
+
         $claudePath = Get-Command claude -ErrorAction SilentlyContinue
         if ($claudePath) {
-            Write-Success "Claude Code installed"
+            Write-Success "Claude Code installed at: $($claudePath.Source)"
         } else {
             Write-Host "⚠ Claude Code package installed but 'claude' command not found" -ForegroundColor Yellow
+            Write-Host "Installation output:" -ForegroundColor Gray
+            Write-Host $claudeInstall -ForegroundColor Gray
             Write-Host "You may need to restart your terminal" -ForegroundColor Yellow
         }
     }
 } catch {
+    Write-Host ""
     Write-Error "Failed to install Claude Code"
     Write-Host "Error: $_" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Manual installation command:" -ForegroundColor Yellow
+    Write-Host "  npm install -g @anthropic-ai/claude-code" -ForegroundColor Cyan
+    Write-Host ""
     exit 1
 }
 
@@ -73,28 +89,64 @@ try {
 Write-Host ""
 Write-Step "Installing Claude Code Router..."
 try {
-    npm install -g @musistudio/claude-code-router 2>&1 | Out-Null
+    Write-Host "Running: npm install -g @musistudio/claude-code-router" -ForegroundColor Gray
+    $installOutput = npm install -g @musistudio/claude-code-router 2>&1
+    $installExitCode = $LASTEXITCODE
+
+    # Show output if there were errors
+    if ($installExitCode -ne 0) {
+        Write-Host "NPM output:" -ForegroundColor Yellow
+        Write-Host $installOutput -ForegroundColor Gray
+        throw "npm install failed with exit code $installExitCode"
+    }
 
     # Verify installation
     $ccrPath = Get-Command ccr -ErrorAction SilentlyContinue
     if ($ccrPath) {
-        Write-Success "Claude Code Router installed"
+        Write-Success "Claude Code Router installed at: $($ccrPath.Source)"
     } else {
         Write-Host "⚠ Package installed but 'ccr' command not found. Trying to fix..." -ForegroundColor Yellow
+        Write-Host "NPM install output:" -ForegroundColor Gray
+        Write-Host $installOutput -ForegroundColor Gray
+
+        # Try reinstalling
+        Write-Host "Uninstalling and reinstalling..." -ForegroundColor Yellow
         npm uninstall -g @musistudio/claude-code-router 2>&1 | Out-Null
-        npm install -g @musistudio/claude-code-router 2>&1 | Out-Null
+        $reinstallOutput = npm install -g @musistudio/claude-code-router 2>&1
 
         $ccrPath = Get-Command ccr -ErrorAction SilentlyContinue
         if ($ccrPath) {
-            Write-Success "Claude Code Router installed (fixed)"
+            Write-Success "Claude Code Router installed (fixed) at: $($ccrPath.Source)"
         } else {
-            Write-Error "Installation completed but 'ccr' command not available"
-            Write-Host "You may need to restart your terminal" -ForegroundColor Yellow
+            Write-Host ""
+            Write-Host "═══════════════════════════════════════════" -ForegroundColor Red
+            Write-Host "  INSTALLATION ISSUE DETECTED" -ForegroundColor Red
+            Write-Host "═══════════════════════════════════════════" -ForegroundColor Red
+            Write-Host ""
+            Write-Host "The package installed but 'ccr' command is not available." -ForegroundColor Yellow
+            Write-Host ""
+            Write-Host "NPM global prefix: " -NoNewline -ForegroundColor White
+            Write-Host (npm config get prefix) -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "Reinstall output:" -ForegroundColor White
+            Write-Host $reinstallOutput -ForegroundColor Gray
+            Write-Host ""
+            Write-Host "Possible solutions:" -ForegroundColor White
+            Write-Host "  1. Close and reopen PowerShell" -ForegroundColor White
+            Write-Host "  2. Add npm's bin directory to PATH" -ForegroundColor White
+            Write-Host "  3. Try: npm config set prefix $env:APPDATA\npm" -ForegroundColor White
+            Write-Host ""
+            throw "ccr command not available after installation"
         }
     }
 } catch {
+    Write-Host ""
     Write-Error "Failed to install Claude Code Router"
     Write-Host "Error: $_" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Manual installation command:" -ForegroundColor Yellow
+    Write-Host "  npm install -g @musistudio/claude-code-router" -ForegroundColor Cyan
+    Write-Host ""
     exit 1
 }
 
