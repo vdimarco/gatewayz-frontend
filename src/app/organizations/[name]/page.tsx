@@ -148,12 +148,12 @@ export default function OrganizationPage() {
     const fetchModels = async () => {
       try {
         setLoading(true);
-        // Use provider parameter to filter models directly from API
-        const response = await fetch(`${API_BASE_URL}/models?provider=${encodeURIComponent(organizationName)}`);
+        // Use developer parameter to filter models directly from API
+        const response = await fetch(`${API_BASE_URL}/catalog/models?developer=${encodeURIComponent(organizationName.toLowerCase())}`);
         const data = await response.json();
         const models = data.data || [];
 
-        console.log(`Found ${models.length} models for ${organizationName} from provider endpoint`);
+        console.log(`Found ${models.length} models for ${organizationName} from catalog endpoint`);
         setApiModels(models);
       } catch (error) {
         console.error('Failed to fetch models:', error);
