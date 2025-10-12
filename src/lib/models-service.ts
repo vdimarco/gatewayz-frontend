@@ -21,18 +21,19 @@ function transformModel(model: any, gateway: string) {
   };
 }
 
-export async function getModelsForGateway(gateway: string) {
+export async function getModelsForGateway(gateway: string, limit?: number) {
   // Validate gateway
   const validGateways = ['openrouter', 'portkey', 'featherless', 'chutes', 'all'];
   if (!validGateways.includes(gateway)) {
     throw new Error('Invalid gateway');
   }
 
-  console.log(`Models Service - Attempting backend: ${API_BASE_URL}/catalog/models?gateway=${gateway}`);
+  const limitParam = limit ? `&limit=${limit}` : '';
+  console.log(`Models Service - Attempting backend: ${API_BASE_URL}/catalog/models?gateway=${gateway}${limitParam}`);
 
   // Try backend first
   try {
-    const url = `${API_BASE_URL}/catalog/models?gateway=${gateway}`;
+    const url = `${API_BASE_URL}/catalog/models?gateway=${gateway}${limitParam}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: {

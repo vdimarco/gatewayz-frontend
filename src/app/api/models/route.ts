@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const gateway = searchParams.get('gateway');
+    const limit = searchParams.get('limit');
 
     if (!gateway) {
       return NextResponse.json(
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const data = await getModelsForGateway(gateway);
+    const data = await getModelsForGateway(gateway, limit ? parseInt(limit) : undefined);
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching models:', error);

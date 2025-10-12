@@ -38,9 +38,11 @@ interface ModelSelectProps {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
 
-const CACHE_KEY = 'gatewayz_models_cache_v4_all_gateways';
+const CACHE_KEY = 'gatewayz_models_cache_v5_optimized';
 const FAVORITES_KEY = 'gatewayz_favorite_models';
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes - longer cache for better performance
+const INITIAL_MODELS_LIMIT = 100; // Load top 100 models initially for faster performance
+const MAX_MODELS_PER_DEVELOPER = 10; // Limit models shown per developer for performance
 
 // Extract developer from model ID (e.g., "openai/gpt-4" -> "OpenAI")
 const getDeveloper = (modelId: string): string => {
@@ -73,6 +75,17 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
   const [favorites, setFavorites] = React.useState<Set<string>>(new Set())
   const [expandedDevelopers, setExpandedDevelopers] = React.useState<Set<string>>(new Set(['Favorites']))
   const [searchQuery, setSearchQuery] = React.useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = React.useState('')
+  const [loadAllModels, setLoadAllModels] = React.useState(false)
+
+  // Debounce search query for performance
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Load favorites from localStorage
   React.useEffect(() => {
@@ -128,41 +141,27 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
         console.log('No cache found, fetching from API');
       }
 
-      // Fetch from all gateways to get all models
+      // Fetch from all gateways - optimized to load fewer models initially
       setLoading(true);
       try {
         console.log('Fetching models from API proxy...');
-        // Fetch from OpenRouter, Portkey, and Featherless separately via frontend API proxy
-        const [openrouterRes, portkeyRes, featherlessRes] = await Promise.all([
-          fetch(`/api/models?gateway=openrouter`),
-          fetch(`/api/models?gateway=portkey`),
-          fetch(`/api/models?gateway=featherless`)
-        ]);
 
-        console.log('Fetch responses:', {
-          openrouter: openrouterRes.status,
-          portkey: portkeyRes.status,
-          featherless: featherlessRes.status
-        });
+        // Only fetch from OpenRouter initially for speed, load others on demand
+        const limit = loadAllModels ? undefined : INITIAL_MODELS_LIMIT;
+        const limitParam = limit ? `&limit=${limit}` : '';
 
-        const [openrouterData, portkeyData, featherlessData] = await Promise.all([
-          openrouterRes.json(),
-          portkeyRes.json(),
-          featherlessRes.json()
-        ]);
+        const openrouterRes = await fetch(`/api/models?gateway=openrouter${limitParam}`);
+        console.log('Fetch response:', { openrouter: openrouterRes.status });
+
+        const openrouterData = await openrouterRes.json();
 
         // Combine models from all gateways
-        const allModels = [
-          ...(openrouterData.data || []),
-          ...(portkeyData.data || []),
-          ...(featherlessData.data || [])
-        ];
+        const allModels = [...(openrouterData.data || [])];
 
         console.log('Models fetched from API:', {
           openrouter: openrouterData.data?.length || 0,
-          portkey: portkeyData.data?.length || 0,
-          featherless: featherlessData.data?.length || 0,
-          total: allModels.length
+          total: allModels.length,
+          loadedAll: loadAllModels
         });
 
         // Deduplicate models by ID - keep the first occurrence
@@ -222,7 +221,7 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
       }
     }
     fetchModels();
-  }, []);
+  }, [loadAllModels]);
 
   // Group models by developer and sort by Hugging Face popularity
   const modelsByDeveloper = React.useMemo(() => {
@@ -296,11 +295,11 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
 
   // Filter models based on search query and auto-expand matching sections
   const filteredModelsByDeveloper = React.useMemo(() => {
-    if (!searchQuery.trim()) {
+    if (!debouncedSearchQuery.trim()) {
       return modelsByDeveloper;
     }
 
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearchQuery.toLowerCase();
     const filtered: Record<string, ModelOption[]> = {};
     const developersToExpand = new Set<string>();
 
@@ -325,20 +324,20 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
     });
 
     return filtered;
-  }, [modelsByDeveloper, searchQuery]);
+  }, [modelsByDeveloper, debouncedSearchQuery]);
 
   // Filter favorite models based on search
   const filteredFavoriteModels = React.useMemo(() => {
-    if (!searchQuery.trim()) {
+    if (!debouncedSearchQuery.trim()) {
       return favoriteModels;
     }
 
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearchQuery.toLowerCase();
     return favoriteModels.filter(model =>
       model.label.toLowerCase().includes(query) ||
       model.value.toLowerCase().includes(query)
     );
-  }, [favoriteModels, searchQuery]);
+  }, [favoriteModels, debouncedSearchQuery]);
 
   return (
     <Popover open={open} onOpenChange={(isOpen) => {
@@ -441,7 +440,7 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
                 </button>
                 {expandedDevelopers.has(developer) && (
                   <div className="pb-2">
-                    {devModels.map((model) => (
+                    {(loadAllModels ? devModels : devModels.slice(0, MAX_MODELS_PER_DEVELOPER)).map((model) => (
                       <CommandItem
                         key={model.value}
                         value={model.label}
@@ -474,6 +473,27 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
                 )}
               </div>
             ))}
+
+            {/* Load More Button */}
+            {!loadAllModels && !debouncedSearchQuery && (
+              <div className="border-t p-2">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setLoadAllModels(true)}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading all models...
+                    </>
+                  ) : (
+                    `Load all models (${models.length} of 330+)`
+                  )}
+                </Button>
+              </div>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
