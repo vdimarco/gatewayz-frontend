@@ -52,7 +52,8 @@
       "Bash(where ccr)",
       "Bash(npm info:*)",
       "Bash(npm uninstall:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "WebFetch(domain:pagespeed.web.dev)"
     ],
     "deny": [],
     "ask": []

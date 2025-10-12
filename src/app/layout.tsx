@@ -9,11 +9,35 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Inter } from 'next/font/google';
 // import { GTMLoader } from '@/components/analytics/gtm-loader'; // Temporarily disabled due to layout router issues
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+  fallback: ['system-ui', 'arial'],
+  adjustFontFallback: true,
+});
 
 export const metadata: Metadata = {
   title: 'Gatewayz - One Interface To Work With Any LLM',
   description: 'From Idea To Production, Gatewayz Gives AI Teams The Toolkit, Savings, And Reliability They Need.',
+  keywords: ['AI', 'LLM', 'GPT', 'Claude', 'Gemini', 'API Gateway', 'AI Router', 'Model Routing'],
+  authors: [{ name: 'Gatewayz' }],
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -23,6 +47,15 @@ export const metadata: Metadata = {
     apple: [
       { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
+  },
+  metadataBase: new URL('https://beta.gatewayz.ai'),
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://beta.gatewayz.ai',
+    siteName: 'Gatewayz',
+    title: 'Gatewayz - One Interface To Work With Any LLM',
+    description: 'From Idea To Production, Gatewayz Gives AI Teams The Toolkit, Savings, And Reliability They Need.',
   },
 };
 
