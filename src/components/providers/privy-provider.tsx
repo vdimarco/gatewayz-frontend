@@ -82,7 +82,7 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
   const handleLoginSuccess = async (user: User) => {
     console.log('Login successful:', { user });
 
-    const existingGatewayzUser = localStorage.getItem('gatewayz_user');
+    const existingGatewayzUser = localStorage.getItem('gatewayz_user_data');
     const isNewUser = !existingGatewayzUser;
 
     try {
@@ -149,11 +149,13 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
           }
         }
 
-        localStorage.setItem('gatewayz_user', JSON.stringify({
+        localStorage.setItem('gatewayz_user_data', JSON.stringify({
           user_id: authData.user_id,
           display_name: authData.display_name || userEmail || 'User',
           email: userEmail,
           api_key: authData.api_key,
+          auth_method: authData.auth_method || 'privy',
+          privy_user_id: user.id,
           credits: authData.credits || 0,
         }));
       }
