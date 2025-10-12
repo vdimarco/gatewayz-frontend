@@ -85,12 +85,47 @@ API_KEY="${1:-$GATEWAYZ_API_KEY}"
 
 if [ -z "$API_KEY" ]; then
     echo ""
-    echo -e "${CYAN}Get your API key at: ${WHITE}https://gatewayz.ai/settings/keys${NC}"
+    echo -e "${YELLOW}═══════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  API KEY REQUIRED${NC}"
+    echo -e "${YELLOW}═══════════════════════════════════════════${NC}"
     echo ""
-    read -p "Enter your GatewayZ API key: " API_KEY
+    echo -e "${CYAN}Opening browser to get your API key...${NC}"
+
+    # Open browser to API keys page (try common Linux browsers)
+    if command -v xdg-open &> /dev/null; then
+        xdg-open "https://beta.gatewayz.ai/settings/keys" 2>/dev/null || true
+    elif command -v firefox &> /dev/null; then
+        firefox "https://beta.gatewayz.ai/settings/keys" 2>/dev/null &
+    elif command -v google-chrome &> /dev/null; then
+        google-chrome "https://beta.gatewayz.ai/settings/keys" 2>/dev/null &
+    fi
+
+    echo ""
+    echo -e "${WHITE}Please follow these steps:${NC}"
+    echo -e "${WHITE}  1. Sign in to GatewayZ (browser window opened)${NC}"
+    echo -e "${WHITE}  2. Click 'Generate API Key' if you don't have one${NC}"
+    echo -e "${WHITE}  3. Copy your API key${NC}"
+    echo ""
+    read -p "Paste your GatewayZ API key here: " API_KEY
 
     if [ -z "$API_KEY" ]; then
-        print_error "No API key provided"
+        echo ""
+        echo -e "${YELLOW}═══════════════════════════════════════════${NC}"
+        echo -e "${YELLOW}  MANUAL SETUP REQUIRED${NC}"
+        echo -e "${YELLOW}═══════════════════════════════════════════${NC}"
+        echo ""
+        echo -e "${WHITE}No API key provided. To complete setup manually:${NC}"
+        echo ""
+        echo -e "${WHITE}  1. Visit: ${CYAN}https://beta.gatewayz.ai/settings/keys${NC}"
+        echo -e "${WHITE}  2. Sign in and generate an API key${NC}"
+        echo -e "${WHITE}  3. Copy your key and add it to your shell config:${NC}"
+        echo ""
+        echo -e "${GREEN}     export GATEWAYZ_API_KEY='your-key-here'${NC}"
+        echo ""
+        echo -e "${WHITE}  4. Restart your terminal${NC}"
+        echo -e "${WHITE}  5. Run: ${GREEN}ccr code${NC}"
+        echo ""
+        print_error "Setup incomplete - API key required"
         exit 1
     fi
 fi
