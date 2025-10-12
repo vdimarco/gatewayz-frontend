@@ -164,20 +164,25 @@ if (-not $ApiKey) {
     Write-Host "  API KEY REQUIRED" -ForegroundColor Yellow
     Write-Host "═══════════════════════════════════════════" -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "Opening browser to get your API key..." -ForegroundColor Cyan
-
-    # Open browser to API keys page
-    Start-Process "https://beta.gatewayz.ai/settings/keys"
-
-    Write-Host ""
-    Write-Host "Please follow these steps:" -ForegroundColor White
-    Write-Host "  1. Sign in to GatewayZ (browser window opened)" -ForegroundColor White
-    Write-Host "  2. Click 'Generate API Key' if you don't have one" -ForegroundColor White
-    Write-Host "  3. Copy your API key" -ForegroundColor White
+    Write-Host "To get your API key, you need to:" -ForegroundColor White
+    Write-Host "  1. Visit: " -NoNewline -ForegroundColor White
+    Write-Host "https://beta.gatewayz.ai/settings/keys" -ForegroundColor Cyan
+    Write-Host "  2. Sign in to GatewayZ" -ForegroundColor White
+    Write-Host "  3. Click 'Generate API Key' if you don't have one" -ForegroundColor White
+    Write-Host "  4. Copy your API key" -ForegroundColor White
     Write-Host ""
 
     # Check if running interactively
     if ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected) {
+        Write-Host "Press Enter to open the API keys page in your browser, or Ctrl+C to cancel..." -ForegroundColor Yellow
+        Read-Host
+
+        # Open browser after user confirms
+        Write-Host "Opening browser..." -ForegroundColor Cyan
+        Start-Process "https://beta.gatewayz.ai/settings/keys"
+
+        Write-Host ""
+        Write-Host "After copying your API key from the browser, paste it below:" -ForegroundColor White
         $ApiKey = Read-Host "Paste your GatewayZ API key here"
     }
 

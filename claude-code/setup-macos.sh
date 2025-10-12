@@ -104,17 +104,21 @@ if [ -z "$API_KEY" ]; then
     echo -e "${YELLOW}  API KEY REQUIRED${NC}"
     echo -e "${YELLOW}═══════════════════════════════════════════${NC}"
     echo ""
-    echo -e "${CYAN}Opening browser to get your API key...${NC}"
+    echo -e "${WHITE}To get your API key, you need to:${NC}"
+    echo -e "${WHITE}  1. Visit: ${CYAN}https://beta.gatewayz.ai/settings/keys${NC}"
+    echo -e "${WHITE}  2. Sign in to GatewayZ${NC}"
+    echo -e "${WHITE}  3. Click 'Generate API Key' if you don't have one${NC}"
+    echo -e "${WHITE}  4. Copy your API key${NC}"
+    echo ""
+    echo -e "${YELLOW}Press Enter to open the API keys page in your browser, or Ctrl+C to cancel...${NC}"
+    read
 
-    # Open browser to API keys page
+    # Open browser after user confirms
+    echo -e "${CYAN}Opening browser...${NC}"
     open "https://beta.gatewayz.ai/settings/keys" 2>/dev/null || true
 
     echo ""
-    echo -e "${WHITE}Please follow these steps:${NC}"
-    echo -e "${WHITE}  1. Sign in to GatewayZ (browser window opened)${NC}"
-    echo -e "${WHITE}  2. Click 'Generate API Key' if you don't have one${NC}"
-    echo -e "${WHITE}  3. Copy your API key${NC}"
-    echo ""
+    echo -e "${WHITE}After copying your API key from the browser, paste it below:${NC}"
     read -p "Paste your GatewayZ API key here: " API_KEY
 
     if [ -z "$API_KEY" ]; then
