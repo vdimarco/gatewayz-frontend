@@ -60,7 +60,8 @@ export async function POST(req: NextRequest) {
 
       // Get the amount of credits and user info from metadata
       const credits = session.metadata?.credits;
-      const userId = session.metadata?.userId;
+      const userId = session.metadata?.userId || session.metadata?.user_id; // Support both userId and user_id
+      const paymentId = session.metadata?.payment_id;
       const userEmail = session.metadata?.userEmail || session.customer_email || session.customer_details?.email;
 
       if (!credits) {
@@ -95,22 +96,30 @@ export async function POST(req: NextRequest) {
             transaction_type: 'purchase',
             description: `Stripe payment - ${credits} credits`,
             stripe_session_id: session.id,
+            payment_id: paymentId ? parseInt(paymentId) : undefined,
             amount: session.amount_total ? session.amount_total / 100 : undefined, // Convert cents to dollars
+            stripe_payment_intent: session.payment_intent as string,
           }),
         });
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.log('Failed to credit user:', errorText);
+          console.error('Failed to credit user:', {
+            status: response.status,
+            error: errorText,
+            userId,
+            credits,
+            sessionId: session.id,
+          });
           throw new Error('Failed to credit user');
         }
 
         const result = await response.json();
         console.log('Successfully processed payment and credited user:', result);
       } catch (error) {
-        console.log('Error crediting user:', error);
-        // Log the error but return success to Stripe to prevent retries
-        // You can manually credit the user later by checking Stripe dashboard
+        console.error('Error crediting user:', error);
+        // Still return success to Stripe to prevent infinite retries
+        // The error is logged for manual review
       }
     }
 
