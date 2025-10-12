@@ -25,6 +25,10 @@ export type ModelOption = {
     category: string;
     sourceGateway?: string;
     developer?: string;
+    huggingfaceMetrics?: {
+        downloads?: number;
+        likes?: number;
+    };
 };
 
 interface ModelSelectProps {
@@ -186,6 +190,10 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
             category,
             sourceGateway,
             developer,
+            huggingfaceMetrics: model.huggingface_metrics ? {
+              downloads: model.huggingface_metrics.downloads || 0,
+              likes: model.huggingface_metrics.likes || 0,
+            } : undefined,
           };
         });
         setModels(modelOptions);
@@ -216,7 +224,7 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
     fetchModels();
   }, []);
 
-  // Group models by developer and sort by model count (descending)
+  // Group models by developer and sort by Hugging Face popularity
   const modelsByDeveloper = React.useMemo(() => {
     const groups: Record<string, ModelOption[]> = {};
 
@@ -228,11 +236,39 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
       groups[dev].push(model);
     });
 
-    // Sort developers by model count (descending), then alphabetically
+    // Calculate popularity score for each developer based on HuggingFace metrics
+    const developerScores: Record<string, number> = {};
+    Object.entries(groups).forEach(([developer, devModels]) => {
+      const totalLikes = devModels.reduce((sum, m) => sum + (m.huggingfaceMetrics?.likes || 0), 0);
+      const totalDownloads = devModels.reduce((sum, m) => sum + (m.huggingfaceMetrics?.downloads || 0), 0);
+      // Weight likes more heavily than downloads (1 like = 1000 download equivalents)
+      // This prioritizes quality/engagement over pure volume
+      developerScores[developer] = (totalLikes * 1000) + (totalDownloads / 1000);
+    });
+
+    // Define priority order for top organizations
+    const priorityOrgs = ['OpenAI', 'Anthropic', 'Google', 'Qwen', 'xAI', 'Meta', 'DeepSeek', 'Mistral AI'];
+
+    // Sort developers: priority orgs first (by their order), then by popularity score, then alphabetically
     return Object.keys(groups)
       .sort((a, b) => {
-        const countDiff = groups[b].length - groups[a].length;
-        if (countDiff !== 0) return countDiff;
+        const aPriority = priorityOrgs.indexOf(a);
+        const bPriority = priorityOrgs.indexOf(b);
+
+        // If both are in priority list, sort by priority order
+        if (aPriority !== -1 && bPriority !== -1) {
+          return aPriority - bPriority;
+        }
+
+        // Priority orgs come first
+        if (aPriority !== -1) return -1;
+        if (bPriority !== -1) return 1;
+
+        // For non-priority orgs, sort by popularity score (descending)
+        const scoreDiff = developerScores[b] - developerScores[a];
+        if (scoreDiff !== 0) return scoreDiff;
+
+        // Finally, alphabetically
         return a.localeCompare(b);
       })
       .reduce((acc, key) => {
