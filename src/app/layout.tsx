@@ -6,6 +6,7 @@ import { AppFooter } from '@/components/layout/app-footer';
 import { ThemeProvider } from '@/components/theme-provider';
 import { PrivyProviderWrapper } from '@/components/providers/privy-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { OnboardingBanner } from '@/components/onboarding/onboarding-banner';
 import { Inter } from 'next/font/google';
 // import { GTMLoader } from '@/components/analytics/gtm-loader'; // Temporarily disabled due to layout router issues
 
@@ -75,6 +76,7 @@ export default function RootLayout({
             <PrivyProviderWrapper>
               {/* <GTMLoader /> Temporarily disabled due to layout router issues */}
               <AppHeader />
+              <OnboardingBanner />
               {children}
               <Toaster />
               <AppFooter />
