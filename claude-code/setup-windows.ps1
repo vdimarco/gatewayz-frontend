@@ -97,17 +97,18 @@ try {
     Write-Host "  Current PATH contains: $env:PATH" -ForegroundColor Gray
     Write-Host ""
 
-    $installOutput = npm install -g @alpaca-network/claude-code-router 2>&1
+    Write-Host "Starting npm install (this may take 30-60 seconds, please be patient)..." -ForegroundColor Cyan
+    Write-Host ""
+
+    # Run npm directly - let it show its own progress
+    & npm install -g @alpaca-network/claude-code-router
     $installExitCode = $LASTEXITCODE
 
-    # Always show npm output for debugging
-    Write-Host "NPM Install Output:" -ForegroundColor Cyan
-    Write-Host $installOutput -ForegroundColor Gray
     Write-Host ""
-    Write-Host "Exit code: $installExitCode" -ForegroundColor $(if ($installExitCode -eq 0) { "Green" } else { "Red" })
+    Write-Host "Install command completed with exit code: $installExitCode" -ForegroundColor $(if ($installExitCode -eq 0) { "Green" } else { "Red" })
     Write-Host ""
 
-    # Show output if there were errors
+    # Check if there were errors
     if ($installExitCode -ne 0) {
         throw "npm install failed with exit code $installExitCode"
     }
