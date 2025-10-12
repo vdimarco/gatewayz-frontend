@@ -1391,6 +1391,64 @@ function ChatPageContent() {
                 setIsStreamingResponse(false);
                 console.error('Streaming error:', streamError);
 
+                const errorMessage = streamError instanceof Error ? streamError.message : 'Failed to get response';
+
+                // Check if this is a 500 error or 404 error (model unavailable) and attempt fallback
+                const is500Error = errorMessage.includes('500') || errorMessage.includes('Internal server error') || errorMessage.includes('Server error');
+                const is404Error = errorMessage.includes('404') || errorMessage.includes('not found') || errorMessage.includes('unavailable');
+                const shouldFallback = is500Error || is404Error;
+
+                if (shouldFallback && selectedModel) {
+                    // Define fallback models in order of preference
+                    const fallbackModels: ModelOption[] = [
+                        { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet', category: 'Paid' },
+                        { value: 'openai/gpt-4', label: 'GPT-4', category: 'Paid' },
+                        { value: 'deepseek/deepseek-chat', label: 'DeepSeek Chat', category: 'Free' },
+                        { value: 'google/gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash', category: 'Free' }
+                    ];
+
+                    // Find the first fallback model that isn't the current model
+                    const fallbackModel = fallbackModels.find(fm => fm.value !== selectedModel.value);
+
+                    if (fallbackModel) {
+                        console.log(`Model ${selectedModel.value} failed with 500 error, attempting fallback to ${fallbackModel.value}`);
+
+                        // Show a toast notification about the fallback
+                        toast({
+                            title: "Model Unavailable",
+                            description: `${selectedModel.label} is temporarily unavailable. Switched to ${fallbackModel.label}.`,
+                            variant: 'default'
+                        });
+
+                        // Update the selected model
+                        setSelectedModel(fallbackModel);
+
+                        // Remove the streaming message
+                        setSessions(prev => prev.map(session => {
+                            if (session.id === currentSessionId) {
+                                return {
+                                    ...session,
+                                    messages: updatedMessages,
+                                    updatedAt: new Date()
+                                };
+                            }
+                            return session;
+                        }));
+
+                        // Retry the request with the fallback model by recursively calling handleSendMessage
+                        // Wait a short moment before retrying
+                        setTimeout(() => {
+                            // Re-populate the message field with the original user message
+                            setMessage(userMessage);
+                            setUserHasTyped(true);
+                            // Trigger send
+                            handleSendMessage();
+                        }, 500);
+
+                        return; // Exit early to prevent showing error message
+                    }
+                }
+
                 // Remove streaming message and show error
                 setSessions(prev => prev.map(session => {
                     if (session.id === currentSessionId) {
@@ -1407,7 +1465,6 @@ function ChatPageContent() {
                 }));
 
                 // Determine error type and provide helpful message
-                const errorMessage = streamError instanceof Error ? streamError.message : 'Failed to get response';
                 let toastTitle = "Error";
                 let toastDescription = errorMessage;
 

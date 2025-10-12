@@ -59,6 +59,15 @@ export async function* streamChatResponse(
       );
     }
 
+    // Handle 404 Model Not Found
+    if (response.status === 404) {
+      const errorMessage = errorData.detail || errorData.error?.message || errorData.message || 'Model not found';
+      console.error('404 Model Not Found details:', errorData);
+      throw new Error(
+        `Model not found: ${errorMessage}`
+      );
+    }
+
     if (response.status === 429) {
       const detailMessage: string =
         (typeof errorData.detail === 'string' && errorData.detail) ||
