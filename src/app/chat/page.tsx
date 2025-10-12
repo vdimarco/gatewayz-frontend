@@ -407,7 +407,7 @@ const SessionListItem = ({
                     className="w-full max-w-full justify-start items-start text-left flex flex-col h-auto py-1.5 pl-2 pr-10 rounded-lg min-w-0"
                     onClick={() => switchToSession(session.id)}
                 >
-                    <span className="font-medium truncate text-sm leading-tight block w-full">
+                    <span className="font-medium text-sm leading-tight block w-full line-clamp-2">
                         {session.title}
                     </span>
                     <span className="text-xs text-muted-foreground truncate leading-tight mt-0.5 block w-full">
