@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Circle, ArrowRight, Code, MessageSquare, CreditCard, Sparkles, Terminal, Book } from "lucide-react";
+import { CheckCircle2, Circle, ArrowRight, Code, MessageSquare, CreditCard, Sparkles, Terminal, Book, Copy, Check, Key } from "lucide-react";
 import Link from "next/link";
-import { getUserData } from '@/lib/api';
+import { getUserData, getApiKey } from '@/lib/api';
 
 interface OnboardingTask {
   id: string;
@@ -20,6 +20,9 @@ interface OnboardingTask {
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const [apiKey, setApiKey] = useState<string>('');
+  const [copiedKey, setCopiedKey] = useState(false);
+
   const [tasks, setTasks] = useState<OnboardingTask[]>([
     {
       id: "welcome",
@@ -29,15 +32,6 @@ export default function OnboardingPage() {
       completed: true,
     },
     {
-      id: "explore",
-      title: "Explore 10,000+ AI Models",
-      description: "Browse our model catalog to find the perfect AI for your needs.",
-      icon: <Book className="h-5 w-5" />,
-      completed: false,
-      action: "/models",
-      actionLabel: "Browse Models"
-    },
-    {
       id: "chat",
       title: "Start Your First Chat",
       description: "Try chatting with any of our AI models in the playground.",
@@ -45,6 +39,15 @@ export default function OnboardingPage() {
       completed: false,
       action: "/chat",
       actionLabel: "Go to Chat"
+    },
+    {
+      id: "explore",
+      title: "Explore 10,000+ AI Models",
+      description: "Browse our model catalog and see integration examples below.",
+      icon: <Book className="h-5 w-5" />,
+      completed: false,
+      action: "/models",
+      actionLabel: "Browse Models"
     },
     {
       id: "credits",
@@ -58,6 +61,16 @@ export default function OnboardingPage() {
   ]);
 
   const [showBanner, setShowBanner] = useState(true);
+  const [selectedModel, setSelectedModel] = useState('openai/gpt-4');
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  const models = [
+    { id: 'openai/gpt-4', name: 'GPT-4' },
+    { id: 'anthropic/claude-3-opus', name: 'Claude 3 Opus' },
+    { id: 'google/gemini-pro', name: 'Gemini Pro' },
+    { id: 'meta-llama/llama-3-70b', name: 'Llama 3 70B' },
+    { id: 'mistralai/mistral-large', name: 'Mistral Large' },
+  ];
 
   useEffect(() => {
     // Check if user has already seen onboarding
@@ -65,6 +78,22 @@ export default function OnboardingPage() {
     if (hasSeenOnboarding) {
       // Redirect to chat if they've already completed onboarding
       router.push('/chat');
+    }
+
+    // Load API key
+    const key = getApiKey();
+    if (key) {
+      setApiKey(key);
+    }
+
+    // Load completed tasks from localStorage
+    const savedTasks = localStorage.getItem('gatewayz_onboarding_tasks');
+    if (savedTasks) {
+      const parsedTasks = JSON.parse(savedTasks);
+      setTasks(prev => prev.map(task => ({
+        ...task,
+        completed: parsedTasks[task.id] || task.completed
+      })));
     }
 
     // Auto-mark first task as complete
@@ -75,9 +104,88 @@ export default function OnboardingPage() {
   }, [router]);
 
   const markTaskComplete = (taskId: string) => {
-    setTasks(prev => prev.map(task =>
-      task.id === taskId ? { ...task, completed: true } : task
-    ));
+    setTasks(prev => {
+      const updated = prev.map(task =>
+        task.id === taskId ? { ...task, completed: true } : task
+      );
+
+      // Save to localStorage
+      const taskState: Record<string, boolean> = {};
+      updated.forEach(task => {
+        taskState[task.id] = task.completed;
+      });
+      localStorage.setItem('gatewayz_onboarding_tasks', JSON.stringify(taskState));
+
+      return updated;
+    });
+  };
+
+  const toggleTaskComplete = (taskId: string) => {
+    setTasks(prev => {
+      const updated = prev.map(task =>
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      );
+
+      // Save to localStorage
+      const taskState: Record<string, boolean> = {};
+      updated.forEach(task => {
+        taskState[task.id] = task.completed;
+      });
+      localStorage.setItem('gatewayz_onboarding_tasks', JSON.stringify(taskState));
+
+      return updated;
+    });
+  };
+
+  const copyApiKey = () => {
+    navigator.clipboard.writeText(apiKey);
+    setCopiedKey(true);
+    setTimeout(() => setCopiedKey(false), 2000);
+  };
+
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  const getCodeExample = (language: 'curl' | 'python' | 'javascript') => {
+    const examples = {
+      curl: `curl -X POST https://api.gatewayz.ai/v1/chat/completions \\
+  -H "Authorization: Bearer ${apiKey || 'YOUR_API_KEY'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "${selectedModel}",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'`,
+      python: `from openai import OpenAI
+
+client = OpenAI(
+    api_key="${apiKey || 'YOUR_API_KEY'}",
+    base_url="https://api.gatewayz.ai/v1"
+)
+
+response = client.chat.completions.create(
+    model="${selectedModel}",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+
+print(response.choices[0].message.content)`,
+      javascript: `import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: "${apiKey || 'YOUR_API_KEY'}",
+  baseURL: "https://api.gatewayz.ai/v1"
+});
+
+const response = await client.chat.completions.create({
+  model: "${selectedModel}",
+  messages: [{ role: "user", content: "Hello!" }]
+});
+
+console.log(response.choices[0].message.content);`
+    };
+    return examples[language];
   };
 
   const handleFinishOnboarding = () => {
@@ -110,8 +218,7 @@ export default function OnboardingPage() {
                   <ArrowRight className="h-3 w-3" />
                 </Link>
                 <Link
-                  href="https://claude.com/claude-code"
-                  target="_blank"
+                  href="/claude-code"
                   className="flex items-center gap-2 hover:underline transition-all"
                 >
                   <Sparkles className="h-4 w-4" />
@@ -139,7 +246,7 @@ export default function OnboardingPage() {
           <p className="text-xl text-muted-foreground mb-2">
             Let's get you started with a few quick tasks
           </p>
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
             <span className="font-medium">{completedCount} of {totalCount} completed</span>
             <div className="h-2 w-48 bg-muted rounded-full overflow-hidden">
               <div
@@ -148,6 +255,44 @@ export default function OnboardingPage() {
               />
             </div>
           </div>
+
+          {/* API Key Display */}
+          {apiKey && (
+            <Card className="max-w-2xl mx-auto">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Key className="h-5 w-5 text-purple-600" />
+                  Your API Key
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg font-mono text-sm">
+                  <code className="flex-1 truncate">{apiKey}</code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={copyApiKey}
+                    className="shrink-0"
+                  >
+                    {copiedKey ? (
+                      <>
+                        <Check className="h-4 w-4 mr-1 text-green-600" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4 mr-1" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Use this key to authenticate API requests
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Task List */}
@@ -163,14 +308,17 @@ export default function OnboardingPage() {
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className={`mt-1 ${task.completed ? 'text-green-600' : 'text-muted-foreground'}`}>
+                  <div className="flex items-start gap-4 flex-1">
+                    <button
+                      onClick={() => toggleTaskComplete(task.id)}
+                      className={`mt-1 hover:scale-110 transition-transform ${task.completed ? 'text-green-600' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
                       {task.completed ? (
                         <CheckCircle2 className="h-6 w-6" />
                       ) : (
                         <Circle className="h-6 w-6" />
                       )}
-                    </div>
+                    </button>
                     <div className="flex-1">
                       <CardTitle className="text-xl flex items-center gap-2">
                         {task.icon}
@@ -181,12 +329,12 @@ export default function OnboardingPage() {
                       </CardDescription>
                     </div>
                   </div>
-                  {task.action && !task.completed && (
+                  {task.action && (
                     <Link href={task.action}>
                       <Button
-                        variant="default"
+                        variant={task.completed ? "outline" : "default"}
                         size="sm"
-                        onClick={() => markTaskComplete(task.id)}
+                        onClick={() => !task.completed && markTaskComplete(task.id)}
                       >
                         {task.actionLabel}
                         <ArrowRight className="ml-2 h-4 w-4" />
@@ -198,6 +346,85 @@ export default function OnboardingPage() {
             </Card>
           ))}
         </div>
+
+        {/* Integration Code Examples */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Quick Integration Examples</CardTitle>
+            <CardDescription>Call any model with a few lines of code</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Model Selector */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Select a model:</label>
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="w-full p-2 border rounded-md bg-background"
+                >
+                  {models.map(model => (
+                    <option key={model.id} value={model.id}>{model.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Code Examples Tabs */}
+              <div className="space-y-4">
+                {/* cURL Example */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">cURL</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyCode(getCodeExample('curl'))}
+                    >
+                      {copiedCode ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <pre className="p-4 bg-muted rounded-md text-xs overflow-x-auto">
+                    <code>{getCodeExample('curl')}</code>
+                  </pre>
+                </div>
+
+                {/* Python Example */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Python</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyCode(getCodeExample('python'))}
+                    >
+                      {copiedCode ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <pre className="p-4 bg-muted rounded-md text-xs overflow-x-auto">
+                    <code>{getCodeExample('python')}</code>
+                  </pre>
+                </div>
+
+                {/* JavaScript Example */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">JavaScript / TypeScript</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyCode(getCodeExample('javascript'))}
+                    >
+                      {copiedCode ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <pre className="p-4 bg-muted rounded-md text-xs overflow-x-auto">
+                    <code>{getCodeExample('javascript')}</code>
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Quick Links Section */}
         <Card className="mb-8">
@@ -226,8 +453,7 @@ export default function OnboardingPage() {
                 <p className="text-sm text-muted-foreground">Integrate with your code</p>
               </Link>
               <Link
-                href="https://claude.com/claude-code"
-                target="_blank"
+                href="/claude-code"
                 className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
               >
                 <Terminal className="h-5 w-5 mb-2 text-green-600" />
