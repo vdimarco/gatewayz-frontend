@@ -90,31 +90,37 @@ export function UserNav({ user }: UserNavProps) {
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              {user?.email?.address || user?.google?.email || user?.github?.email || user?.github?.name || "User"}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user?.email?.address || user?.google?.email || user?.github?.email || user?.github?.username || ""}
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <p className="text-xs text-muted-foreground font-mono">
-                {formatAddress(getWalletAddress(user))}
+      <DropdownMenuContent className="w-64" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal py-3">
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <p className="text-sm font-medium leading-none">
+                {user?.email?.address || user?.google?.email || user?.github?.email || user?.github?.name || "User"}
               </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-4 w-4 p-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  copyToClipboard(getWalletAddress(user));
-                }}
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
+              {(user?.email?.address || user?.google?.email || user?.github?.email || user?.github?.username) && (
+                <p className="text-xs leading-none text-muted-foreground">
+                  ({user?.email?.address || user?.google?.email || user?.github?.email || user?.github?.username})
+                </p>
+              )}
             </div>
+            {getWalletAddress(user) && (
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground font-mono">
+                  {formatAddress(getWalletAddress(user))}
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-4 w-4 p-0 hover:bg-muted"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    copyToClipboard(getWalletAddress(user));
+                  }}
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
