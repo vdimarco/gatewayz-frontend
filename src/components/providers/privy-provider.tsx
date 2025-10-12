@@ -133,9 +133,27 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
 
       // Store user data
       if (authData.user_id) {
+        // Extract real email from Privy user object
+        let userEmail = authData.email || null;
+
+        // If auth data doesn't have email or has a Privy DID, try to extract from linked accounts
+        if (!userEmail || userEmail.startsWith('did:privy:')) {
+          for (const account of user.linkedAccounts || []) {
+            if (account.type === 'email' && (account as { email?: string }).email) {
+              userEmail = (account as { email?: string }).email!;
+              break;
+            } else if (account.type === 'google_oauth' && (account as { email?: string }).email) {
+              userEmail = (account as { email?: string }).email!;
+              break;
+            }
+          }
+        }
+
         localStorage.setItem('gatewayz_user', JSON.stringify({
           user_id: authData.user_id,
-          display_name: authData.display_name || user.email?.address || 'User',
+          display_name: authData.display_name || userEmail || 'User',
+          email: userEmail,
+          api_key: authData.api_key,
           credits: authData.credits || 0,
         }));
       }
