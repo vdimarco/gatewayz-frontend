@@ -407,7 +407,18 @@ const SessionListItem = ({
                     className="w-full max-w-full justify-start items-start text-left flex flex-col h-auto py-1.5 pl-2 pr-10 rounded-lg min-w-0"
                     onClick={() => switchToSession(session.id)}
                 >
-                    <span className="font-medium text-sm leading-[1.3] block w-full line-clamp-2 break-words" style={{ maxWidth: '100%', wordBreak: 'break-word', overflowWrap: 'break-word', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
+                    <span
+                        className="font-medium text-sm leading-[1.3] block w-full break-words"
+                        style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical' as const,
+                            overflow: 'hidden',
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word',
+                            maxWidth: '100%'
+                        }}
+                    >
                         {session.title}
                     </span>
                     <span className="text-xs text-muted-foreground truncate leading-tight mt-0.5 block w-full">
