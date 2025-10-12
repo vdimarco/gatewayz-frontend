@@ -404,13 +404,13 @@ const SessionListItem = ({
             >
                 <Button
                     variant={activeSessionId === session.id ? "secondary" : "ghost"}
-                    className="w-full justify-start items-start text-left flex flex-col h-auto py-2 px-3 rounded-lg pr-10"
+                    className="w-full justify-start items-start text-left flex flex-col h-auto py-2 px-3 rounded-lg pr-10 min-w-0"
                     onClick={() => switchToSession(session.id)}
                 >
-                    <span className="font-medium truncate w-full block max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                    <span className="font-medium truncate w-full block overflow-hidden text-ellipsis whitespace-nowrap">
                         {session.title}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate w-full block max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                    <span className="text-xs text-muted-foreground truncate w-full block overflow-hidden text-ellipsis whitespace-nowrap">
                         {formatDistanceToNow(session.startTime, { addSuffix: true })}
                     </span>
                 </Button>
