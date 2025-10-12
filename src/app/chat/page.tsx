@@ -404,19 +404,19 @@ const SessionListItem = ({
             >
                 <Button
                     variant={activeSessionId === session.id ? "secondary" : "ghost"}
-                    className="w-full justify-start items-start text-left flex flex-col h-auto py-1.5 pl-2 pr-8 rounded-lg min-w-0"
+                    className="w-full justify-start items-start text-left flex flex-col h-auto py-1.5 pl-2 pr-10 rounded-lg min-w-0 overflow-hidden"
                     onClick={() => switchToSession(session.id)}
                 >
-                    <span className="font-medium truncate max-w-[80%] text-sm leading-tight block">
+                    <span className="font-medium truncate text-sm leading-tight block" style={{ maxWidth: 'calc(100% - 32px)' }}>
                         {session.title}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate max-w-[80%] leading-tight mt-0.5 block">
+                    <span className="text-xs text-muted-foreground truncate leading-tight mt-0.5 block" style={{ maxWidth: 'calc(100% - 32px)' }}>
                         {formatDistanceToNow(session.startTime, { addSuffix: true })}
                     </span>
                 </Button>
 
-                {/* Three dots menu - always shown on mobile, shown on hover for desktop */}
-                <div className="absolute right-1 top-1/2 -translate-y-1/2 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity z-10">
+                {/* Three dots menu - always visible */}
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 transition-opacity z-10">
                     <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                         <DropdownMenuTrigger asChild>
                             <Button
