@@ -218,7 +218,7 @@ function CreditsPageContent() {
               // Update localStorage with fresh credits
               const userData = getUserData();
               if (userData) {
-                localStorage.setItem('gatewayz_user', JSON.stringify({
+                localStorage.setItem('gatewayz_user_data', JSON.stringify({
                   ...userData,
                   credits: data.credits
                 }));
