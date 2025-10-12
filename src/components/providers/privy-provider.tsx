@@ -89,6 +89,10 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
       // Get the Privy access token
       const token = localStorage.getItem('privy:token');
 
+      // Check for referral code from localStorage (set by signup page)
+      const referralCode = localStorage.getItem('gatewayz_referral_code');
+      console.log('Referral code from localStorage:', referralCode);
+
       // Authenticate with backend
       const authBody = stripUndefined({
         user: stripUndefined({
@@ -103,6 +107,7 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
         auto_create_api_key: true,
         trial_credits: 10,
         is_new_user: isNewUser,
+        referral_code: referralCode || undefined,
       });
 
       const authResponse = await fetch(`${API_BASE_URL}/auth`, {
@@ -133,6 +138,12 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
           display_name: authData.display_name || user.email?.address || 'User',
           credits: authData.credits || 0,
         }));
+      }
+
+      // Clear referral code after successful authentication
+      if (referralCode) {
+        localStorage.removeItem('gatewayz_referral_code');
+        console.log('Referral code cleared from localStorage after successful auth');
       }
 
       // Redirect new users to chat
