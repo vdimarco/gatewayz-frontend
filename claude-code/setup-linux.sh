@@ -69,9 +69,9 @@ fi
 # Step 3: Install Claude Code Router
 echo ""
 print_step "Installing Claude Code Router..."
-echo -e "${GRAY}Running: sudo npm install -g @musistudio/claude-code-router${NC}"
+echo -e "${GRAY}Running: sudo npm install -g @alpaca-network/claude-code-router${NC}"
 
-INSTALL_OUTPUT=$(sudo npm install -g @musistudio/claude-code-router 2>&1)
+INSTALL_OUTPUT=$(sudo npm install -g @alpaca-network/claude-code-router 2>&1)
 INSTALL_EXIT_CODE=$?
 
 if [ $INSTALL_EXIT_CODE -eq 0 ]; then
@@ -92,7 +92,7 @@ else
     echo -e "${GRAY}$INSTALL_OUTPUT${NC}"
     echo ""
     echo -e "${YELLOW}Manual installation command:${NC}"
-    echo -e "${CYAN}sudo npm install -g @musistudio/claude-code-router${NC}"
+    echo -e "${CYAN}sudo npm install -g @alpaca-network/claude-code-router${NC}"
     exit 1
 fi
 
