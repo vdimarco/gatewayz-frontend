@@ -287,12 +287,12 @@ export default function ClaudeCodePage() {
             <p className="text-sm font-medium">Switch models on-the-fly:</p>
             <div className="bg-slate-950 dark:bg-slate-900 border-2 border-slate-800 rounded-lg p-4 font-mono text-xs space-y-2 shadow-lg">
               <div className="flex items-center justify-between">
-                <code className="text-green-400">/model gatewayz,openai/gpt-4</code>
-                <CopyButton text="/model gatewayz,openai/gpt-4" id="model-gpt4" />
+                <code className="text-green-400">/model gatewayz,openai/gpt-5</code>
+                <CopyButton text="/model gatewayz,openai/gpt-5" id="model-gpt5" />
               </div>
               <div className="flex items-center justify-between">
-                <code className="text-green-400">/model gatewayz,deepseek/deepseek-chat</code>
-                <CopyButton text="/model gatewayz,deepseek/deepseek-chat" id="model-deepseek" />
+                <code className="text-green-400">/model gatewayz,x-ai/grok-code-fast-1</code>
+                <CopyButton text="/model gatewayz,x-ai/grok-code-fast-1" id="model-grok" />
               </div>
             </div>
           </div>
@@ -310,21 +310,20 @@ export default function ClaudeCodePage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[
-              { name: 'GPT-5', provider: 'OpenAI', tokens: 'TBA', share: 'Coming Soon' },
-              { name: 'Gemini 2.5 Pro', provider: 'Google', tokens: 'TBA', share: 'Coming Soon' },
-              { name: 'Grok Code Fast 1', provider: 'x.ai', tokens: '53.9B', share: '19.7%' },
-              { name: 'GPT-OSS-20B', provider: 'OpenAI', tokens: '26.8B', share: '9.8%' },
-              { name: 'DeepSeek V3.1', provider: 'DeepSeek', tokens: '21.7B', share: '7.9%' },
-              { name: 'Gemini 2.5 Flash', provider: 'Google', tokens: '18.1B', share: '6.6%' },
-              { name: 'Claude Sonnet 4.5', provider: 'Anthropic', tokens: '12.8B', share: '4.7%' },
-              { name: 'Claude Sonnet 4', provider: 'Anthropic', tokens: '10.4B', share: '3.8%' },
-              { name: 'Gemma 3 12B', provider: 'Google', tokens: '10.1B', share: '3.7%' },
-              { name: 'Gemini 2.0 Flash', provider: 'Google', tokens: '8.13B', share: '3.0%' },
+              { name: 'GPT-5', provider: 'OpenAI' },
+              { name: 'Gemini 2.5 Pro', provider: 'Google' },
+              { name: 'Grok Code Fast 1', provider: 'x.ai' },
+              { name: 'GPT-OSS-20B', provider: 'OpenAI' },
+              { name: 'DeepSeek V3.1', provider: 'DeepSeek' },
+              { name: 'Gemini 2.5 Flash', provider: 'Google' },
+              { name: 'Claude Sonnet 4.5', provider: 'Anthropic' },
+              { name: 'Claude Sonnet 4', provider: 'Anthropic' },
+              { name: 'Gemma 3 12B', provider: 'Google' },
+              { name: 'Gemini 2.0 Flash', provider: 'Google' },
             ].map((model, i) => (
               <div key={i} className="p-3 rounded-lg border bg-card">
                 <div className="font-medium text-sm">{model.name}</div>
                 <div className="text-xs text-muted-foreground">by {model.provider}</div>
-                <div className="text-xs text-muted-foreground mt-1">{model.tokens} tokens • {model.share}</div>
               </div>
             ))}
           </div>
