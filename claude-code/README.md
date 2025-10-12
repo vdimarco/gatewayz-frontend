@@ -155,7 +155,7 @@ Edit `~/.claude-code-router/config.json`:
 
 ### Permission Denied (Linux)
 ```bash
-sudo npm install -g @musistudio/claude-code-router
+sudo npm install -g @alpaca-network/claude-code-router
 ```
 
 ### API Key Not Set

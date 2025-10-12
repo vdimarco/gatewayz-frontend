@@ -1,6 +1,6 @@
 # Claude Code Router + GatewayZ Integration
 
-This setup configures Claude Code to use [claude-code-router](https://github.com/musistudio/claude-code-router) with GatewayZ as the API provider.
+This setup configures Claude Code to use [claude-code-router](https://github.com/Alpaca-Network/claude-code-router) with GatewayZ as the API provider.
 
 ## 🚀 Quick Start
 
@@ -12,7 +12,7 @@ powershell -ExecutionPolicy Bypass -File ~/.claude-code-router/quickstart.ps1
 ### Option 2: Manual Installation
 ```bash
 # Install the router
-npm install -g @musistudio/claude-code-router
+npm install -g @alpaca-network/claude-code-router
 
 # Set your GatewayZ API key
 setx GATEWAYZ_API_KEY "your-api-key-here"
@@ -159,7 +159,7 @@ Update the `config.json` with available models from your GatewayZ dashboard
 ### Router Not Starting
 ```bash
 # Reinstall
-npm install -g @musistudio/claude-code-router
+npm install -g @alpaca-network/claude-code-router
 
 # Check logs
 ccr code --verbose
@@ -170,7 +170,7 @@ ccr code --verbose
 - **GatewayZ Dashboard**: https://gatewayz.ai
 - **API Keys**: https://gatewayz.ai/settings/keys
 - **Usage Stats**: https://gatewayz.ai/settings/activity
-- **Claude Code Router**: https://github.com/musistudio/claude-code-router
+- **Claude Code Router**: https://github.com/Alpaca-Network/claude-code-router
 
 ## 🎉 What's Next?
 
