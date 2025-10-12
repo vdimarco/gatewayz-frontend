@@ -68,6 +68,7 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
   const [loading, setLoading] = React.useState(false)
   const [favorites, setFavorites] = React.useState<Set<string>>(new Set())
   const [expandedDevelopers, setExpandedDevelopers] = React.useState<Set<string>>(new Set(['Favorites']))
+  const [searchQuery, setSearchQuery] = React.useState('')
 
   // Load favorites from localStorage
   React.useEffect(() => {
@@ -257,8 +258,60 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
     });
   };
 
+  // Filter models based on search query and auto-expand matching sections
+  const filteredModelsByDeveloper = React.useMemo(() => {
+    if (!searchQuery.trim()) {
+      return modelsByDeveloper;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered: Record<string, ModelOption[]> = {};
+    const developersToExpand = new Set<string>();
+
+    Object.entries(modelsByDeveloper).forEach(([developer, devModels]) => {
+      const matchingModels = devModels.filter(model =>
+        model.label.toLowerCase().includes(query) ||
+        model.value.toLowerCase().includes(query) ||
+        developer.toLowerCase().includes(query)
+      );
+
+      if (matchingModels.length > 0) {
+        filtered[developer] = matchingModels;
+        developersToExpand.add(developer);
+      }
+    });
+
+    // Auto-expand sections with matches
+    setExpandedDevelopers(prev => {
+      const next = new Set(prev);
+      developersToExpand.forEach(dev => next.add(dev));
+      return next;
+    });
+
+    return filtered;
+  }, [modelsByDeveloper, searchQuery]);
+
+  // Filter favorite models based on search
+  const filteredFavoriteModels = React.useMemo(() => {
+    if (!searchQuery.trim()) {
+      return favoriteModels;
+    }
+
+    const query = searchQuery.toLowerCase();
+    return favoriteModels.filter(model =>
+      model.label.toLowerCase().includes(query) ||
+      model.value.toLowerCase().includes(query)
+    );
+  }, [favoriteModels, searchQuery]);
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen);
+      if (!isOpen) {
+        // Clear search when closing
+        setSearchQuery('');
+      }
+    }}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -281,13 +334,17 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[400px] p-0">
-        <Command>
-          <CommandInput placeholder="Search model..." />
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Search model..."
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+          />
           <CommandList className="max-h-[400px]">
             <CommandEmpty>No model found.</CommandEmpty>
 
             {/* Favorites Section */}
-            {favoriteModels.length > 0 && (
+            {filteredFavoriteModels.length > 0 && (
               <div className="border-b">
                 <button
                   onClick={() => toggleDeveloper('Favorites')}
@@ -299,11 +356,11 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
                     <ChevronRight className="h-4 w-4" />
                   )}
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span>Favorites ({favoriteModels.length})</span>
+                  <span>Favorites ({filteredFavoriteModels.length})</span>
                 </button>
                 {expandedDevelopers.has('Favorites') && (
                   <div className="pb-2">
-                    {favoriteModels.map((model) => (
+                    {filteredFavoriteModels.map((model) => (
                       <CommandItem
                         key={model.value}
                         value={model.label}
@@ -333,7 +390,7 @@ export function ModelSelect({ selectedModel, onSelectModel }: ModelSelectProps) 
             )}
 
             {/* Developer Groups */}
-            {Object.entries(modelsByDeveloper).map(([developer, devModels]) => (
+            {Object.entries(filteredModelsByDeveloper).map(([developer, devModels]) => (
               <div key={developer} className="border-b last:border-0">
                 <button
                   onClick={() => toggleDeveloper(developer)}
