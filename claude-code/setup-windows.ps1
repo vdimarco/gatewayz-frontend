@@ -108,24 +108,48 @@ if (-not $ApiKey) {
 
 if (-not $ApiKey) {
     Write-Host ""
-    Write-Host "Get your API key at: " -NoNewline -ForegroundColor Cyan
-    Write-Host "https://gatewayz.ai/settings/keys" -ForegroundColor White
+    Write-Host "═══════════════════════════════════════════" -ForegroundColor Yellow
+    Write-Host "  API KEY REQUIRED" -ForegroundColor Yellow
+    Write-Host "═══════════════════════════════════════════" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Opening browser to get your API key..." -ForegroundColor Cyan
+
+    # Open browser to API keys page
+    Start-Process "https://beta.gatewayz.ai/settings/keys"
+
+    Write-Host ""
+    Write-Host "Please follow these steps:" -ForegroundColor White
+    Write-Host "  1. Sign in to GatewayZ (browser window opened)" -ForegroundColor White
+    Write-Host "  2. Click 'Generate API Key' if you don't have one" -ForegroundColor White
+    Write-Host "  3. Copy your API key" -ForegroundColor White
     Write-Host ""
 
     # Check if running interactively
     if ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected) {
-        $ApiKey = Read-Host "Enter your GatewayZ API key"
+        $ApiKey = Read-Host "Paste your GatewayZ API key here"
     }
 
     if (-not $ApiKey) {
         Write-Host ""
-        Write-Host "No API key found. Please set it manually:" -ForegroundColor Yellow
-        Write-Host "  1. Get your API key from https://gatewayz.ai/settings/keys" -ForegroundColor White
-        Write-Host "  2. Run in PowerShell:" -ForegroundColor White
-        Write-Host "     [System.Environment]::SetEnvironmentVariable('GATEWAYZ_API_KEY', 'your-key-here', 'User')" -ForegroundColor Cyan
-        Write-Host "  3. Restart PowerShell and run: ccr code" -ForegroundColor White
+        Write-Host "═══════════════════════════════════════════" -ForegroundColor Yellow
+        Write-Host "  MANUAL SETUP REQUIRED" -ForegroundColor Yellow
+        Write-Host "═══════════════════════════════════════════" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "No API key provided. To complete setup manually:" -ForegroundColor White
+        Write-Host ""
+        Write-Host "  1. Visit: " -NoNewline -ForegroundColor White
+        Write-Host "https://beta.gatewayz.ai/settings/keys" -ForegroundColor Cyan
+        Write-Host "  2. Sign in and generate an API key" -ForegroundColor White
+        Write-Host "  3. Copy your key and run this command in PowerShell:" -ForegroundColor White
+        Write-Host ""
+        Write-Host "     [System.Environment]::SetEnvironmentVariable('GATEWAYZ_API_KEY', 'your-key-here', 'User')" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "  4. Close and reopen PowerShell" -ForegroundColor White
+        Write-Host "  5. Run: " -NoNewline -ForegroundColor White
+        Write-Host "ccr code" -ForegroundColor Green
         Write-Host ""
         Write-Host "Setup will continue with placeholder configuration..." -ForegroundColor Yellow
+        Write-Host ""
         $ApiKey = "YOUR_GATEWAYZ_API_KEY_HERE"
     }
 }
