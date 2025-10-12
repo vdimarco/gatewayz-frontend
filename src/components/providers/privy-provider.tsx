@@ -171,9 +171,9 @@ export function PrivyProviderWrapper({ children }: PrivyProviderWrapperProps) {
         console.log('Referral code cleared from localStorage after successful auth');
       }
 
-      // Redirect new users to chat
+      // Redirect new users to onboarding
       if (authData.is_new_user ?? isNewUser) {
-        window.location.href = '/chat';
+        window.location.href = '/onboarding';
       }
     } catch (error) {
       console.error('Error during login:', error);
