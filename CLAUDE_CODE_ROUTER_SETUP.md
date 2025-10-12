@@ -42,19 +42,20 @@ All configuration files are in `~/.claude-code-router/`:
 
 ## 🤖 Available Models
 
-The router is configured with the following GatewayZ models:
+The router is configured with the following top-ranked GatewayZ models:
 
-| Model | Purpose | Cost |
-|-------|---------|------|
-| `anthropic/claude-3.7-sonnet` | Default - General tasks | Medium |
-| `deepseek/deepseek-chat` | Background tasks | Low |
-| `anthropic/claude-3.5-sonnet` | Complex reasoning | Medium |
-| `google/gemini-1.5-pro` | Long context (100k+ tokens) | Low |
-| `google/gemini-2.0-flash-exp` | Web search | Very Low |
-| `openai/gpt-4` | Alternative reasoning | High |
-| `openai/gpt-4-turbo` | Fast GPT-4 | Medium |
-| `anthropic/claude-3-opus` | Most capable | High |
-| `anthropic/claude-3-haiku` | Fastest | Very Low |
+| Model | Rank | Purpose | Cost |
+|-------|------|---------|------|
+| `x-ai/grok-code-fast-1` | #1 | Code-focused tasks | Medium |
+| `anthropic/claude-sonnet-4` | #2 | Default - General tasks | Medium |
+| `x-ai/grok-4-fast` | #3 | Fast reasoning | Medium |
+| `google/gemini-2.5-flash` | #4 | Web search & fast tasks | Very Low |
+| `deepseek/deepseek-v3.1` | #5 | Background tasks | Low |
+| `anthropic/claude-sonnet-4.5` | #6 | Complex reasoning | Medium |
+| `google/gemini-2.5-pro` | #8 | Long context (100k+ tokens) | Low |
+| `openai/gpt-5` | #11 | Latest GPT model | High |
+| `openai/gpt-4.1-mini` | #10 | Fast GPT alternative | Medium |
+| `anthropic/claude-3.7-sonnet` | #14 | Previous generation | Medium |
 
 ## 🎯 Routing Strategy
 
@@ -62,19 +63,19 @@ The router automatically selects the best model for each task:
 
 ```json
 {
-  "default": "anthropic/claude-3.7-sonnet",
-  "background": "deepseek/deepseek-chat",
-  "think": "anthropic/claude-3.5-sonnet",
-  "longContext": "google/gemini-1.5-pro",
-  "webSearch": "google/gemini-2.0-flash-exp"
+  "default": "anthropic/claude-sonnet-4",
+  "background": "deepseek/deepseek-v3.1",
+  "think": "anthropic/claude-sonnet-4.5",
+  "longContext": "google/gemini-2.5-pro",
+  "webSearch": "google/gemini-2.5-flash"
 }
 ```
 
-- **Default tasks** → Claude 3.7 Sonnet (best balance)
-- **Background operations** → DeepSeek Chat (cost-effective)
-- **Complex reasoning** → Claude 3.5 Sonnet (advanced)
-- **Long documents (>100k tokens)** → Gemini 1.5 Pro
-- **Web search tasks** → Gemini 2.0 Flash
+- **Default tasks** → Claude Sonnet 4 (#2 ranked - best balance)
+- **Background operations** → DeepSeek V3.1 (#5 ranked - cost-effective)
+- **Complex reasoning** → Claude Sonnet 4.5 (#6 ranked - advanced thinking)
+- **Long documents (>100k tokens)** → Gemini 2.5 Pro (#8 ranked)
+- **Web search tasks** → Gemini 2.5 Flash (#4 ranked - fast)
 
 ## 💡 Usage
 
@@ -86,8 +87,9 @@ ccr code
 ### Switch Models Dynamically
 While in Claude Code, use the `/model` command:
 ```
-/model gatewayz,openai/gpt-4
-/model gatewayz,deepseek/deepseek-chat
+/model gatewayz,x-ai/grok-code-fast-1
+/model gatewayz,openai/gpt-5
+/model gatewayz,deepseek/deepseek-v3.1
 ```
 
 ### Open Web UI
@@ -109,7 +111,8 @@ Edit the `models` array in `config.json`:
   "Providers": [{
     "name": "gatewayz",
     "models": [
-      "anthropic/claude-3.7-sonnet",
+      "anthropic/claude-sonnet-4",
+      "x-ai/grok-code-fast-1",
       "your-new-model"
     ]
   }]

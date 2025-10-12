@@ -287,26 +287,30 @@ $config = @{
             api_base_url = "https://api.gatewayz.ai/v1/chat/completions"
             api_key = "`$GATEWAYZ_API_KEY"
             models = @(
-                "anthropic/claude-3.7-sonnet",
-                "anthropic/claude-3.5-sonnet",
-                "anthropic/claude-3-opus",
-                "anthropic/claude-3-haiku",
-                "openai/gpt-4",
-                "openai/gpt-4-turbo",
-                "openai/gpt-3.5-turbo",
-                "deepseek/deepseek-chat",
-                "google/gemini-2.0-flash-exp",
-                "google/gemini-1.5-pro"
+                "x-ai/grok-code-fast-1",
+                "x-ai/grok-3-turbo-preview",
+                "x-ai/grok-2-1212",
+                "anthropic/claude-sonnet-4",
+                "anthropic/claude-sonnet-4.5",
+                "anthropic/claude-sonnet-4.5-20250514",
+                "anthropic/claude-opus-4-20250514",
+                "openai/gpt-5",
+                "openai/gpt-5-mini",
+                "google/gemini-2.5-pro",
+                "google/gemini-2.5-flash",
+                "google/gemini-2.0-flash",
+                "deepseek/deepseek-v3.1",
+                "deepseek/deepseek-v3-0324"
             )
         }
     )
     Router = @{
-        default = "gatewayz,anthropic/claude-3.7-sonnet"
-        background = "gatewayz,deepseek/deepseek-chat"
-        think = "gatewayz,anthropic/claude-3.5-sonnet"
-        longContext = "gatewayz,google/gemini-1.5-pro"
+        default = "gatewayz,x-ai/grok-code-fast-1"
+        background = "gatewayz,openai/gpt-5"
+        think = "gatewayz,anthropic/claude-sonnet-4.5-20250514"
+        longContext = "gatewayz,google/gemini-2.5-pro"
         longContextThreshold = 100000
-        webSearch = "gatewayz,google/gemini-2.0-flash-exp"
+        webSearch = "gatewayz,google/gemini-2.5-flash"
     }
 }
 
@@ -341,9 +345,11 @@ Write-Host "  /model <name>         " -NoNewline -ForegroundColor White
 Write-Host "- Switch models (in Claude Code)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Available Models:" -ForegroundColor Cyan
-Write-Host "  • claude-3.7-sonnet (default)" -ForegroundColor White
-Write-Host "  • deepseek-chat (cost-effective)" -ForegroundColor White
-Write-Host "  • gpt-4, gemini-1.5-pro, and more..." -ForegroundColor White
+Write-Host "  • grok-code-fast-1 (default - optimized for coding)" -ForegroundColor White
+Write-Host "  • gpt-5 (background tasks)" -ForegroundColor White
+Write-Host "  • claude-sonnet-4.5 (thinking tasks)" -ForegroundColor White
+Write-Host "  • gemini-2.5-pro (long context)" -ForegroundColor White
+Write-Host "  • Plus: grok-3-turbo, claude-opus-4, and more..." -ForegroundColor White
 Write-Host ""
 Write-Host "Next Steps:" -ForegroundColor Cyan
 Write-Host "  1. Close and reopen your terminal" -ForegroundColor White
