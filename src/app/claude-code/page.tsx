@@ -305,17 +305,21 @@ export default function ClaudeCodePage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[
-              { name: 'Claude 3.7 Sonnet', use: 'Default - Best balance', cost: 'Medium' },
-              { name: 'DeepSeek Chat', use: 'Background tasks', cost: 'Very Low' },
-              { name: 'Claude 3.5 Sonnet', use: 'Complex reasoning', cost: 'Medium' },
-              { name: 'Gemini 1.5 Pro', use: 'Long context (100k+)', cost: 'Low' },
-              { name: 'GPT-4', use: 'Alternative reasoning', cost: 'High' },
-              { name: 'Gemini 2.0 Flash', use: 'Web search', cost: 'Very Low' },
+              { name: 'GPT-5', provider: 'OpenAI', tokens: 'TBA', share: 'Coming Soon' },
+              { name: 'Gemini 2.5 Pro', provider: 'Google', tokens: 'TBA', share: 'Coming Soon' },
+              { name: 'Grok Code Fast 1', provider: 'x.ai', tokens: '53.9B', share: '19.7%' },
+              { name: 'GPT-OSS-20B', provider: 'OpenAI', tokens: '26.8B', share: '9.8%' },
+              { name: 'DeepSeek V3.1', provider: 'DeepSeek', tokens: '21.7B', share: '7.9%' },
+              { name: 'Gemini 2.5 Flash', provider: 'Google', tokens: '18.1B', share: '6.6%' },
+              { name: 'Claude Sonnet 4.5', provider: 'Anthropic', tokens: '12.8B', share: '4.7%' },
+              { name: 'Claude Sonnet 4', provider: 'Anthropic', tokens: '10.4B', share: '3.8%' },
+              { name: 'Gemma 3 12B', provider: 'Google', tokens: '10.1B', share: '3.7%' },
+              { name: 'Gemini 2.0 Flash', provider: 'Google', tokens: '8.13B', share: '3.0%' },
             ].map((model, i) => (
               <div key={i} className="p-3 rounded-lg border bg-card">
                 <div className="font-medium text-sm">{model.name}</div>
-                <div className="text-xs text-muted-foreground">{model.use}</div>
-                <div className="text-xs text-muted-foreground mt-1">Cost: {model.cost}</div>
+                <div className="text-xs text-muted-foreground">by {model.provider}</div>
+                <div className="text-xs text-muted-foreground mt-1">{model.tokens} tokens • {model.share}</div>
               </div>
             ))}
           </div>
