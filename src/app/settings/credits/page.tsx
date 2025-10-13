@@ -209,11 +209,13 @@ function CreditsPageContent() {
       // Fetch fresh credits and transactions after successful payment
       const fetchFreshData = async () => {
         try {
+          let currentCredits;
           // Fetch credits
           const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/profile`);
           if (response.ok) {
             const data = await response.json();
             if (data.credits !== undefined) {
+              currentCredits = data.credits;
               setCredits(data.credits);
               // Update localStorage with fresh credits
               const userData = getUserData();
@@ -231,13 +233,14 @@ function CreditsPageContent() {
           if (txnResponse.ok) {
             const txnData = await txnResponse.json();
             if (Array.isArray(txnData.transactions)) {
-              const mappedTransactions = txnData.transactions.map((txn: any) => ({
+              const mappedTransactions = txnData.transactions.map((txn: any, index: number) => ({
                 id: txn.id,
                 amount: txn.amount,
                 transaction_type: txn.transaction_type,
                 created_at: txn.created_at,
                 description: txn.description,
-                balance: txn.balance_after
+                // For the most recent transaction, use current credits for accuracy
+                balance: index === 0 && currentCredits !== undefined ? currentCredits : txn.balance_after
               }));
               setTransactions(mappedTransactions);
             }
@@ -268,12 +271,15 @@ function CreditsPageContent() {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
+      let currentCredits = userData?.credits;
+
       try {
         // Fetch fresh data from API
         const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/profile`);
         if (response.ok) {
           const data = await response.json();
           if (data.credits !== undefined) {
+            currentCredits = data.credits;
             setCredits(data.credits);
           }
         }
@@ -291,13 +297,14 @@ function CreditsPageContent() {
           const data = await response.json();
           if (Array.isArray(data.transactions)) {
             // Transactions already include balance_after from the database
-            const mappedTransactions = data.transactions.map((txn: any) => ({
+            const mappedTransactions = data.transactions.map((txn: any, index: number) => ({
               id: txn.id,
               amount: txn.amount,
               transaction_type: txn.transaction_type,
               created_at: txn.created_at,
               description: txn.description,
-              balance: txn.balance_after // Use the balance from the database
+              // For the most recent transaction (index 0), use current credits for accuracy
+              balance: index === 0 && currentCredits !== undefined ? currentCredits : txn.balance_after
             }));
 
             setTransactions(mappedTransactions);
