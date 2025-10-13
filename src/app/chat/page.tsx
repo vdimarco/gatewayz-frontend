@@ -702,8 +702,8 @@ const ChatSkeleton = () => (
   </div>
 );
 
-// Helper function to generate a concise chat title with random emoji
-const generateChatTitle = (message: string): string => {
+// Helper function to generate a concise chat title with random emoji using AI
+const generateChatTitle = async (message: string, apiKey: string, privyUserId: string): Promise<string> => {
     // Expanded array of emojis from standard emoji set
     const emojis = [
         '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇',
@@ -745,12 +745,50 @@ const generateChatTitle = (message: string): string => {
     // Pick a random emoji
     const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
 
-    // Split message into words and take first 5-6 words
+    try {
+        // Call AI to summarize the message into 3-5 words
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
+        const url = `${apiBaseUrl}/v1/responses?privy_user_id=${encodeURIComponent(privyUserId)}`;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'deepseek/deepseek-chat',
+                input: [
+                    {
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'input_text',
+                                text: `Summarize this message in exactly 3-5 words that capture its main topic or question. Only respond with the summary, no other text:\n\n"${message}"`
+                            }
+                        ]
+                    }
+                ],
+                stream: false
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const summary = data.output?.trim() || '';
+
+            if (summary && summary.split(/\s+/).length <= 6) {
+                return `${randomEmoji} ${summary}`;
+            }
+        }
+    } catch (error) {
+        console.error('Failed to generate AI title, falling back to truncation:', error);
+    }
+
+    // Fallback: Split message into words and take first 5-6 words
     const words = message.trim().split(/\s+/);
     const maxWords = 6;
     const titleWords = words.slice(0, maxWords);
-
-    // Add ellipsis if message was longer
     const title = titleWords.join(' ') + (words.length > maxWords ? '...' : '');
 
     return `${randomEmoji} ${title}`;
@@ -1278,11 +1316,14 @@ function ChatPageContent() {
             image: userImage || undefined
         }];
 
+        // Generate title asynchronously if this is the first message
+        let newTitle = isFirstMessage ? await generateChatTitle(userMessage, apiKey, userData.privy_user_id) : undefined;
+
         const updatedSessions = sessions.map(session => {
             if (session.id === currentSessionId) {
                 return {
                     ...session,
-                    title: isFirstMessage ? generateChatTitle(userMessage) : session.title,
+                    title: isFirstMessage && newTitle ? newTitle : session.title,
                     messages: updatedMessages,
                     updatedAt: new Date()
                 };
@@ -1500,13 +1541,11 @@ function ChatPageContent() {
 
                 // Update session title in API if this is the first message
                 // Note: Messages are automatically saved by the backend when session_id is passed
-                // The title was already updated locally in updatedSessions (line 1250)
-                if (isFirstMessage && currentSession?.apiSessionId) {
+                // The title was already updated locally in updatedSessions (line 1326)
+                if (isFirstMessage && currentSession?.apiSessionId && newTitle) {
                     try {
                         if (apiKey) {
                             const chatAPI = new ChatHistoryAPI(apiKey, undefined, userData.privy_user_id);
-                            // Generate concise title with emoji
-                            const newTitle = generateChatTitle(userMessage);
                             console.log('Updating session title in API:', { oldTitle: 'Untitled Chat', newTitle, sessionId: currentSession.apiSessionId });
                             await chatAPI.updateSession(currentSession.apiSessionId, newTitle);
                         }
