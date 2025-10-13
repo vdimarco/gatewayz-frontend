@@ -702,6 +702,82 @@ const ChatSkeleton = () => (
   </div>
 );
 
+// Helper function to generate a concise chat title with random emoji
+const generateChatTitle = (message: string): string => {
+    // Expanded array of emojis from standard emoji set
+    const emojis = [
+        '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇',
+        '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑',
+        '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬',
+        '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵',
+        '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕', '😟', '🙁', '☹️',
+        '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱',
+        '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿',
+        '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '😺', '😸', '😹',
+        '😻', '😼', '😽', '🙀', '😿', '😾', '💋', '👋', '🤚', '🖐️', '✋', '🖖', '👌',
+        '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍',
+        '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💅',
+        '🤳', '💪', '🦾', '🦵', '🦿', '🦶', '👂', '🦻', '👃', '🧠', '🦷', '🦴', '👀',
+        '👁️', '👅', '👄', '💬', '💭', '🗨️', '💕', '💞', '💓', '💗', '💖', '💘', '💝',
+        '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎',
+        '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓', '🆔', '⚛️',
+        '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮',
+        '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘',
+        '❌', '⭕', '🛑', '⛔', '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '🚱',
+        '🔞', '📵', '🚭', '❗', '❕', '❓', '❔', '‼️', '⁉️', '🔅', '🔆', '〽️', '⚠️',
+        '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯', '💹', '❇️', '✳️', '❎', '🌐', '💠',
+        '🔷', '🔸', '🔹', '🔺', '🔻', '🔲', '🔳', '⬛', '⬜', '◾', '◽', '◼️', '◻️',
+        '⚫', '⚪', '🔘', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '🟤', '⭐', '🌟', '💫',
+        '✨', '⚡', '💥', '🔥', '🌈', '🎃', '🎄', '🎆', '🎇', '🧨', '✨', '🎈', '🎉',
+        '🎊', '🎋', '🎍', '🎎', '🎏', '🎐', '🎑', '🧧', '🎀', '🎁', '🎗️', '🎟️', '🎫',
+        '🎖️', '🏆', '🏅', '🥇', '🥈', '🥉', '⚽', '⚾', '🥎', '🏀', '🏐', '🏈', '🏉',
+        '🎾', '🥏', '🎳', '🏏', '🏑', '🏒', '🥍', '🏓', '🏸', '🥊', '🥋', '🥅', '⛳',
+        '⛸️', '🎣', '🤿', '🎽', '🎿', '🛷', '🥌', '🎯', '🪀', '🪁', '🎱', '🔮', '🪄',
+        '🧿', '🎮', '🕹️', '🎰', '🎲', '🧩', '🧸', '🪅', '🪆', '♠️', '♥️', '♦️', '♣️',
+        '♟️', '🃏', '🀄', '🎴', '🎭', '🖼️', '🎨', '🧵', '🪡', '🧶', '🪢', '🌍', '🌎',
+        '🌏', '🌐', '🗺️', '🗾', '🧭', '🏔️', '⛰️', '🌋', '🗻', '🏕️', '🏖️', '🏜️', '🏝️',
+        '🏞️', '🏟️', '🏛️', '🏗️', '🧱', '🪨', '🪵', '🛖', '🏘️', '🏚️', '🏠', '🏡', '🏢',
+        '🏣', '🏤', '🏥', '🏦', '🏨', '🏩', '🏪', '🏫', '🏬', '🏭', '🏯', '🏰', '💒',
+        '🗼', '🗽', '⛪', '🕌', '🛕', '🕍', '⛩️', '🕋', '⛲', '⛺', '🌁', '🌃', '🏙️',
+        '🌄', '🌅', '🌆', '🌇', '🌉', '♨️', '🎠', '🎡', '🎢', '💈', '🎪'
+    ];
+
+    // Pick a random emoji
+    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+    // Clean and normalize the message
+    const cleaned = message.trim();
+
+    // Smart title generation based on common question patterns
+    const words = cleaned.split(/\s+/);
+
+    // If message is already short (5 words or less), use it as is
+    if (words.length <= 5) {
+        return `${randomEmoji} ${cleaned}`;
+    }
+
+    // Remove common filler words and extract key terms
+    const fillerWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'can', 'will', 'just', 'should', 'now']);
+
+    // Keep question words and important content words
+    const importantWords = words.filter((word, index) => {
+        const lower = word.toLowerCase();
+        // Always keep the first word if it's a question word
+        if (index === 0 && ['what', 'how', 'why', 'when', 'where', 'who', 'which', 'whose', 'whom', 'can', 'could', 'would', 'should', 'is', 'are', 'do', 'does'].includes(lower)) {
+            return true;
+        }
+        // Keep words that aren't filler words
+        return !fillerWords.has(lower) || index === 0;
+    });
+
+    // Take first 5-6 important words
+    const maxWords = 6;
+    const titleWords = importantWords.slice(0, maxWords);
+    const title = titleWords.join(' ') + (words.length > maxWords ? '...' : '');
+
+    return `${randomEmoji} ${title}`;
+};
+
 function ChatPageContent() {
     const searchParams = useSearchParams();
     const { login, authenticated, ready } = usePrivy();
@@ -1224,11 +1300,14 @@ function ChatPageContent() {
             image: userImage || undefined
         }];
 
+        // Generate title if this is the first message
+        let newTitle = isFirstMessage ? generateChatTitle(userMessage) : undefined;
+
         const updatedSessions = sessions.map(session => {
             if (session.id === currentSessionId) {
                 return {
                     ...session,
-                    title: isFirstMessage ? userMessage : session.title,
+                    title: isFirstMessage && newTitle ? newTitle : session.title,
                     messages: updatedMessages,
                     updatedAt: new Date()
                 };
@@ -1446,13 +1525,11 @@ function ChatPageContent() {
 
                 // Update session title in API if this is the first message
                 // Note: Messages are automatically saved by the backend when session_id is passed
-                // The title was already updated locally in updatedSessions (line 1051)
-                if (isFirstMessage && currentSession?.apiSessionId) {
+                // The title was already updated locally in updatedSessions (line 1326)
+                if (isFirstMessage && currentSession?.apiSessionId && newTitle) {
                     try {
                         if (apiKey) {
                             const chatAPI = new ChatHistoryAPI(apiKey, undefined, userData.privy_user_id);
-                            // Truncate title if too long (max 100 chars)
-                            const newTitle = userMessage.length > 100 ? userMessage.substring(0, 100) + '...' : userMessage;
                             console.log('Updating session title in API:', { oldTitle: 'Untitled Chat', newTitle, sessionId: currentSession.apiSessionId });
                             await chatAPI.updateSession(currentSession.apiSessionId, newTitle);
                         }

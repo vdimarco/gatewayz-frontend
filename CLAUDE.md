@@ -23,6 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Tailwind CSS** with custom design system and dark/light theme support
 - **Radix UI** components for accessible UI primitives
 - **Privy** for Web3-native authentication (email, Google, GitHub)
+- **PostHog** for product analytics and user behavior tracking
 - **Google Genkit** for AI orchestration and chat flows
 - **Firebase** for backend services and database
 - **Recharts** and **Chart.js** for data visualization
@@ -45,7 +46,8 @@ src/
 │   ├── auth/             # Authentication components
 │   ├── chat/             # Chat-specific components
 │   ├── dashboard/        # Analytics and charts
-│   └── layout/           # Header, footer, navigation
+│   ├── layout/           # Header, footer, navigation
+│   └── providers/        # Context providers (Privy, PostHog)
 ├── hooks/                # Custom React hooks
 ├── lib/                  # Utilities and configuration
 │   ├── models-data.ts    # 300+ AI model definitions
@@ -62,6 +64,14 @@ src/
 - **Required env**: `NEXT_PUBLIC_PRIVY_APP_ID`
 - **Components**: Authentication flows handled by `src/components/providers/privy-provider.tsx`
 - **Hooks**: Use `src/hooks/use-auth.ts` for authentication state
+
+### Analytics System
+- **PostHog**: Product analytics and user behavior tracking
+- **Configuration**: `src/components/providers/posthog-provider.tsx`
+- **Required env**: `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`
+- **Auto-tracking**: Pageviews are automatically tracked via `PostHogPageView` component
+- **Custom events**: Use `usePostHog()` hook from `posthog-js/react` to track custom events
+- **Example**: `const posthog = usePostHog(); posthog.capture('event_name', { property: 'value' });`
 
 ### AI Integration
 - **Framework**: Google Genkit for AI orchestration
@@ -96,12 +106,20 @@ src/
 ```bash
 NEXT_PUBLIC_PRIVY_APP_ID=your-privy-app-id
 GOOGLE_AI_API_KEY=your-google-ai-api-key
+NEXT_PUBLIC_POSTHOG_KEY=your-posthog-key
+NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
 ```
 
 ### Privy Setup
 - Create app at dashboard.privy.io
 - Configure login methods: email, Google, GitHub OAuth
 - Set authorized domains for production
+
+### PostHog Setup
+- Create project at app.posthog.com
+- Get project API key from project settings
+- Analytics automatically tracks pageviews and user events
+- Use `usePostHog()` hook from `posthog-js/react` for custom event tracking
 
 ## Development Workflow
 

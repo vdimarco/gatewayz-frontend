@@ -5,9 +5,11 @@ import { AppHeader } from '@/components/layout/app-header';
 import { AppFooter } from '@/components/layout/app-footer';
 import { ThemeProvider } from '@/components/theme-provider';
 import { PrivyProviderWrapper } from '@/components/providers/privy-provider';
+import { PostHogProvider, PostHogPageView } from '@/components/providers/posthog-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { OnboardingBanner } from '@/components/onboarding/onboarding-banner';
 import { Inter } from 'next/font/google';
+import { Suspense } from 'react';
 // import { GTMLoader } from '@/components/analytics/gtm-loader'; // Temporarily disabled due to layout router issues
 
 const inter = Inter({
@@ -73,14 +75,19 @@ export default function RootLayout({
           storageKey="ui-theme"
         >
           <ErrorBoundary>
-            <PrivyProviderWrapper>
-              {/* <GTMLoader /> Temporarily disabled due to layout router issues */}
-              <AppHeader />
-              <OnboardingBanner />
-              {children}
-              <Toaster />
-              <AppFooter />
-            </PrivyProviderWrapper>
+            <PostHogProvider>
+              <Suspense fallback={null}>
+                <PostHogPageView />
+              </Suspense>
+              <PrivyProviderWrapper>
+                {/* <GTMLoader /> Temporarily disabled due to layout router issues */}
+                <AppHeader />
+                <OnboardingBanner />
+                {children}
+                <Toaster />
+                <AppFooter />
+              </PrivyProviderWrapper>
+            </PostHogProvider>
           </ErrorBoundary>
         </ThemeProvider>
       </body>
