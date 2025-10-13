@@ -27,8 +27,8 @@ export function OnboardingBanner() {
       return;
     }
 
-    // Don't show on onboarding page itself or home page
-    if (pathname === '/onboarding' || pathname === '/') {
+    // Don't show on onboarding page itself, home page, or settings pages
+    if (pathname === '/onboarding' || pathname === '/' || pathname?.startsWith('/settings')) {
       setVisible(false);
       return;
     }
