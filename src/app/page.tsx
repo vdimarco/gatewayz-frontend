@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, ChevronRight, GitMerge, ShieldCheck, TrendingUp, User, Zap } from 'lucide-react';
+import { ArrowRight, ChevronRight, GitMerge, ShieldCheck, TrendingUp, User, Zap, Code2, Terminal, MessageSquare, Check as CheckIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { getApiKey } from '@/lib/api';
 import { API_BASE_URL } from '@/lib/config';
 import Image from 'next/image';
+import { PathChooserModal } from '@/components/onboarding/path-chooser-modal';
+import posthog from 'posthog-js';
 
 interface FeaturedModel {
   name: string;
@@ -210,6 +212,7 @@ export default function Home() {
   const [codeCopied, setCodeCopied] = useState(false);
   const [showApiKey, setShowApiKey] = useState(true);
   const { toast } = useToast();
+  const [showPathChooser, setShowPathChooser] = useState(false);
 
   // Load the actual API key when user is authenticated
   useEffect(() => {
@@ -467,7 +470,12 @@ console.log(completion.choices[0].message);`,
     });
     setTimeout(() => setCodeCopied(false), 2000);
   };
-  
+
+  // Track page view on mount
+  useEffect(() => {
+    posthog.capture('view_homepage');
+  }, []);
+
   return (
     <div className="bg-background text-foreground">
       {/* Claude Code Integration Banner */}
@@ -489,11 +497,12 @@ console.log(completion.choices[0].message);`,
                 </p>
               </div>
             </div>
-            <Link href="/claude-code" className="w-full sm:w-auto">
+            <Link href="/start/claude-code" className="w-full sm:w-auto">
               <Button
                 variant="secondary"
                 size="sm"
                 className="bg-background text-purple-600 dark:text-purple-400 hover:bg-muted whitespace-nowrap w-full sm:w-auto text-xs sm:text-sm py-1.5 sm:py-2"
+                onClick={() => posthog.capture('claude_code_banner_clicked')}
               >
                 Get Started →
               </Button>
@@ -515,31 +524,125 @@ console.log(completion.choices[0].message);`,
         
         <section className="grid md:grid-cols-1 gap-8 items-center py-8 md:py-[140px] mb-16 md:mb-32 max-w-5xl mx-auto px-4" >
           <div className="space-y-6 md:space-y-8 px-4">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-extrabold tracking-tighter text-center leading-tight" style={{  fontFamily: 'Inter, sans-serif',}}>One Interface To Work With Any LLM</h1>
-            <p className="text-sm sm:text-base md:text-lg text-center px-4 py-6">From Idea To Production, Gatewayz Gives AI Teams The Toolkit, Savings, And Reliability They Need.</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-extrabold tracking-tighter text-center leading-tight" style={{  fontFamily: 'Inter, sans-serif',}}>Ship with any AI model. One API key.</h1>
+            <p className="text-sm sm:text-base md:text-lg text-center px-4 py-6">Pick your path: API · Claude Code · Chat. Make your first call in 30 seconds.</p>
           </div>
-          <div className="relative mt-4">
-            <Input
-              placeholder="Start a message..."
-              className="h-12 pr-14 bg-input"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              autoComplete="off"
-              data-form-type="other"
-              type="text"
-            />
-            <button
-              className="absolute right-2 top-1/2 -translate-y-1/2"
-              onClick={handleSendMessage}
-              type="button"
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4">
+            <Button
+              size="lg"
+              className="h-14 px-8 text-lg font-semibold bg-black hover:bg-gray-900 text-white w-full sm:w-auto"
+              onClick={() => {
+                posthog.capture('get_started_clicked');
+                setShowPathChooser(true);
+              }}
             >
-              <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="34" height="34" rx="8" fill="black"/>
-                <path d="M9 23.5V18.346L14.846 17L9 15.654V10.5L24.423 17L9 23.5Z" fill="white"/>
-              </svg>
-            </button>
+              Get Started
+            </Button>
+            <Link href="/models">
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 px-8 text-lg font-semibold w-full sm:w-auto"
+              >
+                Explore Models
+              </Button>
+            </Link>
           </div>
+
+          {/* Path Chooser Modal */}
+          <PathChooserModal open={showPathChooser} onOpenChange={setShowPathChooser} />
+
+          {/* Three Path Cards - Above the Fold */}
+          <div className="grid md:grid-cols-3 gap-6 mt-16 max-w-5xl mx-auto">
+            {/* API Path Card */}
+            <Link href="/start/api" className="group">
+              <div className="bg-card border-2 border-border hover:border-blue-500 rounded-lg p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col">
+                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Code2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Use the API</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Copy key → make your first API call in 30 seconds
+                </p>
+                <div className="mt-auto">
+                  <div className="text-sm font-medium text-blue-600 dark:text-blue-400 group-hover:underline">
+                    Get Started →
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* Claude Code Path Card */}
+            <Link href="/start/claude-code" className="group">
+              <div className="bg-card border-2 border-border hover:border-purple-500 rounded-lg p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col">
+                <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Terminal className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Install Claude Code</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  One command → AI-powered coding in minutes
+                </p>
+                <div className="mt-auto">
+                  <div className="text-sm font-medium text-purple-600 dark:text-purple-400 group-hover:underline">
+                    Get Started →
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* Chat Path Card */}
+            <Link href="/start/chat" className="group">
+              <div className="bg-card border-2 border-border hover:border-green-500 rounded-lg p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col">
+                <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <MessageSquare className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Open Chat</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Start chatting → we pick the best model for you
+                </p>
+                <div className="mt-auto">
+                  <div className="text-sm font-medium text-green-600 dark:text-green-400 group-hover:underline">
+                    Get Started →
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </div>
+
+          {/* Why Gatewayz - Proof Strip */}
+          <div className="mt-16 max-w-5xl mx-auto">
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-8">
+              <h3 className="text-2xl font-bold text-center mb-8">Why Gatewayz?</h3>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-3">
+                    <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <h4 className="font-bold mb-2">Cheaper</h4>
+                  <p className="text-sm text-muted-foreground">Router picks lowest cost model automatically</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-3">
+                    <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h4 className="font-bold mb-2">Faster</h4>
+                  <p className="text-sm text-muted-foreground">Multi-provider routing for best performance</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mx-auto mb-3">
+                    <CheckIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <h4 className="font-bold mb-2">1000+ Models</h4>
+                  <p className="text-sm text-muted-foreground">Access every major AI model through one API</p>
+                </div>
+              </div>
+              <div className="mt-6 text-center text-sm text-muted-foreground">
+                <p>💰 <strong>Bonus:</strong> Add $10 → get +$10 free credits on your first top-up</p>
+              </div>
+            </div>
+          </div>
+
           <div className="overflow-hidden relative -mx-4 mt-6">
             <div
               ref={carouselRef}
@@ -770,7 +873,7 @@ console.log(completion.choices[0].message);`,
                  className="relative bg-black hover:bg-gray-900 text-white hover:text-white h-12 px-12 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)]"
                  onClick={handleGenerateApiKey}
                >
-                 {user ? 'Claim Trial Credits' : 'Generate API Key'}
+                 {user ? 'Claim Trial Credits' : 'Get API Key'}
                </Button>
              </div>
            </div>
