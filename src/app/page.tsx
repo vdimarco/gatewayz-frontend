@@ -669,6 +669,31 @@ console.log(completion.choices[0].message);`,
             </div>
           </div>
 
+          {/* Message Input for Chat Redirect */}
+          <div className="max-w-3xl mx-auto mt-8 px-4">
+            <div className="relative flex gap-2">
+              <Input
+                type="text"
+                placeholder="Try: Explain quantum computing in simple terms..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="h-14 px-6 text-base bg-background border-2 border-border hover:border-primary/50 focus:border-primary transition-colors"
+              />
+              <Button
+                size="lg"
+                onClick={handleSendMessage}
+                disabled={!message.trim() || activeModelIndex === null}
+                className="h-14 px-8 text-base font-semibold bg-primary hover:bg-primary/90"
+              >
+                Chat
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Select a model above and type a message to start chatting
+            </p>
+          </div>
+
             {/* Connected to 1000+ AI Models - Moved here */}
             <section className="mt-12 px-4">
               <div className="mb-8">
