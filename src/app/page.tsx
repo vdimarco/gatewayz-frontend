@@ -471,7 +471,7 @@ console.log(completion.choices[0].message);`,
   return (
     <div className="bg-background text-foreground">
       {/* Claude Code Integration Banner */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+      <div className="sticky top-[65px] z-40 bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
