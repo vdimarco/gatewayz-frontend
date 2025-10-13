@@ -67,7 +67,7 @@ export default function StartApiPage() {
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer ${apiKey || 'YOUR_API_KEY'}" \\
   -d '{
-    "model": "gpt-4",
+    "model": "openai/gpt-4",
     "messages": [
       {
         "role": "user",
@@ -83,7 +83,7 @@ client = OpenAI(
 )
 
 completion = client.chat.completions.create(
-    model="gpt-4",
+    model="openai/gpt-4",  # Format: researcher/model
     messages=[
         {"role": "user", "content": "Hello! What can you help me with?"}
     ]
@@ -257,7 +257,7 @@ print(completion.choices[0].message.content)`
 
           <div className="bg-card border rounded-lg p-6 shadow-sm">
             <p className="text-muted-foreground mb-4">
-              Replace <code className="bg-muted px-2 py-1 rounded">gpt-4</code> with any model ID from our catalog.
+              Replace <code className="bg-muted px-2 py-1 rounded">openai/gpt-4</code> with any model from our catalog using the format <code className="bg-muted px-2 py-1 rounded">researcher/model</code>.
               We support 1000+ models from OpenAI, Anthropic, Google, Meta, and more.
             </p>
             <Link href="/models">

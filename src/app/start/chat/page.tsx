@@ -53,7 +53,7 @@ export default function StartChatPage() {
       title: "Math",
       description: "Best for calculations & reasoning",
       prompt: "Solve this calculus problem: find the derivative of x³ + 2x² - 5x + 3",
-      model: "Grok 2",
+      model: "Gemini 2.1 Pro",
       color: "purple",
       bgColor: "bg-purple-50 dark:bg-purple-950/20",
       borderColor: "border-purple-200 dark:border-purple-800",
