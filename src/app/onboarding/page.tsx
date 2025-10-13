@@ -53,7 +53,7 @@ export default function OnboardingPage() {
     {
       id: "credits",
       title: "Add More Credits (Optional)",
-      description: "When you're ready, add more credits to keep using AI models.",
+      description: "Add $10 and get a bonus $10 in free credits on your first top up",
       icon: <CreditCard className="h-5 w-5" />,
       completed: false,
       action: "/settings/credits",
@@ -319,6 +319,32 @@ console.log(response.choices[0].message.content);`
                 className="h-full bg-gradient-to-r from-purple-600 to-blue-600 transition-all duration-500"
                 style={{ width: `${(completedCount / totalCount) * 100}%` }}
               />
+            </div>
+          </div>
+
+          {/* Promotional Banner */}
+          <div className="max-w-2xl mx-auto mb-6">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-2 border-green-200 dark:border-green-800 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                    <CreditCard className="h-5 w-5 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-green-900 dark:text-green-100 mb-1">
+                    💰 Limited Time Offer
+                  </h3>
+                  <p className="text-sm text-green-800 dark:text-green-200">
+                    <strong>Add $10 and get a bonus $10 in free credits</strong> on your first top up!
+                  </p>
+                </div>
+                <Link href="/settings/credits">
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                    Add Credits
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
 
