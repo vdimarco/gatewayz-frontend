@@ -67,10 +67,17 @@ const nextConfig: NextConfig = {
       };
     }
 
-    // Ignore warnings about require.extensions
+    // Ignore warnings about require.extensions and module casing
     config.ignoreWarnings = [
       /require\.extensions is not supported by webpack/,
+      /There are multiple modules with names that only differ in casing/,
     ];
+
+    // Fix module casing issues on Windows
+    config.snapshot = {
+      ...config.snapshot,
+      managedPaths: [],
+    };
 
     return config;
   },

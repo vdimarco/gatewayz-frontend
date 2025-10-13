@@ -539,7 +539,7 @@ console.log(completion.choices[0].message);`,
             >
               Get Started
             </Button>
-            <Link href="/models">
+            <Link href="/models" className="w-full sm:w-auto">
               <Button
                 size="lg"
                 variant="outline"
@@ -822,9 +822,9 @@ console.log(completion.choices[0].message);`,
             }
           `}</style>
 
-           <div className="w-full flex items-center gap-4 mt-8">
+           <div className="w-full flex flex-col lg:flex-row items-stretch lg:items-center gap-4 mt-8">
              {user && apiKey && (
-               <div className="flex-1 flex items-center gap-3">
+               <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Your API Key</label>
                  <div className="relative flex-1">
                    <Input
@@ -860,7 +860,7 @@ console.log(completion.choices[0].message);`,
                </div>
              )}
 
-             <div className={`relative group inline-block ${user && apiKey ? '' : 'mx-auto'}`}>
+             <div className={`relative group ${user && apiKey ? 'w-full lg:w-auto' : 'w-full sm:w-auto mx-auto'}`}>
                {/* Multi-layered LED-style glow with color shifting */}
                <div className="absolute -inset-[3px] rounded-lg opacity-90 blur-md animate-led-shimmer"></div>
                <div className="absolute -inset-[2px] rounded-lg opacity-80 blur-sm animate-led-shimmer" style={{ animationDelay: '0.5s' }}></div>
@@ -870,7 +870,7 @@ console.log(completion.choices[0].message);`,
 
                {/* Button with elevation effect */}
                <Button
-                 className="relative bg-black hover:bg-gray-900 text-white hover:text-white h-12 px-12 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)]"
+                 className="relative bg-black hover:bg-gray-900 text-white hover:text-white h-12 px-12 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)] w-full lg:w-auto"
                  onClick={handleGenerateApiKey}
                >
                  {user ? 'Claim Trial Credits' : 'Get API Key'}
