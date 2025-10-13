@@ -33,8 +33,8 @@ const nextConfig: NextConfig = {
   compress: true,
   // Optimize production builds
   productionBrowserSourceMaps: false,
-  // React optimization
-  reactStrictMode: true,
+  // React optimization - disabled due to layout router mounting issues with providers
+  reactStrictMode: false,
   // Optimize power preference
   poweredByHeader: false,
   experimental: {
