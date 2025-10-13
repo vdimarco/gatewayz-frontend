@@ -58,7 +58,7 @@ const FeaturedModelCard = ({
     <div
       className={`h-[144px] bg-card border rounded-lg shadow-sm hover:shadow-md cursor-pointer overflow-hidden relative ${
         isActive
-          ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-auto min-w-[280px] sm:min-w-[350px] md:min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)]'
+          ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-full sm:w-auto sm:min-w-[350px] md:min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)]'
           : 'border-border hover:border-border/80 w-20 sm:w-24 min-w-[80px] sm:min-w-[96px] flex-shrink-0'
       }`}
       style={{
@@ -142,7 +142,6 @@ const FeaturedModelCard = ({
         <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <div className="text-center">
             <p className="text-base sm:text-lg md:text-xl font-bold leading-tight">{model.tokens}</p>
-            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Tokens</p>
           </div>
           <div className="text-center">
             <p className="text-base sm:text-lg md:text-xl font-bold leading-tight">{model.latency}</p>
