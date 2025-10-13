@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Copy, Check, ExternalLink, Play } from 'lucide-react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useState, useEffect } from 'react';
@@ -19,6 +20,18 @@ export default function StartApiPage() {
   const [activeTab, setActiveTab] = useState<'curl' | 'python'>('curl');
   const [copied, setCopied] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('openai/gpt-4');
+
+  // Popular models for the dropdown
+  const popularModels = [
+    { value: 'openai/gpt-4o', label: 'GPT-4o (OpenAI)', description: 'Latest multimodal model' },
+    { value: 'openai/gpt-4', label: 'GPT-4 (OpenAI)', description: 'Most capable GPT model' },
+    { value: 'openai/gpt-4o-mini', label: 'GPT-4o mini (OpenAI)', description: 'Fast and affordable' },
+    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet (Anthropic)', description: 'Best for coding and analysis' },
+    { value: 'google/gemini-2.1-pro', label: 'Gemini 2.1 Pro (Google)', description: 'Advanced multimodal reasoning' },
+    { value: 'meta/llama-3.1-405b', label: 'Llama 3.1 405B (Meta)', description: 'Open source powerhouse' },
+    { value: 'qwen/qwen2-72b-a16b-2507', label: 'Qwen2 72B (Qwen)', description: 'Free multilingual model' },
+  ];
 
   // Track page view
   useEffect(() => {
@@ -67,7 +80,7 @@ export default function StartApiPage() {
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer ${apiKey || 'YOUR_API_KEY'}" \\
   -d '{
-    "model": "openai/gpt-4",
+    "model": "${selectedModel}",
     "messages": [
       {
         "role": "user",
@@ -83,7 +96,7 @@ client = OpenAI(
 )
 
 completion = client.chat.completions.create(
-    model="openai/gpt-4",  # Format: researcher/model
+    model="${selectedModel}",  # Format: researcher/model
     messages=[
         {"role": "user", "content": "Hello! What can you help me with?"}
     ]
@@ -179,11 +192,43 @@ print(completion.choices[0].message.content)`
           </div>
         </div>
 
-        {/* Step 2: Run Code */}
+        {/* Step 2: Select Model */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold">
               2
+            </div>
+            <h2 className="text-2xl font-bold">Select a Model</h2>
+          </div>
+
+          <div className="bg-card border rounded-lg p-6 shadow-sm">
+            <label className="text-sm font-medium mb-3 block">Choose from Popular Models</label>
+            <Select value={selectedModel} onValueChange={setSelectedModel}>
+              <SelectTrigger className="h-12 text-base">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {popularModels.map((model) => (
+                  <SelectItem key={model.value} value={model.value}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{model.label}</span>
+                      <span className="text-xs text-muted-foreground">{model.description}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-2">
+              💡 The code below will update automatically with your selection
+            </p>
+          </div>
+        </div>
+
+        {/* Step 3: Run Code */}
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold">
+              3
             </div>
             <h2 className="text-2xl font-bold">Run Your First Call</h2>
           </div>
@@ -246,19 +291,21 @@ print(completion.choices[0].message.content)`
           </div>
         </div>
 
-        {/* Step 3: Next Steps */}
+        {/* Step 4: Next Steps */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold">
-              3
+              4
             </div>
             <h2 className="text-2xl font-bold">Explore Models</h2>
           </div>
 
           <div className="bg-card border rounded-lg p-6 shadow-sm">
             <p className="text-muted-foreground mb-4">
-              Replace <code className="bg-muted px-2 py-1 rounded">openai/gpt-4</code> with any model from our catalog using the format <code className="bg-muted px-2 py-1 rounded">researcher/model</code>.
-              We support 1000+ models from OpenAI, Anthropic, Google, Meta, and more.
+              Want to try other models? We support 1000+ models from OpenAI, Anthropic, Google, Meta, and more using the <code className="bg-muted px-2 py-1 rounded">researcher/model</code> format.
+            </p>
+            <p className="text-sm text-muted-foreground mb-4">
+              💰 <strong>Add $10 in credits and get a bonus $10 on your first top-up</strong>
             </p>
             <Link href="/models">
               <Button variant="outline" className="w-full sm:w-auto">
