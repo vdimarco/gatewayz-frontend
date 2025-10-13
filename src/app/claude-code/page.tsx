@@ -240,8 +240,28 @@ export default function ClaudeCodePage() {
         </CardContent>
       </Card>
 
-      {/* Get API Key */}
-      {!apiKey && (
+      {/* API Key Display */}
+      {apiKey ? (
+        <Card className="mb-8 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3 text-green-900 dark:text-green-100">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100 font-bold">
+                ✓
+              </div>
+              Your API Key
+            </CardTitle>
+            <CardDescription>
+              Copy this key to use during installation
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-slate-950 dark:bg-slate-900 border-2 border-slate-800 rounded-lg p-4 font-mono text-sm flex items-center justify-between gap-4 shadow-lg">
+              <code className="flex-1 overflow-x-auto text-green-400">{apiKey}</code>
+              <CopyButton text={apiKey} id="api-key" />
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
         <Card className="mb-8 border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-3 text-amber-900 dark:text-amber-100">
