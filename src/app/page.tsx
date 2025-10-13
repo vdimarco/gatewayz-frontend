@@ -139,15 +139,15 @@ const FeaturedModelCard = ({
 
         <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <div className="text-center">
-            <p className="text-lg sm:text-xl md:text-2xl font-bold">{model.tokens}</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold leading-tight">{model.tokens}</p>
             <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Tokens</p>
           </div>
           <div className="text-center">
-            <p className="text-lg sm:text-xl md:text-2xl font-bold">{model.latency}</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold leading-tight">{model.latency}</p>
             <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Latency</p>
           </div>
           <div className="text-center">
-            <p className={`text-lg sm:text-xl md:text-2xl font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
+            <p className={`text-base sm:text-lg md:text-xl font-bold leading-tight ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
               {model.growth}
             </p>
             <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Weekly Growth</p>
@@ -515,8 +515,7 @@ console.log(completion.choices[0].message);`,
         
         <section className="grid md:grid-cols-1 gap-8 items-center py-8 md:py-[140px] mb-16 md:mb-32 max-w-5xl mx-auto px-4" >
           <div className="space-y-6 md:space-y-8 px-4">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tighter text-center" style={{  fontFamily: 'Inter, sans-serif',}}>One Interface To </h1>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tighter text-center">Work With Any LLM</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-extrabold tracking-tighter text-center leading-tight" style={{  fontFamily: 'Inter, sans-serif',}}>One Interface To Work With Any LLM</h1>
             <p className="text-sm sm:text-base md:text-lg text-center px-4 py-6">From Idea To Production, Gatewayz Gives AI Teams The Toolkit, Savings, And Reliability They Need.</p>
           </div>
           <div className="relative mt-4">
@@ -581,10 +580,10 @@ console.log(completion.choices[0].message);`,
             </section>
 
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm z-10 mt-12">
-              <div className=" px-6 py-[10px] flex flex-row items-center justify-between">
+              <div className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="font-bold tracking-tight text-lg">Top Models This Month</div>
-              <Link href="/rankings">
-                <Button variant="link" className="text-sm">View Trending
+              <Link href="/rankings" className="w-full sm:w-auto">
+                <Button variant="link" className="text-sm w-full sm:w-auto justify-start sm:justify-center">View Trending
                   <span>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2.66671 8H13.3334M13.3334 8L9.33337 12M13.3334 8L9.33337 4" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -602,7 +601,7 @@ console.log(completion.choices[0].message);`,
             <h2 className="text-4xl font-bold text-center">Getting Started Is As Easy As 123...</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-12">
-            <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
+            <div className="p-4 bg-card border rounded-lg h-40 grid grid-cols-7 shadow-sm">
               <div className="flex items-center justify-between col-span-2" >
                 <img src="/sign-up-blue.svg" alt="Signup icon" width="100" height="100" className="w-full h-full" loading="lazy" />
               </div>
@@ -612,7 +611,7 @@ console.log(completion.choices[0].message);`,
                 </HowItWorksStep>
               </div>
             </div>
-            <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
+            <div className="p-4 bg-card border rounded-lg h-40 grid grid-cols-7 shadow-sm">
              <div className="flex items-center justify-between col-span-2" >
                 <img src="/coins-blue.svg" alt="Credits icon" width="100" height="100" className="w-full h-full" loading="lazy" />
               </div>
@@ -622,7 +621,7 @@ console.log(completion.choices[0].message);`,
                 </HowItWorksStep>
               </div>
             </div>
-            <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
+            <div className="p-4 bg-card border rounded-lg h-40 grid grid-cols-7 shadow-sm">
               <div className="flex items-center justify-between col-span-2" >
                 <img src="/api-blue.svg" alt="API key icon" width="100" height="100" className="w-full h-full" loading="lazy" />
               </div>
