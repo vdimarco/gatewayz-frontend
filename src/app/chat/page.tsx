@@ -746,6 +746,7 @@ function ChatPageContent() {
         const messageParam = searchParams.get('message');
 
         if (modelParam) {
+            console.log('URL model parameter detected:', modelParam);
             // Fetch the model details from all gateways
             Promise.all([
                 fetch(`/api/models?gateway=openrouter`).then(res => res.json()),
@@ -760,11 +761,14 @@ function ChatPageContent() {
                     ];
                     const foundModel = allModels.find((m: any) => m.id === modelParam);
                     if (foundModel) {
+                        console.log('Found model from URL:', foundModel.name, foundModel.id);
                         setSelectedModel({
                             value: foundModel.id,
                             label: foundModel.name,
                             category: foundModel.pricing?.prompt ? 'Paid' : 'Free'
                         });
+                    } else {
+                        console.warn('Model not found in API:', modelParam);
                     }
                 })
                 .catch(err => console.log('Failed to fetch model:', err));
