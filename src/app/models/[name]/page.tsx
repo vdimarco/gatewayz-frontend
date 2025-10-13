@@ -11,14 +11,16 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { addDays, format } from 'date-fns';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ProvidersDisplay } from '@/components/models/provider-card';
-import { Maximize } from 'lucide-react';
+import { Maximize, Copy, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { providerData } from '@/lib/provider-data';
 import { generateChartData, generateStatsTable } from '@/lib/data';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import ReactMarkdown from "react-markdown";
 import { cn } from '@/lib/utils';
 import { stringToColor } from '@/lib/utils';
 import { API_BASE_URL } from '@/lib/config';
+import { models as staticModels } from '@/lib/models-data';
 
 // Lazy load heavy components
 const TopAppsTable = lazy(() => import('@/components/dashboard/top-apps-table'));
@@ -136,11 +138,34 @@ const ChartCard = ({ modelName, title, dataKey, yAxisFormatter }: { modelName: s
     )
 }
 
+type TabType = 'Overview' | 'Providers' | 'Apps' | 'Activity' | 'Uptime' | 'API';
+
+// Transform static model to API format
+function transformStaticModel(staticModel: typeof staticModels[0]): Model {
+    return {
+        id: `${staticModel.developer}/${staticModel.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+        name: staticModel.name,
+        description: staticModel.description,
+        context_length: staticModel.context * 1000,
+        pricing: {
+            prompt: staticModel.inputCost.toString(),
+            completion: staticModel.outputCost.toString()
+        },
+        architecture: {
+            input_modalities: staticModel.modalities.map(m => m.toLowerCase())
+        },
+        supported_parameters: staticModel.supportedParameters,
+        provider_slug: staticModel.developer
+    };
+}
+
 export default function ModelProfilePage() {
     const params = useParams();
     const [model, setModel] = useState<Model | null>(null);
     const [allModels, setAllModels] = useState<Model[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<TabType>('Overview');
+    const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
 
     const modelId = useMemo(() => {
         const id = params.name as string;
@@ -148,8 +173,20 @@ export default function ModelProfilePage() {
     }, [params.name]);
 
     useEffect(() => {
-        const CACHE_KEY = 'gatewayz_models_cache';
-        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+        const CACHE_KEY = 'gatewayz_models_cache_v4_all_gateways';
+        const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+        let mounted = true;
+
+        // Load static data immediately for instant page render (only if found)
+        const staticModelsTransformed = staticModels.map(transformStaticModel);
+        const staticFoundModel = staticModelsTransformed.find((m: Model) => m.id === modelId);
+
+        if (staticFoundModel && mounted) {
+            setModel(staticFoundModel);
+            setAllModels(staticModelsTransformed);
+            setLoading(false);
+        }
+        // If not found in static data, keep loading=true until API data arrives
 
         const fetchModels = async () => {
             try {
@@ -162,38 +199,130 @@ export default function ModelProfilePage() {
                         const { data, timestamp } = JSON.parse(cached);
                         if (Date.now() - timestamp < CACHE_DURATION) {
                             models = data;
-                            setAllModels(models);
-                            const foundModel = models.find((m: Model) => m.id === modelId);
-                            setModel(foundModel || null);
-                            setLoading(false);
-                            return;
+                            if (mounted) {
+                                setAllModels(models);
+                                const foundModel = models.find((m: Model) => m.id === modelId);
+                                if (foundModel) {
+                                    setModel(foundModel);
+                                    setLoading(false);
+                                    return; // Only return if model was found in cache
+                                }
+                                // If model not found in cache, continue to fetch from API
+                                console.log(`Model ${modelId} not in cache, fetching from API...`);
+                            }
                         }
                     } catch (e) {
-                        console.error('Cache parse error:', e);
+                        console.log('Cache parse error:', e);
                     }
                 }
 
-                // Fetch from API if no valid cache
-                const response = await fetch(`${API_BASE_URL}/models?gateway=all`);
-                const data = await response.json();
-                models = data.data || [];
+                // Fetch from all gateways to get all models via frontend API proxy
+                // Add timeout to prevent hanging
+                const fetchWithTimeout = (url: string, timeout = 10000) => {
+                    return Promise.race([
+                        fetch(url),
+                        new Promise<Response>((_, reject) =>
+                            setTimeout(() => reject(new Error('Request timeout')), timeout)
+                        )
+                    ]);
+                };
 
-                // Cache the result
-                localStorage.setItem(CACHE_KEY, JSON.stringify({
-                    data: models,
-                    timestamp: Date.now()
-                }));
+                const [openrouterRes, portkeyRes, featherlessRes] = await Promise.allSettled([
+                    fetchWithTimeout(`/api/models?gateway=openrouter`),
+                    fetchWithTimeout(`/api/models?gateway=portkey`),
+                    fetchWithTimeout(`/api/models?gateway=featherless`)
+                ]);
 
-                setAllModels(models);
-                const foundModel = models.find((m: Model) => m.id === modelId);
-                setModel(foundModel || null);
+                const getData = async (result: PromiseSettledResult<Response>) => {
+                    if (result.status === 'fulfilled') {
+                        try {
+                            const data = await result.value.json();
+                            return data.data || [];
+                        } catch (e) {
+                            console.log('Error parsing gateway response:', e);
+                            return [];
+                        }
+                    }
+                    return [];
+                };
+
+                const [openrouterData, portkeyData, featherlessData] = await Promise.all([
+                    getData(openrouterRes),
+                    getData(portkeyRes),
+                    getData(featherlessRes)
+                ]);
+
+                // Combine models from all gateways
+                const allModels = [
+                    ...openrouterData,
+                    ...portkeyData,
+                    ...featherlessData
+                ];
+
+                // Deduplicate models by ID - keep the first occurrence
+                const uniqueModelsMap = new Map();
+                allModels.forEach((model: any) => {
+                    if (!uniqueModelsMap.has(model.id)) {
+                        uniqueModelsMap.set(model.id, model);
+                    }
+                });
+                models = Array.from(uniqueModelsMap.values());
+
+                // Try to cache the result with compression (only essential fields)
+                try {
+                    // Only cache essential fields to reduce size
+                    const compactModels = models.map((m: Model) => ({
+                        id: m.id,
+                        name: m.name,
+                        description: m.description.substring(0, 200), // Truncate descriptions
+                        context_length: m.context_length,
+                        pricing: m.pricing,
+                        architecture: m.architecture,
+                        supported_parameters: m.supported_parameters,
+                        provider_slug: m.provider_slug
+                    }));
+
+                    localStorage.setItem(CACHE_KEY, JSON.stringify({
+                        data: compactModels,
+                        timestamp: Date.now()
+                    }));
+                } catch (e) {
+                    // If still too large, don't cache at all (we have static fallback)
+                    console.log('Cache skipped (storage quota), using static data fallback');
+                    try {
+                        localStorage.removeItem(CACHE_KEY);
+                        localStorage.removeItem('gatewayz_models_cache'); // Old cache key
+                    } catch (clearError) {
+                        // Ignore cleanup errors
+                    }
+                }
+
+                if (mounted) {
+                    setAllModels(models);
+                    const foundModel = models.find((m: Model) => m.id === modelId);
+                    // Update if found, or set to null if not found (after API fetch completes)
+                    if (foundModel) {
+                        setModel(foundModel);
+                    } else if (!staticFoundModel) {
+                        // Model not in static data and not in API - show "not found"
+                        setModel(null);
+                    }
+                    setLoading(false);
+                }
             } catch (error) {
-                console.error('Failed to fetch models:', error);
-            } finally {
-                setLoading(false);
+                console.log('Failed to fetch models:', error);
+                if (mounted && !staticFoundModel) {
+                    setLoading(false);
+                }
             }
         };
+
+        // Fetch API data in background (non-blocking)
         fetchModels();
+
+        return () => {
+            mounted = false;
+        };
     }, [modelId]);
 
     const relatedModels = useMemo(() => {
@@ -201,9 +330,21 @@ export default function ModelProfilePage() {
       return allModels.filter(m => m.provider_slug === model.provider_slug && m.id !== model.id).slice(0,3);
     }, [model, allModels]);
 
+    const copyToClipboard = async (text: string, id: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedStates({ ...copiedStates, [id]: true });
+            setTimeout(() => {
+                setCopiedStates({ ...copiedStates, [id]: false });
+            }, 2000);
+        } catch (error) {
+            console.error('Failed to copy:', error);
+        }
+    };
+
     if (loading) {
         return (
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center flex-1">
                 <p className="text-muted-foreground">Loading model...</p>
             </div>
         );
@@ -233,18 +374,38 @@ export default function ModelProfilePage() {
                         <Link href={`/chat?model=${encodeURIComponent(model.id)}`}>
                             <Button>Chat</Button>
                         </Link>
-                        <Button variant="outline" className="hidden sm:flex">Compare</Button>
                     </div>
                 </div>
                  <div className="mt-4 text-muted-foreground">
-                    <p>{model.description}</p>
+                    {/* <p>{model.description}</p> */}
+                    <ReactMarkdown
+                        components={{
+                        a: ({ children, ...props }) => (
+                            <span className="text-blue-600 underline cursor-pointer" {...props}>
+                            {children}
+                            </span>
+                        ),
+                        }}
+                    >
+                        {model.description}
+                    </ReactMarkdown>
                 </div>
             </header>
 
             <nav className="border-b overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
                 <div className="flex gap-4 lg:gap-6">
-                    {['Overview', 'Providers', 'Apps', 'Activity', 'Uptime', 'API'].map(item => (
-                        <Button key={item} variant="ghost" className="rounded-none border-b-2 border-transparent hover:border-primary data-[active]:border-primary data-[active]:text-primary whitespace-nowrap flex-shrink-0">
+                    {(['Overview', 'Providers', 'Apps', 'Activity', 'Uptime', 'API'] as TabType[]).map(item => (
+                        <Button
+                            key={item}
+                            variant="ghost"
+                            className={cn(
+                                "rounded-none border-b-2 whitespace-nowrap flex-shrink-0",
+                                activeTab === item
+                                    ? "border-primary text-primary"
+                                    : "border-transparent hover:border-primary"
+                            )}
+                            onClick={() => setActiveTab(item)}
+                        >
                             {item}
                         </Button>
                     ))}
@@ -252,66 +413,217 @@ export default function ModelProfilePage() {
             </nav>
 
             <main>
-                <Section 
-                  title={`Providers for ${model.name}`}
-                  description="OpenRouter routes requests to the best providers that are able to handle your prompt size and parameters, with fallbacks to maximize uptime."
-                  className="pt-8 pb-0"
-                >
-                    <ProvidersDisplay modelName={model.name} />
-                </Section>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-                    <ChartCard
-                        modelName={model.name}
-                        title="Throughput"
-                        dataKey="throughput"
-                        yAxisFormatter={(value) => `${value} tps`}
-                    />
-                     <ChartCard
-                        modelName={model.name}
-                        title="Latency"
-                        dataKey="latency"
-                        yAxisFormatter={(value) => `${value}s`}
-                    />
-                </div>
-
-                <Suspense fallback={<div className="py-8 text-center text-muted-foreground">Loading apps...</div>}>
-                    <TopAppsTable />
-                </Suspense>
-
-                <Section title={`Uptime from our API and our providers`}>
-                    <Card>
-                        <CardContent className="h-[200px] p-2">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={generateChartData([], 'throughput').slice(0,30)}>
-                                    <Tooltip 
-                                        formatter={(value) => [value, "Uptime"]}
-                                    />
-                                    <Area type="monotone" dataKey="value" strokeWidth={2} stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2) / 0.1)" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-                </Section>
-
-                <Section title="Is My Data Private?">
-                    <p className="text-muted-foreground">Yes, your data is private by default. See our <Link href="#" className="text-primary hover:underline">privacy policy</Link>.</p>
-                </Section>
-
-                <Section title={`More models from ${model.provider_slug}`}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {relatedModels.map(relatedModel => (
-                            <Link key={relatedModel.id} href={`/models/${encodeURIComponent(relatedModel.id)}`}>
-                                <Card className="hover:border-primary h-full">
-                                    <CardContent className="p-4">
-                                        <h3 className="font-semibold">{relatedModel.name}</h3>
-                                        <p className="text-sm text-muted-foreground mt-2 truncate">{relatedModel.description}</p>
+                {activeTab === 'Overview' && (
+                    <>
+                        <Section
+                          title="Model Details"
+                          className="pt-8 pb-0"
+                        >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-base">Pricing</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Prompt:</span>
+                                                <span className="font-medium">${model.pricing.prompt}/1M tokens</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Completion:</span>
+                                                <span className="font-medium">${model.pricing.completion}/1M tokens</span>
+                                            </div>
+                                        </div>
                                     </CardContent>
                                 </Card>
-                            </Link>
-                        ))}
-                    </div>
-                </Section>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-base">Capabilities</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="flex flex-wrap gap-2">
+                                            {model.architecture.input_modalities.map((modality) => (
+                                                <Badge key={modality} variant="secondary">{modality}</Badge>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </Section>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+                            <ChartCard
+                                modelName={model.name}
+                                title="Throughput"
+                                dataKey="throughput"
+                                yAxisFormatter={(value) => `${value} tps`}
+                            />
+                             <ChartCard
+                                modelName={model.name}
+                                title="Latency"
+                                dataKey="latency"
+                                yAxisFormatter={(value) => `${value}s`}
+                            />
+                        </div>
+
+                        <Section title="Is My Data Private?">
+                            <p className="text-muted-foreground">Yes, your data is private by default. See our <Link href="#" className="text-primary hover:underline">privacy policy</Link>.</p>
+                        </Section>
+
+                        <Section title={`More models from ${model.provider_slug}`}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {relatedModels.map(relatedModel => (
+                                    <Link key={relatedModel.id} href={`/models/${encodeURIComponent(relatedModel.id)}`}>
+                                        <Card className="hover:border-primary h-full">
+                                            <CardContent className="p-4">
+                                                <h3 className="font-semibold">{relatedModel.name}</h3>
+                                                <p className="text-sm text-muted-foreground mt-2 truncate">{relatedModel.description}</p>
+                                            </CardContent>
+                                        </Card>
+                                    </Link>
+                                ))}
+                            </div>
+                        </Section>
+                    </>
+                )}
+
+                {activeTab === 'Providers' && (
+                    <Section
+                      title={`Providers for ${model.name}`}
+                      description="Gatewayz routes requests to the best providers that are able to handle your prompt size and parameters, with fallbacks to maximize uptime."
+                      className="pt-8 pb-0"
+                    >
+                        <ProvidersDisplay modelName={model.name} />
+                    </Section>
+                )}
+
+                {activeTab === 'Apps' && (
+                    <Suspense fallback={<div className="py-8 text-center text-muted-foreground">Loading apps...</div>}>
+                        <Section title="Top Apps" className="pt-8">
+                            <TopAppsTable />
+                        </Section>
+                    </Suspense>
+                )}
+
+                {activeTab === 'Activity' && (
+                    <Section title="Recent Activity" className="pt-8">
+                        <Card>
+                            <CardContent className="p-8 text-center text-muted-foreground">
+                                Activity tracking coming soon
+                            </CardContent>
+                        </Card>
+                    </Section>
+                )}
+
+                {activeTab === 'Uptime' && (
+                    <Section title={`Uptime from our API and our providers`} className="pt-8">
+                        <Card>
+                            <CardContent className="h-[200px] p-2">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={generateChartData([], 'throughput').slice(0,30)}>
+                                        <Tooltip
+                                            formatter={(value) => [value, "Uptime"]}
+                                        />
+                                        <Area type="monotone" dataKey="value" strokeWidth={2} stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2) / 0.1)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </Section>
+                )}
+
+                {activeTab === 'API' && (
+                    <Section title="API Documentation" className="pt-8">
+                        <Card>
+                            <CardContent className="p-6 space-y-6">
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="font-semibold">Model ID</h3>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 px-2"
+                                            onClick={() => copyToClipboard(model.id, 'model-id')}
+                                        >
+                                            {copiedStates['model-id'] ? (
+                                                <>
+                                                    <Check className="h-4 w-4 mr-1 text-green-600" />
+                                                    Copied
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="h-4 w-4 mr-1" />
+                                                    Copy
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                    <code className="bg-muted px-3 py-2 rounded block">{model.id}</code>
+                                </div>
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="font-semibold">Example Request</h3>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 px-2"
+                                            onClick={() => copyToClipboard(
+`curl https://api.gatewayz.ai/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -d '{
+    "model": "${model.id}",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello!"
+      }
+    ]
+  }'`,
+                                                'example-request'
+                                            )}
+                                        >
+                                            {copiedStates['example-request'] ? (
+                                                <>
+                                                    <Check className="h-4 w-4 mr-1 text-green-600" />
+                                                    Copied
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="h-4 w-4 mr-1" />
+                                                    Copy
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                    <pre className="bg-muted p-4 rounded overflow-x-auto text-xs">
+{`curl https://api.gatewayz.ai/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -d '{
+    "model": "${model.id}",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello!"
+      }
+    ]
+  }'`}
+                                    </pre>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold mb-2">Supported Parameters</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {model.supported_parameters.map((param) => (
+                                            <Badge key={param} variant="outline">{param}</Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Section>
+                )}
             </main>
         </div>
         </TooltipProvider>

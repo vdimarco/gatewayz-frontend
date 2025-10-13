@@ -15,7 +15,7 @@ export async function GET() {
       }
     });
   } catch (error) {
-    console.error('Database test error:', error);
+    console.log('Database test error:', error);
     return NextResponse.json({
       success: false,
       message: 'Database connection failed',

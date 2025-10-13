@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown, ArrowUp, ArrowDown } from 'lucide-react';
 import TokenStackedBarChart from '@/components/TokenStackedBarChart';
+import CategoryStackedAreaChart from '@/components/CategoryStackedAreaChart';
 import { API_BASE_URL } from '@/lib/config';
 import { extractTokenValue } from '@/lib/utils';
 
@@ -15,6 +16,8 @@ export interface ModelData {
   rank: number;
   model_name: string;
   author: string;
+  category?: string;
+  provider?: string;
   tokens: string;
   trend_percentage: string;
   trend_direction: "up" | "down";
@@ -24,6 +27,7 @@ export interface ModelData {
   author_url: string;
   time_period: string;
   scraped_at: string; // ISO datetime string
+  logo_url: string;
 }
 
 interface AppData {
@@ -42,74 +46,13 @@ interface AppData {
 
 export default function RankingsPage() {
   const [selectedTopModelsCount, setSelectedTopModelsCount] = useState<number>(5);
-  const [modelLogos, setModelLogos] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(false);
-
 
   const [selectedTimeRangeForModels, setSelectedTimeRangeForModels] = useState("Top this month");
   const [selectedTimeRangeForApps, setSelectedTimeRangeForApps] = useState("Today");
 
   const [models, setModels] = useState<ModelData[]>([]);
   const [apps, setApps] = useState<AppData[]>([]);
-
-  // Fetch model logos
-  useEffect(() => {
-    const fetchLogos = async () => {
-      const logoMap = new Map<string, string>();
-
-      // Map of static logos for major providers
-      const staticLogos: { [key: string]: string } = {
-        'google': '/google-logo.svg',
-        'openai': '/openai-logo.svg',
-        'anthropic': '/anthropic-logo.svg',
-      };
-
-      await Promise.all(
-        models.slice(0, 20).map(async (model) => {
-          try {
-            // Check if we have a static logo for this author
-            const authorLower = model.author.toLowerCase();
-            const staticLogo = staticLogos[authorLower];
-            if (staticLogo) {
-              logoMap.set(model.model_name, staticLogo);
-              return;
-            }
-
-            // Special handling for specific models
-            let modelId = '';
-
-            // X-AI / Grok models - use xai organization
-            if (authorLower.includes('x-ai') || authorLower.includes('xai')) {
-              modelId = `xai/grok-2-1212`;  // Use a known Grok model for logo
-            }
-            // DeepSeek models - use deepseek-ai organization
-            else if (authorLower.includes('deepseek')) {
-              modelId = `deepseek-ai/DeepSeek-V3`;  // Use a known DeepSeek model for logo
-            }
-            // Default: use author/model-name
-            else {
-              modelId = `${model.author}/${model.model_name.replace(/ /g, '-')}`;
-            }
-
-            const response = await fetch(`/api/model-logo?modelId=${encodeURIComponent(modelId)}`);
-
-            if (response.ok) {
-              const data = await response.json();
-              if (data.model?.authorData?.avatarUrl) {
-                logoMap.set(model.model_name, data.model.authorData.avatarUrl);
-              }
-            }
-          } catch (error) {
-            console.error(`Failed to fetch logo for ${model.model_name}:`, error);
-          }
-        })
-      );
-
-      setModelLogos(logoMap);
-    };
-
-    fetchLogos();
-  }, [models]);
 
   useEffect(() => {
     const getModels = async () => {
@@ -129,7 +72,7 @@ export default function RankingsPage() {
           setModels([])
         }
       } catch (error) {
-        console.error('Failed to fetch models:', error);
+        console.log('Failed to fetch models:', error);
       } finally {
         setLoading(false);
       }
@@ -150,7 +93,7 @@ export default function RankingsPage() {
           setApps([]);
         }
       } catch (error) {
-        console.error('Failed to fetch apps:', error);
+        console.log('Failed to fetch apps:', error);
       } finally {
         setLoading(false);
       }
@@ -161,10 +104,25 @@ export default function RankingsPage() {
   },[]);
 
   const filteredModels = useMemo(() => {
-    return models
-    .filter((model) => model.time_period === selectedTimeRangeForModels)
-    .sort((a, b) => a.rank - b.rank) // ascending order
-    .slice(0, selectedTopModelsCount);
+    // Deduplicate by model_name and filter by time period
+    const uniqueModels = models
+      .filter((model) => model.time_period === selectedTimeRangeForModels)
+      .reduce((acc, current) => {
+        const existingIndex = acc.findIndex(m => m.model_name === current.model_name);
+        if (existingIndex === -1) {
+          acc.push(current);
+        } else {
+          // Keep the one with lower rank (better ranking)
+          if (current.rank < acc[existingIndex].rank) {
+            acc[existingIndex] = current;
+          }
+        }
+        return acc;
+      }, [] as ModelData[]);
+
+    return uniqueModels
+      .sort((a, b) => a.rank - b.rank) // ascending order
+      .slice(0, selectedTopModelsCount);
   }, [selectedTopModelsCount, selectedTimeRangeForModels, models])
 
   const filteredApps = useMemo(() => {
@@ -174,7 +132,7 @@ export default function RankingsPage() {
   }, [selectedTimeRangeForApps, apps])
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <header className="text-center mb-8">
@@ -188,9 +146,16 @@ export default function RankingsPage() {
          <div className="mb-12">
            <Card className="p-4">
              <div className="mb-2">
-               <h3 className="text-base font-semibold text-gray-800">Top 10 Models - Tokens Generated</h3>
+               <h3 className="text-base font-semibold">Top 10 Models - Tokens Generated</h3>
              </div>
-             <TokenStackedBarChart rankingData={models} />
+             <TokenStackedBarChart rankingData={filteredModels} />
+           </Card>
+         </div>
+
+         {/* Category Stacked Area Chart */}
+         <div className="mb-12">
+           <Card className="p-6">
+             <CategoryStackedAreaChart rankingData={filteredModels} />
            </Card>
          </div>
 
@@ -230,14 +195,14 @@ export default function RankingsPage() {
 
           {/* Header Row - Hidden on mobile */}
           <Card className='hidden lg:flex flex-col'>
-            <div className="ranking-row bg-gray-50 rounded-lg">
-              <div className="col-span-2 font-semibold text-xs text-gray-600">Rank</div>
-              <div className="col-span-6 font-semibold text-xs text-gray-600">AI Model</div>
-              <div className="col-span-3 font-semibold text-xs text-gray-600">Model Org</div>
-              <div className="col-span-3 font-semibold text-xs text-gray-600">Category</div>
-              <div className="col-span-3 font-semibold text-xs text-gray-600">Top Provider</div>
-              <div className="col-span-3 font-semibold text-xs text-gray-600 text-right">Tokens Generated</div>
-              <div className="col-span-3 font-semibold text-xs text-gray-600 text-right">Change</div>
+            <div className="ranking-row bg-muted rounded-lg">
+              <div className="col-span-2 font-semibold text-xs text-muted-foreground">Rank</div>
+              <div className="col-span-6 font-semibold text-xs text-muted-foreground">AI Model</div>
+              <div className="col-span-3 font-semibold text-xs text-muted-foreground">Model Org</div>
+              <div className="col-span-3 font-semibold text-xs text-muted-foreground">Category</div>
+              <div className="col-span-3 font-semibold text-xs text-muted-foreground">Top Provider</div>
+              <div className="col-span-3 font-semibold text-xs text-muted-foreground text-right">Tokens Generated</div>
+              <div className="col-span-3 font-semibold text-xs text-muted-foreground text-right">Change</div>
             </div>
           </Card>
 
@@ -247,13 +212,13 @@ export default function RankingsPage() {
               Array.from({ length: 10 }).map((_, i) => (
                 <Card key={i} className="p-0 overflow-hidden">
                   <div className="grid grid-cols-24 gap-2 px-6 py-2">
-                    <div className="col-span-24 h-16 animate-pulse bg-gray-100 rounded"></div>
+                    <div className="col-span-24 h-16 animate-pulse bg-muted rounded"></div>
                   </div>
                 </Card>
               ))
             ) : filteredModels.length === 0 ? (
               <Card className="p-6">
-                <p className="text-center text-gray-500">No models found for the selected time period.</p>
+                <p className="text-center text-muted-foreground">No models found for the selected time period.</p>
               </Card>
             ) : (
               filteredModels.map((model, index) => (
@@ -271,15 +236,24 @@ export default function RankingsPage() {
                     {/* AI Model - 7 columns on mobile (col-span-7), 6 on desktop */}
                     <div className="col-span-7 lg:col-span-6">
                       <div className="flex items-center gap-2">
-                        {modelLogos.get(model.model_name) ? (
+                        {model.logo_url ? (
                           <div className='ranking-logo'>
                             <img
-                              src={modelLogos.get(model.model_name)}
+                              src={model.logo_url}
                               alt={model.model_name}
+                              onError={(e) => {
+                                // Fallback to author initial if logo fails to load
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = `<div class='w-8 h-8 flex-shrink-0 rounded bg-muted flex items-center justify-center'><span class="text-sm font-medium">${model.author.charAt(0).toUpperCase()}</span></div>`;
+                                }
+                              }}
                             />
                           </div>
                         ) : (
-                          <div className='w-8 h-8 flex-shrink-0 rounded bg-gray-100 flex items-center justify-center'>
+                          <div className='w-8 h-8 flex-shrink-0 rounded bg-muted flex items-center justify-center'>
                             <span className="text-sm font-medium">{model.author.charAt(0).toUpperCase()}</span>
                           </div>
                         )}
@@ -342,7 +316,7 @@ export default function RankingsPage() {
 
           {filteredApps.length === 0 ? (
             <Card className="p-6">
-              <p className="text-center text-gray-500">
+              <p className="text-center text-muted-foreground">
                 No apps found for the selected time period.
               </p>
             </Card>
@@ -359,7 +333,7 @@ export default function RankingsPage() {
                     />
                     <div className="min-h-[60px]">
                       <h3 className="font-semibold">{app.app_name}</h3>
-                      <p className="text-sm text-gray-600 line-clamp-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
                         {app.description}
                       </p>
                     </div>
@@ -371,7 +345,7 @@ export default function RankingsPage() {
                       <p className="text-2xl font-bold">
                         {app.tokens ? extractTokenValue(app.tokens) : '0'}
                       </p>
-                      <p className="text-xs text-gray-500">Tokens Generated</p>
+                      <p className="text-xs text-muted-foreground">Tokens Generated</p>
                     </div>
                   </div>
                 </Card>

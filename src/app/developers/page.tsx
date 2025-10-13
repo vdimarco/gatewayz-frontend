@@ -26,6 +26,7 @@ type RankingModel = {
     author_url: string;
     time_period: string;
     scraped_at: string;
+    logo_url: string;
 }
 
 type Organization = {
@@ -67,11 +68,11 @@ const OrganizationCard = ({ org }: { org: Organization }) => {
         <Card className="flex flex-col bg-card border rounded-lg">
             <CardContent className="p-6 pb-2 flex-grow">
                 <div className="flex items-start gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-white overflow-hidden">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-background border overflow-hidden">
                         {logoUrl ? (
                             <img src={logoUrl} alt={org.name} className="w-10 h-10 object-contain" />
                         ) : (
-                            <Bot className="w-6 h-6 text-gray-600" />
+                            <Bot className="w-6 h-6 text-muted-foreground" />
                         )}
                     </div>
                     <div>
@@ -100,7 +101,7 @@ const OrganizationCard = ({ org }: { org: Organization }) => {
             </CardContent>
             <CardFooter className="p-6 pt-4">
                 <Link href={`/organizations/${encodeURIComponent(org.author)}`} className="w-full">
-                    <Button variant="outline" className="w-full bg-white">
+                    <Button variant="outline" className="w-full">
                         View Profile <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 </Link>
@@ -153,7 +154,7 @@ export default function DevelopersPage() {
                     console.log('Set ranking models:', data.data.length);
                 }
             } catch (error) {
-                console.error('Failed to fetch ranking models:', error);
+                console.log('Failed to fetch ranking models:', error);
             } finally {
                 setLoading(false);
             }
@@ -162,42 +163,18 @@ export default function DevelopersPage() {
         fetchRankingModels();
     }, []);
 
-    // Fetch organization logos
+    // Build organization logos from API response
     useEffect(() => {
-        const fetchLogos = async () => {
-            // Get unique authors from ranking models
-            const uniqueAuthors = Array.from(new Set(rankingModels.map(m => m.author)));
-            const logoMap = new Map<string, string>();
+        const logoMap = new Map<string, string>();
+        
+        // Use logo_url from the API response for each model
+        rankingModels.forEach(model => {
+            if (model.logo_url) {
+                logoMap.set(model.author, model.logo_url);
+            }
+        });
 
-            await Promise.all(
-                uniqueAuthors.map(async (author) => {
-                    try {
-                        // Use the first model from this author to get the logo
-                        const authorModel = rankingModels.find(m => m.author === author);
-                        if (!authorModel) return;
-
-                        // Format model name for API: "author/model-name"
-                        const modelId = `${author}/${authorModel.model_name.replace(/ /g, '-')}`;
-                        const response = await fetch(`/api/model-logo?modelId=${encodeURIComponent(modelId)}`);
-
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.model?.authorData?.avatarUrl) {
-                                logoMap.set(author, data.model.authorData.avatarUrl);
-                            }
-                        }
-                    } catch (error) {
-                        console.error(`Failed to fetch logo for ${author}:`, error);
-                    }
-                })
-            );
-
-            setOrganizationLogos(logoMap);
-        };
-
-        if (rankingModels.length > 0) {
-            fetchLogos();
-        }
+        setOrganizationLogos(logoMap);
     }, [rankingModels]);
 
     const organizations: Organization[] = useMemo(() => {
@@ -286,7 +263,7 @@ export default function DevelopersPage() {
 
 
     return (
-        <div className="min-h-[calc(100vh-130px)] bg-white">
+        <div className="min-h-[calc(100vh-130px)] bg-background">
             <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-8">
                 <header className="text-center mb-8">
                     <h1 className="text-4xl font-bold tracking-tight">Developers</h1>
@@ -300,7 +277,7 @@ export default function DevelopersPage() {
                         <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                             placeholder="Search Organisation..."
-                            className="pr-9 bg-white border"
+                            className="pr-9 border"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -309,22 +286,15 @@ export default function DevelopersPage() {
 
                 <div className="flex justify-between items-center mb-8">
                     <div className="flex items-center gap-2">
-                        <Button 
-                            variant={activeTab === 'top' ? 'default' : 'ghost'} 
-                            onClick={() => setActiveTab('top')}
-                            className={activeTab === 'top' ? 'bg-gray-100 text-foreground' : ''}
-                        >
-                            Top Models
-                        </Button>
-                        <Button 
+                        <Button
                             variant={activeTab === 'trending' ? 'default' : 'ghost'}
                             onClick={() => setActiveTab('trending')}
-                            className={activeTab === 'trending' ? 'bg-gray-100 text-foreground' : ''}
+                            className={activeTab === 'trending' ? 'bg-muted text-foreground' : ''}
                         >
                             Trending
                         </Button>
                     </div>
-                    
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="w-[160px] justify-between">

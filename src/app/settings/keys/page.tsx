@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { getApiKey, makeAuthenticatedRequest } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
 import { useToast } from "@/hooks/use-toast";
+import { usePrivy } from "@privy-io/react-auth";
 
 // API Key data type from backend
 interface ApiKey {
@@ -72,19 +73,19 @@ const ApiKeyRow = ({
   const limit = apiKey.max_requests ? `${apiKey.max_requests}` : "Unlimited";
 
   return (
-    <div className="px-4 py-3 hover:bg-gray-50">
-      <div className="grid grid-cols-5 gap-4 items-center text-sm">
+    <div className="px-4 py-3 hover:bg-muted/50 dark:hover:bg-muted/30">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 items-center text-sm">
         <div className="font-medium">
           {apiKey.key_name}
           {apiKey.is_primary && (
-            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Primary</span>
+            <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded">Primary</span>
           )}
           {!apiKey.is_active && (
-            <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">Inactive</span>
+            <span className="ml-2 text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-2 py-0.5 rounded">Inactive</span>
           )}
         </div>
         <div className="font-medium flex items-center gap-2 min-w-0">
-          <span className="font-mono text-xs truncate">{maskedKey}</span>
+          <span className="font-mono text-xs truncate flex-shrink min-w-0">{maskedKey}</span>
           <TooltipProvider delayDuration={0}>
             <Tooltip open={showFullKey}>
               <TooltipTrigger asChild>
@@ -133,15 +134,15 @@ const ApiKeyRow = ({
             <Copy className="h-3 w-3" />
           </Button>
         </div>
-        <div className="font-medium">{limit}</div>
-        <div className="font-medium">{usage}</div>
+        <div className="font-medium hidden lg:block">{limit}</div>
+        <div className="font-medium hidden lg:block">{usage}</div>
 
-        <div className="flex justify-end gap-2">
+        <div className="hidden lg:flex justify-end gap-2">
           {!apiKey.is_primary && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="h-8 w-8 p-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
               onClick={handleDeleteClick}
             >
               <Trash2 className="h-4 w-4" />
@@ -157,15 +158,27 @@ export default function ApiKeysPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authenticating, setAuthenticating] = useState(true);
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [hasLimitedPermissions, setHasLimitedPermissions] = useState(false);
   const { toast } = useToast();
+  const { ready, authenticated, login } = usePrivy();
 
   // Form state
   const [keyName, setKeyName] = useState("");
   const [creditLimit, setCreditLimit] = useState("");
   const [includeBYOK, setIncludeBYOK] = useState(false);
+
+  // Check authentication and redirect if needed
+  useEffect(() => {
+    if (!ready) return;
+
+    if (!authenticated) {
+      login();
+    }
+  }, [ready, authenticated, login]);
 
   useEffect(() => {
     setMounted(true);
@@ -176,11 +189,13 @@ export default function ApiKeysPage() {
     const apiKey = getApiKey();
     if (!apiKey) {
       setLoading(false);
+      setAuthenticating(true);
       return;
     }
 
     try {
       setLoading(true);
+      setAuthenticating(false);
       const response = await makeAuthenticatedRequest(
         `${API_BASE_URL}/user/api-keys`,
         { method: 'GET' }
@@ -189,6 +204,44 @@ export default function ApiKeysPage() {
       if (response.ok) {
         const data = await response.json();
         setApiKeys(data.keys || []);
+      } else if (response.status === 403) {
+        // Permission denied - show primary key from localStorage as fallback
+        console.log('Insufficient permissions - showing primary API key from localStorage');
+        const errorData = await response.json().catch(() => ({}));
+
+        // Mark that user has limited permissions
+        setHasLimitedPermissions(true);
+
+        // Create a mock API key entry from the one in localStorage
+        const primaryKey: ApiKey = {
+          id: 1,
+          api_key: apiKey,
+          key_name: 'Primary API Key',
+          environment_tag: 'live',
+          scope_permissions: {},
+          is_active: true,
+          is_primary: true,
+          expiration_date: null,
+          days_remaining: null,
+          max_requests: null,
+          requests_used: 0,
+          requests_remaining: null,
+          usage_percentage: null,
+          ip_allowlist: [],
+          domain_referrers: [],
+          created_at: null,
+          updated_at: null,
+          last_used_at: null,
+        };
+
+        setApiKeys([primaryKey]);
+
+        // Show informational toast (not an error)
+        toast({
+          title: "Limited Access",
+          description: "Your account has limited API key management permissions. Use your primary key to get started.",
+          variant: "default",
+        });
       } else {
         const errorData = await response.json();
         toast({
@@ -198,7 +251,7 @@ export default function ApiKeysPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching API keys:', error);
+      console.log('Error fetching API keys:', error);
       toast({
         title: "Error",
         description: "Failed to load API keys. Please try again.",
@@ -238,6 +291,7 @@ export default function ApiKeysPage() {
       if (interval) clearInterval(interval);
       if (!hasStartedFetch) {
         setLoading(false);
+        setAuthenticating(false);
       }
     }, 5000);
 
@@ -291,8 +345,20 @@ export default function ApiKeysPage() {
         setIncludeBYOK(false);
         setDialogOpen(false);
 
+        // Clear limited permissions flag since creation worked
+        setHasLimitedPermissions(false);
+
         // Refresh the list
         await fetchApiKeys();
+      } else if (response.status === 403) {
+        // Permission denied for creating keys
+        const errorData = await response.json().catch(() => ({}));
+        toast({
+          title: "Permission Denied",
+          description: "Your account doesn't have permission to create additional API keys. Please use your primary key or contact support for access.",
+          variant: "destructive",
+        });
+        setDialogOpen(false);
       } else {
         const errorData = await response.json();
         toast({
@@ -302,7 +368,7 @@ export default function ApiKeysPage() {
         });
       }
     } catch (error) {
-      console.error('Error creating API key:', error);
+      console.log('Error creating API key:', error);
       toast({
         title: "Error",
         description: "Failed to create API key. Please try again.",
@@ -338,7 +404,7 @@ export default function ApiKeysPage() {
         });
       }
     } catch (error) {
-      console.error('Error deleting API key:', error);
+      console.log('Error deleting API key:', error);
       toast({
         title: "Error",
         description: "Failed to delete API key. Please try again.",
@@ -370,10 +436,11 @@ export default function ApiKeysPage() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <h2 className="text-base sm:text-lg font-semibold">Your API Keys</h2>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-black text-white h-10 sm:h-12 px-6 sm:px-10 text-sm sm:text-base w-full sm:w-auto">Generate API Key</Button>
-            </DialogTrigger>
+          {!hasLimitedPermissions && (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 sm:h-12 px-6 sm:px-10 text-sm sm:text-base w-full sm:w-auto">Generate API Key</Button>
+              </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Create a Key</DialogTitle>
@@ -420,7 +487,7 @@ export default function ApiKeysPage() {
                       />
                     </div>
                      <p className="text-xs text-muted-foreground p-2 bg-muted rounded-md">
-                       If enabled, this key&apos;s limit will apply to the sum of its BYOK usage and OpenRouter usage.
+                       If enabled, this key&apos;s limit will apply to the sum of its BYOK usage and GatewayZ usage.
                      </p>
                   </CollapsibleContent>
                 </Collapsible>
@@ -440,29 +507,59 @@ export default function ApiKeysPage() {
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          )}
         </div>
 
-        {loading ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">Loading API keys...</p>
+        {authenticating ? (
+          <div className="text-center py-12 border border-border rounded-lg bg-card">
+            <div className="flex flex-col items-center gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="text-muted-foreground">Authenticating...</p>
+              <p className="text-xs text-muted-foreground">Please wait while we verify your account</p>
+            </div>
+          </div>
+        ) : loading ? (
+          <div className="text-center py-12 border border-border rounded-lg bg-card">
+            <div className="flex flex-col items-center gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="text-muted-foreground">Loading your API keys...</p>
+            </div>
           </div>
         ) : apiKeys.length === 0 ? (
-          <div className="text-center py-8 border border-gray-200 rounded-lg">
-            <p className="text-muted-foreground">No API keys found. Create one to get started!</p>
+          <div className="text-center py-12 border border-border rounded-lg bg-muted/30">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <svg className="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-medium text-foreground">No API keys yet</p>
+                <p className="text-sm text-muted-foreground mt-1">Create your first API key to get started</p>
+              </div>
+              {!hasLimitedPermissions && (
+                <Button
+                  className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => setDialogOpen(true)}
+                >
+                  Generate API Key
+                </Button>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="border border-gray-200 overflow-hidden border-x-0">
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-              <div className="grid grid-cols-5 gap-4 text-sm font-medium">
+          <div className="border border-border overflow-hidden border-x-0 bg-card">
+            <div className="bg-muted/50 px-4 py-3 border-b border-border">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 text-sm font-medium text-foreground">
                 <div>Name</div>
-                <div>Key</div>
-                <div>Limit</div>
-                <div>Usage</div>
-                <div></div>
+                <div className="col-span-1">Key</div>
+                <div className="hidden lg:block">Limit</div>
+                <div className="hidden lg:block">Usage</div>
+                <div className="hidden lg:block"></div>
               </div>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-border">
               {apiKeys.map((apiKey) => (
                 <ApiKeyRow
                   key={apiKey.id}

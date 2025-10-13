@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,6 +28,8 @@ import { BookText, Bot, ChevronDown, ChevronUp, FileText, ImageIcon, LayoutGrid,
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { stringToColor } from '@/lib/utils';
+import ReactMarkdown from "react-markdown";
+
 
 interface Model {
   id: string;
@@ -44,6 +46,8 @@ interface Model {
   } | null;
   supported_parameters: string[] | null;
   provider_slug: string;
+  source_gateway?: string;
+  created?: number;
 }
 
 const ModelCard = ({ model }: { model: Model }) => {
@@ -53,19 +57,31 @@ const ModelCard = ({ model }: { model: Model }) => {
   const contextK = model.context_length > 0 ? Math.round(model.context_length / 1000) : 0;
 
   return (
-    <Link href={`/models/${encodeURIComponent(model.id)}`} className="h-full">
-      <Card className="p-5 flex flex-col h-full hover:border-primary transition-colors">
-        <div className="flex justify-between items-start gap-3 mb-3">
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold flex items-center gap-2 flex-wrap mb-2">
-              <span className="truncate">{model.name}</span> {isFree && <Badge className="text-xs">Free</Badge>}
+    <Link href={`/models/${encodeURIComponent(model.id)}`} className="h-full block">
+      <Card className="p-5 flex flex-col h-full hover:border-primary transition-colors overflow-hidden">
+        <div className="flex justify-between items-start gap-3 mb-3 min-w-0">
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <h3 className="text-base font-semibold flex items-center gap-2 flex-wrap mb-2 min-w-0">
+              <span className="truncate break-words min-w-0">{model.name}</span> {isFree && <Badge className="text-xs flex-shrink-0">Free</Badge>}
             </h3>
-            <Badge variant="outline" className="text-xs" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
+            <Badge variant="outline" className="text-xs truncate max-w-full" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
           </div>
           <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0 font-medium">{contextK > 0 ? `${contextK}K` : 'Pending'}</div>
         </div>
-        <p className="text-muted-foreground text-sm flex-grow line-clamp-2 mb-4">{model.description || 'No description available'}</p>
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-3 border-t">
+        <div className="text-muted-foreground text-sm flex-grow line-clamp-2 mb-4 overflow-hidden break-words">
+          <ReactMarkdown
+            components={{
+              a: ({ children, ...props }) => (
+                <span className="text-blue-600 underline cursor-pointer" {...props}>
+                  {children}
+                </span>
+              ),
+            }}
+          >
+            {model.description || 'No description available'}
+          </ReactMarkdown>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-3 border-t min-w-0">
           <span className="whitespace-nowrap">{contextK > 0 ? `${contextK}K context` : 'Pending sync'}</span>
           <span className="whitespace-nowrap">${inputCost}/M in</span>
           <span className="whitespace-nowrap">${outputCost}/M out</span>
@@ -79,17 +95,64 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Infinite scroll state
+  const [itemsPerPage] = useState(48); // Load 48 models at a time
+  const [visibleCount, setVisibleCount] = useState(48); // Number of items currently visible
+  const loadMoreRef = React.useRef<HTMLDivElement>(null);
+
+  // Additional deduplication as a safety measure
+  const deduplicatedModels = useMemo(() => {
+    console.log(`Initial models received: ${initialModels.length}`);
+    const seen = new Set<string>();
+    const deduplicated = initialModels.filter(model => {
+      if (seen.has(model.id)) {
+        console.warn(`Duplicate model ID found: ${model.id}`);
+        return false;
+      }
+      seen.add(model.id);
+      return true;
+    });
+    console.log(`After client-side deduplication: ${deduplicated.length} unique models`);
+    return deduplicated;
+  }, [initialModels]);
+
   const [layout, setLayout] = useState("list");
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || "");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchParams.get('search') || "");
   const [selectedInputFormats, setSelectedInputFormats] = useState<string[]>(searchParams.get('inputFormats')?.split(',').filter(Boolean) || []);
   const [selectedOutputFormats, setSelectedOutputFormats] = useState<string[]>(searchParams.get('outputFormats')?.split(',').filter(Boolean) || []);
-  const [contextLength, setContextLength] = useState(parseInt(searchParams.get('contextLength') || '1024'));
-  const [promptPricing, setPromptPricing] = useState(parseFloat(searchParams.get('promptPricing') || '10'));
+  const [contextLengthRange, setContextLengthRange] = useState<[number, number]>([
+    parseInt(searchParams.get('contextLengthMin') || '0'),
+    parseInt(searchParams.get('contextLengthMax') || '1024')
+  ]);
+  const [promptPricingRange, setPromptPricingRange] = useState<[number, number]>([
+    parseFloat(searchParams.get('promptPricingMin') || '0'),
+    parseFloat(searchParams.get('promptPricingMax') || '10')
+  ]);
   const [selectedParameters, setSelectedParameters] = useState<string[]>(searchParams.get('parameters')?.split(',').filter(Boolean) || []);
-  const [selectedProviders, setSelectedProviders] = useState<string[]>(searchParams.get('providers')?.split(',').filter(Boolean) || []);
+  const [selectedDevelopers, setSelectedDevelopers] = useState<string[]>(searchParams.get('developers')?.split(',').filter(Boolean) || []);
+  const [selectedGateways, setSelectedGateways] = useState<string[]>(searchParams.get('gateways')?.split(',').filter(Boolean) || []);
   const [selectedModelSeries, setSelectedModelSeries] = useState<string[]>(searchParams.get('modelSeries')?.split(',').filter(Boolean) || []);
+  const [pricingFilter, setPricingFilter] = useState<'all' | 'free' | 'paid'>(searchParams.get('pricing') as 'all' | 'free' | 'paid' || 'all');
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'tokens-desc');
+  const [releaseDateFilter, setReleaseDateFilter] = useState<string>(searchParams.get('releaseDate') || 'all');
+
+  // Mark explore task as complete in onboarding when page loads
+  useEffect(() => {
+    try {
+      const savedTasks = localStorage.getItem('gatewayz_onboarding_tasks');
+      if (savedTasks) {
+        const taskState = JSON.parse(savedTasks);
+        if (!taskState.explore) {
+          taskState.explore = true;
+          localStorage.setItem('gatewayz_onboarding_tasks', JSON.stringify(taskState));
+          console.log('Onboarding - Explore task marked as complete');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update onboarding task:', error);
+    }
+  }, []); // Run once on mount
 
   // Debounce search input
   useEffect(() => {
@@ -107,16 +170,21 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     if (searchTerm) params.set('search', searchTerm);
     if (selectedInputFormats.length > 0) params.set('inputFormats', selectedInputFormats.join(','));
     if (selectedOutputFormats.length > 0) params.set('outputFormats', selectedOutputFormats.join(','));
-    if (contextLength !== 1024) params.set('contextLength', contextLength.toString());
-    if (promptPricing !== 10) params.set('promptPricing', promptPricing.toString());
+    if (contextLengthRange[0] !== 0) params.set('contextLengthMin', contextLengthRange[0].toString());
+    if (contextLengthRange[1] !== 1024) params.set('contextLengthMax', contextLengthRange[1].toString());
+    if (promptPricingRange[0] !== 0) params.set('promptPricingMin', promptPricingRange[0].toString());
+    if (promptPricingRange[1] !== 10) params.set('promptPricingMax', promptPricingRange[1].toString());
     if (selectedParameters.length > 0) params.set('parameters', selectedParameters.join(','));
-    if (selectedProviders.length > 0) params.set('providers', selectedProviders.join(','));
+    if (selectedDevelopers.length > 0) params.set('developers', selectedDevelopers.join(','));
+    if (selectedGateways.length > 0) params.set('gateways', selectedGateways.join(','));
     if (selectedModelSeries.length > 0) params.set('modelSeries', selectedModelSeries.join(','));
+    if (pricingFilter !== 'all') params.set('pricing', pricingFilter);
     if (sortBy !== 'tokens-desc') params.set('sortBy', sortBy);
+    if (releaseDateFilter !== 'all') params.set('releaseDate', releaseDateFilter);
 
     const queryString = params.toString();
     router.replace(queryString ? `?${queryString}` : '/models', { scroll: false });
-  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, selectedModelSeries, sortBy, router]);
+  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, pricingFilter, sortBy, releaseDateFilter, router]);
 
   const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (value: string, checked: boolean) => {
     setter(prev => checked ? [...prev, value] : prev.filter(v => v !== value));
@@ -143,31 +211,36 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     setDebouncedSearchTerm("");
     setSelectedInputFormats([]);
     setSelectedOutputFormats([]);
-    setContextLength(1024);
-    setPromptPricing(10);
+    setContextLengthRange([0, 1024]);
+    setPromptPricingRange([0, 10]);
     setSelectedParameters([]);
-    setSelectedProviders([]);
+    setSelectedDevelopers([]);
+    setSelectedGateways([]);
     setSelectedModelSeries([]);
+    setPricingFilter('all');
     setSortBy('tokens-desc');
+    setReleaseDateFilter('all');
   };
 
   // Check if any filters are active
   const hasActiveFilters = searchTerm || selectedInputFormats.length > 0 || selectedOutputFormats.length > 0 ||
-    contextLength !== 1024 || promptPricing !== 10 || selectedParameters.length > 0 ||
-    selectedProviders.length > 0 || selectedModelSeries.length > 0 || sortBy !== 'tokens-desc';
+    contextLengthRange[0] !== 0 || contextLengthRange[1] !== 1024 ||
+    promptPricingRange[0] !== 0 || promptPricingRange[1] !== 10 ||
+    selectedParameters.length > 0 ||
+    selectedDevelopers.length > 0 || selectedGateways.length > 0 || selectedModelSeries.length > 0 || pricingFilter !== 'all' || sortBy !== 'tokens-desc' || releaseDateFilter !== 'all';
 
   // Calculate search matches separately from other filters
   const searchFilteredModels = useMemo(() => {
-    if (!debouncedSearchTerm) return initialModels;
+    if (!debouncedSearchTerm) return deduplicatedModels;
 
     const lowerSearch = debouncedSearchTerm.toLowerCase();
-    return initialModels.filter((model) => {
+    return deduplicatedModels.filter((model) => {
       return (model.name || '').toLowerCase().includes(lowerSearch) ||
         (model.description || '').toLowerCase().includes(lowerSearch) ||
         (model.id || '').toLowerCase().includes(lowerSearch) ||
         (model.provider_slug || '').toLowerCase().includes(lowerSearch);
     });
-  }, [initialModels, debouncedSearchTerm]);
+  }, [deduplicatedModels, debouncedSearchTerm]);
 
   const filteredModels = useMemo(() => {
     // First filter, then sort
@@ -178,16 +251,36 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
       const outputFormatMatch = selectedOutputFormats.length === 0 || selectedOutputFormats.every(m =>
         model.architecture?.output_modalities?.some(om => om.toLowerCase() === m.toLowerCase())
       );
-      // Include models with context_length of 0 (pending metadata sync)
-      const contextMatch = model.context_length === 0 || model.context_length >= contextLength * 1000;
+      // Include models with context_length of 0 (pending metadata sync) or within range
+      const contextMatch = model.context_length === 0 ||
+        (contextLengthRange[0] === 0 && contextLengthRange[1] === 1024) || // No filter applied
+        (model.context_length >= contextLengthRange[0] * 1000 && model.context_length <= contextLengthRange[1] * 1000);
       const isFree = parseFloat(model.pricing?.prompt || '0') === 0 && parseFloat(model.pricing?.completion || '0') === 0;
       const avgPrice = (parseFloat(model.pricing?.prompt || '0') + parseFloat(model.pricing?.completion || '0')) / 2;
-      const priceMatch = avgPrice <= promptPricing / 1000000 || isFree;
+      const priceMatch = (promptPricingRange[0] === 0 && promptPricingRange[1] === 10) || // No filter applied
+        isFree ||
+        (avgPrice >= promptPricingRange[0] / 1000000 && avgPrice <= promptPricingRange[1] / 1000000);
       const parameterMatch = selectedParameters.length === 0 || selectedParameters.every(p => (model.supported_parameters || []).includes(p));
-      const providerMatch = selectedProviders.length === 0 || selectedProviders.includes(model.provider_slug);
+      const developerMatch = selectedDevelopers.length === 0 || selectedDevelopers.includes(model.provider_slug);
+      const gatewayMatch = selectedGateways.length === 0 || selectedGateways.includes(model.source_gateway || '');
       const seriesMatch = selectedModelSeries.length === 0 || selectedModelSeries.includes(getModelSeries(model));
+      const pricingMatch = pricingFilter === 'all' || (pricingFilter === 'free' && isFree) || (pricingFilter === 'paid' && !isFree);
 
-      return inputFormatMatch && outputFormatMatch && contextMatch && priceMatch && parameterMatch && providerMatch && seriesMatch;
+      // Release date filter
+      const now = Date.now() / 1000; // Convert to Unix timestamp
+      const created = model.created || 0;
+      let releaseDateMatch = true;
+      if (releaseDateFilter === 'last-30-days') {
+        releaseDateMatch = created > 0 && created >= now - (30 * 24 * 60 * 60);
+      } else if (releaseDateFilter === 'last-90-days') {
+        releaseDateMatch = created > 0 && created >= now - (90 * 24 * 60 * 60);
+      } else if (releaseDateFilter === 'last-6-months') {
+        releaseDateMatch = created > 0 && created >= now - (180 * 24 * 60 * 60);
+      } else if (releaseDateFilter === 'last-year') {
+        releaseDateMatch = created > 0 && created >= now - (365 * 24 * 60 * 60);
+      }
+
+      return inputFormatMatch && outputFormatMatch && contextMatch && priceMatch && parameterMatch && developerMatch && gatewayMatch && seriesMatch && pricingMatch && releaseDateMatch;
     });
 
     // Then sort the filtered results
@@ -208,45 +301,152 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
     });
 
     return sorted;
-  }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLength, promptPricing, selectedParameters, selectedProviders, selectedModelSeries, sortBy, getModelSeries]);
+  }, [searchFilteredModels, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, pricingFilter, sortBy, getModelSeries]);
 
-  const allInputFormats = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.architecture?.input_modalities || []))).filter(Boolean), [initialModels]);
-  const allOutputFormats = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.architecture?.output_modalities || []))).filter(Boolean), [initialModels]);
-  const allParameters = useMemo(() => Array.from(new Set(initialModels.flatMap(m => m.supported_parameters || []))), [initialModels]);
-  const allProviders = useMemo(() => Array.from(new Set(initialModels.map(m => m.provider_slug).filter(Boolean))), [initialModels]);
-  const allModelSeries = useMemo(() => {
-    const series = Array.from(new Set(initialModels.map(m => getModelSeries(m))));
-    return series.sort();
-  }, [initialModels, getModelSeries]);
+  // Visible models for infinite scroll
+  const visibleModels = useMemo(() => {
+    return filteredModels.slice(0, visibleCount);
+  }, [filteredModels, visibleCount]);
+
+  const hasMore = visibleCount < filteredModels.length;
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(48);
+  }, [searchTerm, selectedInputFormats, selectedOutputFormats, contextLengthRange, promptPricingRange, selectedParameters, selectedDevelopers, selectedGateways, selectedModelSeries, pricingFilter, sortBy, releaseDateFilter]);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setVisibleCount(prev => Math.min(prev + itemsPerPage, filteredModels.length));
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, filteredModels.length, itemsPerPage]);
+
+  const allInputFormatsWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    deduplicatedModels.forEach(m => {
+      (m.architecture?.input_modalities || []).forEach(format => {
+        if (format) counts[format] = (counts[format] || 0) + 1;
+      });
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([format, count]) => ({ value: format, count }));
+  }, [deduplicatedModels]);
+
+  const allOutputFormatsWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    deduplicatedModels.forEach(m => {
+      (m.architecture?.output_modalities || []).forEach(format => {
+        if (format) counts[format] = (counts[format] || 0) + 1;
+      });
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([format, count]) => ({ value: format, count }));
+  }, [deduplicatedModels]);
+
+  const pricingCounts = useMemo(() => {
+    let freeCount = 0;
+    let paidCount = 0;
+    deduplicatedModels.forEach(m => {
+      const isFree = parseFloat(m.pricing?.prompt || '0') === 0 && parseFloat(m.pricing?.completion || '0') === 0;
+      if (isFree) {
+        freeCount++;
+      } else {
+        paidCount++;
+      }
+    });
+    return { free: freeCount, paid: paidCount, all: deduplicatedModels.length };
+  }, [deduplicatedModels]);
+
+  const allParametersWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    deduplicatedModels.forEach(m => {
+      (m.supported_parameters || []).forEach(p => {
+        counts[p] = (counts[p] || 0) + 1;
+      });
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([param, count]) => ({ value: param, count }));
+  }, [deduplicatedModels]);
+
+  const allDevelopersWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    deduplicatedModels.forEach(m => {
+      if (m.provider_slug) {
+        counts[m.provider_slug] = (counts[m.provider_slug] || 0) + 1;
+      }
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([dev, count]) => ({ value: dev, count }));
+  }, [deduplicatedModels]);
+
+  const allGatewaysWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    deduplicatedModels.forEach(m => {
+      if (m.source_gateway) {
+        counts[m.source_gateway] = (counts[m.source_gateway] || 0) + 1;
+      }
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([gateway, count]) => ({ value: gateway, count }));
+  }, [deduplicatedModels]);
+
+  const allModelSeriesWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    deduplicatedModels.forEach(m => {
+      const series = getModelSeries(m);
+      counts[series] = (counts[series] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([series, count]) => ({ value: series, count }));
+  }, [deduplicatedModels, getModelSeries]);
 
 
   return (
     <SidebarProvider>
-      <div className="relative flex h-[calc(100vh-theme(spacing.14))]">
+      <div className="relative flex min-h-[calc(100vh-theme(spacing.14))] justify-center overflow-x-hidden">
         <Sidebar
           variant="sidebar"
-          collapsible="icon"
-          className="hidden lg:flex"
+          collapsible="offcanvas"
         >
           <SidebarContent className="p-4">
             <SidebarGroup>
               <SidebarGroupLabel>Input Formats</SidebarGroupLabel>
               <div className="flex flex-col gap-2">
-                {allInputFormats.map((format) => {
-                  const icon = format.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
-                               format.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
-                               format.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> :
-                               format.toLowerCase() === 'audio' ? <Music className="w-4 h-4"/> : null;
+                {allInputFormatsWithCounts.map((item) => {
+                  const icon = item.value.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
+                               item.value.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
+                               item.value.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> :
+                               item.value.toLowerCase() === 'audio' ? <Music className="w-4 h-4"/> : null;
                   return (
-                    <div key={format} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`input-${format.toLowerCase()}`}
-                        checked={selectedInputFormats.includes(format)}
-                        onCheckedChange={(c) => handleCheckboxChange(setSelectedInputFormats)(format, !!c)}
-                      />
-                      <Label htmlFor={`input-${format.toLowerCase()}`} className="flex items-center gap-2 font-normal capitalize">
-                        {icon}{format}
-                      </Label>
+                    <div key={item.value} className="flex items-center justify-between space-x-2">
+                      <div className="flex items-center space-x-2 flex-1 min-w-0">
+                        <Checkbox
+                          id={`input-${item.value.toLowerCase()}`}
+                          checked={selectedInputFormats.includes(item.value)}
+                          onCheckedChange={(c) => handleCheckboxChange(setSelectedInputFormats)(item.value, !!c)}
+                        />
+                        <Label htmlFor={`input-${item.value.toLowerCase()}`} className="flex items-center gap-2 font-normal capitalize cursor-pointer">
+                          {icon}{item.value}
+                        </Label>
+                      </div>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">({item.count})</span>
                     </div>
                   );
                 })}
@@ -256,67 +456,105 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
             <SidebarGroup>
               <SidebarGroupLabel>Output Formats</SidebarGroupLabel>
               <div className="flex flex-col gap-2">
-                {allOutputFormats.map((format) => {
-                  const icon = format.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
-                               format.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
-                               format.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> :
-                               format.toLowerCase() === 'audio' ? <Music className="w-4 h-4"/> : null;
+                {allOutputFormatsWithCounts.map((item) => {
+                  const icon = item.value.toLowerCase() === 'text' ? <BookText className="w-4 h-4"/> :
+                               item.value.toLowerCase() === 'image' ? <ImageIcon className="w-4 h-4"/> :
+                               item.value.toLowerCase() === 'file' ? <FileText className="w-4 h-4"/> :
+                               item.value.toLowerCase() === 'audio' ? <Music className="w-4 h-4"/> : null;
                   return (
-                    <div key={format} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`output-${format.toLowerCase()}`}
-                        checked={selectedOutputFormats.includes(format)}
-                        onCheckedChange={(c) => handleCheckboxChange(setSelectedOutputFormats)(format, !!c)}
-                      />
-                      <Label htmlFor={`output-${format.toLowerCase()}`} className="flex items-center gap-2 font-normal capitalize">
-                        {icon}{format}
-                      </Label>
+                    <div key={item.value} className="flex items-center justify-between space-x-2">
+                      <div className="flex items-center space-x-2 flex-1 min-w-0">
+                        <Checkbox
+                          id={`output-${item.value.toLowerCase()}`}
+                          checked={selectedOutputFormats.includes(item.value)}
+                          onCheckedChange={(c) => handleCheckboxChange(setSelectedOutputFormats)(item.value, !!c)}
+                        />
+                        <Label htmlFor={`output-${item.value.toLowerCase()}`} className="flex items-center gap-2 font-normal capitalize cursor-pointer">
+                          {icon}{item.value}
+                        </Label>
+                      </div>
+                      <span className="text-xs text-muted-foreground flex-shrink-0">({item.count})</span>
                     </div>
                   );
                 })}
               </div>
             </SidebarGroup>
 
-            <FilterSlider label="Context Length" value={contextLength} onValueChange={setContextLength} min={4} max={1024} step={4} unit="K" />
-            <FilterSlider label="Prompt Pricing" value={promptPricing} onValueChange={setPromptPricing} min={0} max={10} step={0.1} unit="$" />
+            <SidebarGroup>
+              <SidebarGroupLabel>Pricing</SidebarGroupLabel>
+              <Select value={pricingFilter} onValueChange={(value: 'all' | 'free' | 'paid') => setPricingFilter(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All models" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All models ({pricingCounts.all})</SelectItem>
+                  <SelectItem value="free">Free only ({pricingCounts.free})</SelectItem>
+                  <SelectItem value="paid">Paid only ({pricingCounts.paid})</SelectItem>
+                </SelectContent>
+              </Select>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Release Date</SidebarGroupLabel>
+              <Select value={releaseDateFilter} onValueChange={setReleaseDateFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All time</SelectItem>
+                  <SelectItem value="last-30-days">Last 30 days</SelectItem>
+                  <SelectItem value="last-90-days">Last 90 days</SelectItem>
+                  <SelectItem value="last-6-months">Last 6 months</SelectItem>
+                  <SelectItem value="last-year">Last year</SelectItem>
+                </SelectContent>
+              </Select>
+            </SidebarGroup>
+
+            <FilterRangeSlider label="Context Length" value={contextLengthRange} onValueChange={setContextLengthRange} min={4} max={1024} step={4} unit="K" />
+            <FilterRangeSlider label="Prompt Pricing" value={promptPricingRange} onValueChange={setPromptPricingRange} min={0} max={10} step={0.1} unit="$" />
 
             <FilterDropdown
-              label="Available Parameters"
-              items={allParameters}
+              label="Parameters"
+              items={allParametersWithCounts}
               selectedItems={selectedParameters}
               onSelectionChange={handleCheckboxChange(setSelectedParameters)}
               icon={<SlidersIcon className="w-4 h-4"/>}
             />
             <FilterDropdown
               label="Model Series"
-              items={allModelSeries}
+              items={allModelSeriesWithCounts}
               selectedItems={selectedModelSeries}
               onSelectionChange={handleCheckboxChange(setSelectedModelSeries)}
               icon={<Bot className="w-4 h-4"/>}
             />
             <FilterDropdown
-              label="Providers"
-              items={allProviders}
-              selectedItems={selectedProviders}
-              onSelectionChange={handleCheckboxChange(setSelectedProviders)}
+              label="Researcher"
+              items={allDevelopersWithCounts}
+              selectedItems={selectedDevelopers}
+              onSelectionChange={handleCheckboxChange(setSelectedDevelopers)}
+              icon={<Bot className="w-4 h-4"/>}
+            />
+            <FilterDropdown
+              label="Gateway"
+              items={allGatewaysWithCounts}
+              selectedItems={selectedGateways}
+              onSelectionChange={handleCheckboxChange(setSelectedGateways)}
               icon={<Bot className="w-4 h-4"/>}
             />
           </SidebarContent>
         </Sidebar>
 
-        <SidebarInset className="flex-1 overflow-auto">
-          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <SidebarInset className="flex-1 overflow-x-hidden">
+          <div className="max-w-[1600px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-x-hidden">
           <div className="flex flex-col gap-3 mb-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
               <div className="flex items-center gap-3">
                   <SidebarTrigger className="lg:hidden" />
                   <h1 className="text-2xl font-bold">Models</h1>
               </div>
-              <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                <span className="text-sm text-muted-foreground">
-                  {debouncedSearchTerm && filteredModels.length !== searchFilteredModels.length
-                    ? `${filteredModels.length} of ${searchFilteredModels.length} models`
-                    : `${filteredModels.length} models`}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                  {`${filteredModels.length} / ${deduplicatedModels.length} models`}
                 </span>
                 {hasActiveFilters && (
                   <Button variant="ghost" size="sm" onClick={resetFilters}>Clear All Filters</Button>
@@ -342,18 +580,37 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                   </button>
                 </Badge>
               ))}
-              {contextLength !== 1024 && (
+              {pricingFilter !== 'all' && (
                 <Badge variant="secondary" className="gap-1">
-                  Context: ≥{contextLength}K tokens
-                  <button onClick={() => setContextLength(1024)} className="ml-1 hover:bg-muted rounded-sm">
+                  {pricingFilter === 'free' ? 'Free only' : 'Paid only'}
+                  <button onClick={() => setPricingFilter('all')} className="ml-1 hover:bg-muted rounded-sm">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
               )}
-              {promptPricing !== 10 && (
+              {releaseDateFilter !== 'all' && (
                 <Badge variant="secondary" className="gap-1">
-                  Price: ≤${promptPricing}/M tokens
-                  <button onClick={() => setPromptPricing(10)} className="ml-1 hover:bg-muted rounded-sm">
+                  {releaseDateFilter === 'last-30-days' && 'Last 30 days'}
+                  {releaseDateFilter === 'last-90-days' && 'Last 90 days'}
+                  {releaseDateFilter === 'last-6-months' && 'Last 6 months'}
+                  {releaseDateFilter === 'last-year' && 'Last year'}
+                  <button onClick={() => setReleaseDateFilter('all')} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {(contextLengthRange[0] !== 0 || contextLengthRange[1] !== 1024) && (
+                <Badge variant="secondary" className="gap-1">
+                  Context: {contextLengthRange[0]}K-{contextLengthRange[1]}K tokens
+                  <button onClick={() => setContextLengthRange([0, 1024])} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {(promptPricingRange[0] !== 0 || promptPricingRange[1] !== 10) && (
+                <Badge variant="secondary" className="gap-1">
+                  Price: ${promptPricingRange[0]}-${promptPricingRange[1]}/M tokens
+                  <button onClick={() => setPromptPricingRange([0, 10])} className="ml-1 hover:bg-muted rounded-sm">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
@@ -374,10 +631,18 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
                   </button>
                 </Badge>
               ))}
-              {selectedProviders.map(provider => (
-                <Badge key={provider} variant="secondary" className="gap-1">
-                  {provider}
-                  <button onClick={() => setSelectedProviders(prev => prev.filter(p => p !== provider))} className="ml-1 hover:bg-muted rounded-sm">
+              {selectedDevelopers.map(developer => (
+                <Badge key={developer} variant="secondary" className="gap-1">
+                  Researcher: {developer}
+                  <button onClick={() => setSelectedDevelopers(prev => prev.filter(d => d !== developer))} className="ml-1 hover:bg-muted rounded-sm">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {selectedGateways.map(gateway => (
+                <Badge key={gateway} variant="secondary" className="gap-1">
+                  Gateway: {gateway}
+                  <button onClick={() => setSelectedGateways(prev => prev.filter(g => g !== gateway))} className="ml-1 hover:bg-muted rounded-sm">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
@@ -427,15 +692,33 @@ export default function ModelsClient({ initialModels }: { initialModels: Model[]
           <div
             className={
               layout === 'grid'
-                ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6'
-                : 'flex flex-col gap-4 lg:gap-6 max-w-5xl'
+                ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 overflow-x-hidden'
+                : 'flex flex-col gap-4 lg:gap-6 max-w-5xl overflow-x-hidden'
             }
             key={`models-${filteredModels.length}-${debouncedSearchTerm}`}
           >
-            {filteredModels.map((model) => (
-              <ModelCard key={model.id} model={model} />
+            {visibleModels.map((model, key) => (
+              <ModelCard key={key} model={model} />
             ))}
           </div>
+
+          {/* Infinite Scroll Trigger */}
+          {hasMore && (
+            <div ref={loadMoreRef} className="flex items-center justify-center py-8">
+              <div className="text-sm text-muted-foreground">
+                Loading more models... ({visibleCount} of {filteredModels.length})
+              </div>
+            </div>
+          )}
+
+          {/* End of results */}
+          {!hasMore && filteredModels.length > 0 && (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-sm text-muted-foreground">
+                Showing all {filteredModels.length} models
+              </div>
+            </div>
+          )}
           </div>
         </SidebarInset>
       </div>
@@ -457,12 +740,31 @@ const FilterSlider = ({ label, value, onValueChange, min, max, step, unit }: { l
     );
 };
 
-const FilterDropdown = ({ label, items, icon, selectedItems, onSelectionChange }: { label: string, items: string[], icon: React.ReactNode, selectedItems: string[], onSelectionChange: (value: string, checked: boolean) => void }) => {
+const FilterRangeSlider = React.memo(({ label, value, onValueChange, min, max, step, unit }: { label: string, value: [number, number], onValueChange: (value: [number, number]) => void, min: number, max: number, step: number, unit: string }) => {
+    return (
+        <SidebarGroup>
+            <SidebarGroupLabel>{label}</SidebarGroupLabel>
+            <Slider value={value} min={min} max={max} step={step} onValueChange={onValueChange} />
+            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>{value[0]}{unit}</span>
+                <span>to</span>
+                <span>{value[1]}{unit}{value[1] === max ? '+' : ''}</span>
+            </div>
+        </SidebarGroup>
+    );
+});
+
+const FilterDropdown = ({ label, items, icon, selectedItems, onSelectionChange }: { label: string, items: { value: string, count: number }[], icon: React.ReactNode, selectedItems: string[], onSelectionChange: (value: string, checked: boolean) => void }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const displayedItems = showAll ? items : items.slice(0, 3);
-  const hasMore = items.length > 3;
+  const filteredItems = items.filter(item =>
+    item.value.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const displayedItems = showAll ? filteredItems : filteredItems.slice(0, 5);
+  const hasMore = filteredItems.length > 5;
 
   return (
     <SidebarGroup>
@@ -474,18 +776,32 @@ const FilterDropdown = ({ label, items, icon, selectedItems, onSelectionChange }
       </button>
       {isOpen && (
         <div className="flex flex-col gap-2 mt-2">
+          {items.length > 5 && (
+            <Input
+              placeholder={`Search ${label.toLowerCase()}...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-8 text-sm"
+            />
+          )}
           {displayedItems.map((item) => (
-            <div key={item} className="flex items-center space-x-2">
-              <Checkbox id={item.toLowerCase()} checked={selectedItems.includes(item)} onCheckedChange={(c) => onSelectionChange(item, !!c)} />
-              <Label htmlFor={item.toLowerCase()} className="font-normal">{item}</Label>
+            <div key={item.value} className="flex items-center justify-between space-x-2">
+              <div className="flex items-center space-x-2 flex-1 min-w-0">
+                <Checkbox id={item.value.toLowerCase()} checked={selectedItems.includes(item.value)} onCheckedChange={(c) => onSelectionChange(item.value, !!c)} />
+                <Label htmlFor={item.value.toLowerCase()} className="font-normal truncate cursor-pointer">{item.value}</Label>
+              </div>
+              <span className="text-xs text-muted-foreground flex-shrink-0">({item.count})</span>
             </div>
           ))}
+          {filteredItems.length === 0 && (
+            <div className="text-sm text-muted-foreground py-2">No matches found</div>
+          )}
           {hasMore && (
             <button
               onClick={() => setShowAll(!showAll)}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left"
             >
-              {showAll ? 'Show less...' : `More... (${items.length - 3} more)`}
+              {showAll ? 'Show less...' : `Show ${filteredItems.length - 5} more...`}
             </button>
           )}
         </div>

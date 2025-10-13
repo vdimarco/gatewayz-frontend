@@ -26,6 +26,86 @@ import { redirectToCheckout } from '@/lib/stripe';
 import { getUserData, makeAuthenticatedRequest } from '@/lib/api';
 import { API_BASE_URL } from '@/lib/config';
 
+// Confetti/Emoji explosion component
+const EmojiExplosion = ({ onComplete }: { onComplete: () => void }) => {
+  const emojis = ['🎉', '💰', '✨', '🚀', '💎', '⭐', '🔥', '💸', '🎊', '🌟'];
+  const [particles, setParticles] = useState<Array<{
+    id: number;
+    emoji: string;
+    x: number;
+    y: number;
+    rotation: number;
+    velocity: { x: number; y: number };
+    rotationSpeed: number;
+  }>>([]);
+
+  useEffect(() => {
+    // Create 100 emoji particles for more coverage
+    const newParticles = Array.from({ length: 100 }, (_, i) => ({
+      id: i,
+      emoji: emojis[Math.floor(Math.random() * emojis.length)],
+      x: 50, // Start from center
+      y: 50,
+      rotation: Math.random() * 360,
+      velocity: {
+        x: (Math.random() - 0.5) * 100, // Much larger spread
+        y: (Math.random() - 0.5) * 100, // Much larger spread
+      },
+      rotationSpeed: (Math.random() - 0.5) * 15,
+    }));
+
+    setParticles(newParticles);
+
+    // Clean up after animation
+    const timer = setTimeout(() => {
+      onComplete();
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {particles.map((particle) => (
+        <div
+          key={particle.id}
+          className="absolute text-8xl animate-emoji-explosion"
+          style={{
+            left: `${particle.x}%`,
+            top: `${particle.y}%`,
+            transform: `translate(-50%, -50%) rotate(${particle.rotation}deg)`,
+            animation: `emojiFloat 4s ease-out forwards`,
+            '--tx': `${particle.velocity.x}vw`,
+            '--ty': `${particle.velocity.y}vh`,
+            '--rotation': `${particle.rotationSpeed * 360}deg`,
+          } as React.CSSProperties}
+        >
+          {particle.emoji}
+        </div>
+      ))}
+      <style jsx>{`
+        @keyframes emojiFloat {
+          0% {
+            opacity: 1;
+            transform: translate(-50%, -50%) rotate(0deg) scale(0);
+          }
+          5% {
+            opacity: 1;
+            transform: translate(-50%, -50%) rotate(0deg) scale(2);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(
+              calc(-50% + var(--tx)),
+              calc(-50% + var(--ty))
+            ) rotate(var(--rotation)) scale(1.5);
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 // Transaction data type
 interface Transaction {
   id: number;
@@ -69,7 +149,7 @@ const TransactionRow = ({ transaction }: { transaction: Transaction }) => {
   };
 
   return (
-    <div className="px-4 py-3 hover:bg-gray-50">
+    <div className="px-4 py-3 hover:bg-muted/50">
       <div className="grid grid-cols-5 gap-4 items-center text-sm">
         <div className="font-medium">
           {getTransactionType(transaction.transaction_type)}
@@ -112,14 +192,65 @@ function CreditsPageContent() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showEmojiExplosion, setShowEmojiExplosion] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [amount, setAmount] = useState('10');
 
   // Check for success message from Stripe redirect
   useEffect(() => {
     const sessionId = searchParams?.get('session_id');
     if (sessionId) {
       setShowSuccessMessage(true);
-      // Auto-hide after 10 seconds
+      setShowEmojiExplosion(true); // Trigger emoji explosion!
+
+      // Auto-hide success message after 10 seconds
       setTimeout(() => setShowSuccessMessage(false), 10000);
+
+      // Fetch fresh credits and transactions after successful payment
+      const fetchFreshData = async () => {
+        try {
+          let currentCredits;
+          // Fetch credits
+          const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/profile`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.credits !== undefined) {
+              currentCredits = data.credits;
+              setCredits(data.credits);
+              // Update localStorage with fresh credits
+              const userData = getUserData();
+              if (userData) {
+                localStorage.setItem('gatewayz_user_data', JSON.stringify({
+                  ...userData,
+                  credits: data.credits
+                }));
+              }
+            }
+          }
+
+          // Fetch transactions
+          const txnResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/user/credit-transactions?limit=50`);
+          if (txnResponse.ok) {
+            const txnData = await txnResponse.json();
+            if (Array.isArray(txnData.transactions)) {
+              const mappedTransactions = txnData.transactions.map((txn: any, index: number) => ({
+                id: txn.id,
+                amount: txn.amount,
+                transaction_type: txn.transaction_type,
+                created_at: txn.created_at,
+                description: txn.description,
+                // For the most recent transaction, use current credits for accuracy
+                balance: index === 0 && currentCredits !== undefined ? currentCredits : txn.balance_after
+              }));
+              setTransactions(mappedTransactions);
+            }
+          }
+        } catch (error) {
+          console.log('Could not fetch fresh data after payment');
+        }
+      };
+
+      fetchFreshData();
 
       // Clean up URL
       window.history.replaceState({}, '', '/settings/credits');
@@ -140,12 +271,15 @@ function CreditsPageContent() {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
+      let currentCredits = userData?.credits;
+
       try {
         // Fetch fresh data from API
         const response = await makeAuthenticatedRequest(`${API_BASE_URL}/user/profile`);
         if (response.ok) {
           const data = await response.json();
           if (data.credits !== undefined) {
+            currentCredits = data.credits;
             setCredits(data.credits);
           }
         }
@@ -163,13 +297,14 @@ function CreditsPageContent() {
           const data = await response.json();
           if (Array.isArray(data.transactions)) {
             // Transactions already include balance_after from the database
-            const mappedTransactions = data.transactions.map((txn: any) => ({
+            const mappedTransactions = data.transactions.map((txn: any, index: number) => ({
               id: txn.id,
               amount: txn.amount,
               transaction_type: txn.transaction_type,
               created_at: txn.created_at,
               description: txn.description,
-              balance: txn.balance_after // Use the balance from the database
+              // For the most recent transaction (index 0), use current credits for accuracy
+              balance: index === 0 && currentCredits !== undefined ? currentCredits : txn.balance_after
             }));
 
             setTransactions(mappedTransactions);
@@ -185,10 +320,27 @@ function CreditsPageContent() {
     fetchData();
   }, []);
 
-  const handleBuyCredits = async () => {
+  const handleBuyCredits = () => {
+    setShowDialog(true);
+  };
+
+  const handleConfirmPurchase = async () => {
+    const amountNum = parseFloat(amount);
+
+    if (isNaN(amountNum) || amountNum <= 0) {
+      alert('Please enter a valid amount greater than 0');
+      return;
+    }
+
+    if (amountNum < 1) {
+      alert('Minimum purchase amount is $1');
+      return;
+    }
+
     setIsLoading(true);
+    setShowDialog(false);
+
     try {
-      // Get user data to pass to checkout
       const userData = getUserData();
 
       if (!userData || !userData.api_key) {
@@ -197,18 +349,21 @@ function CreditsPageContent() {
         return;
       }
 
-      // Default to $10 worth of credits - can be customized
-      await redirectToCheckout(10, userData.email, userData.user_id);
+      await redirectToCheckout(amountNum, userData.email, userData.user_id);
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.log('Checkout error:', error);
       alert('Failed to start checkout. Please try again.');
-    } finally {
       setIsLoading(false);
     }
   };
 
   return (
     <div className="space-y-8">
+      {/* Emoji explosion animation */}
+      {showEmojiExplosion && (
+        <EmojiExplosion onComplete={() => setShowEmojiExplosion(false)} />
+      )}
+
       <div className="flex justify-center ">
         <h1 className="text-3xl font-bold">Credits</h1>
         {/* <Button variant="ghost" size="icon" className="text-muted-foreground">
@@ -219,10 +374,10 @@ function CreditsPageContent() {
       {/* Success message after Stripe payment */}
       {showSuccessMessage && (
         <div className="mx-auto max-w-2xl">
-          <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+          <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg animate-in slide-in-from-top duration-500">
             <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
             <div className="flex-1">
-              <p className="font-medium text-green-900 dark:text-green-100">Payment successful!</p>
+              <p className="font-medium text-green-900 dark:text-green-100">🎉 Payment successful!</p>
               <p className="text-sm text-green-700 dark:text-green-300">Your credits have been added to your account.</p>
             </div>
             <button
@@ -241,7 +396,7 @@ function CreditsPageContent() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 mr-16">
               <Card
-                className="w-96 h-14 text-xl md:text-2xl font-semibold bg-gray-50 border-gray-200 px-12"
+                className="w-96 h-14 text-xl md:text-2xl font-semibold bg-muted/50 border-border px-12"
               >
                 <CardContent className="py-[13px] flex items-center justify-center">
                   {loadingCredits ? (
@@ -262,8 +417,51 @@ function CreditsPageContent() {
               {isLoading ? 'Loading...' : loadingCredits ? 'Authenticating...' : 'Buy Credits'}
             </Button>
           </div>
-        </div>  
+        </div>
       </div>
+
+      {/* Purchase Credits Dialog */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Purchase Credits</DialogTitle>
+            <DialogDescription>
+              Enter the amount you would like to add to your account. Minimum purchase is $1.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amount" className="text-right">Amount</Label>
+              <div className="col-span-3 relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                <Input
+                  id="amount"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleConfirmPurchase();
+                    }
+                  }}
+                  className="pl-7"
+                  autoFocus
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleConfirmPurchase}>
+              Continue to Checkout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl"> */}
         {/* <Card>
@@ -337,8 +535,8 @@ function CreditsPageContent() {
       {/* </div> */}
 
       <div className="space-y-4">
-        <div className="border border-gray-200 overflow-hidden border-x-0">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+        <div className="border border-border overflow-hidden border-x-0">
+          <div className="bg-muted/50 px-4 py-3 border-b border-border">
             <div className="grid grid-cols-5 gap-4 text-sm font-medium">
               <div>Recent Transactions</div>
               <div>Amount</div>

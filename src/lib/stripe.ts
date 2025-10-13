@@ -15,9 +15,14 @@ export const redirectToCheckout = async (amount: number, userEmail?: string, use
     // Get API key from localStorage
     const apiKey = getApiKey();
 
+    const sanitizedEmail =
+      typeof userEmail === 'string' && !userEmail.startsWith('did:privy:') && userEmail.includes('@')
+        ? userEmail
+        : undefined;
+
     console.log('Checkout - API key exists:', !!apiKey);
     console.log('Checkout - Amount:', amount);
-    console.log('Checkout - User email:', userEmail);
+    console.log('Checkout - User email:', sanitizedEmail || 'not provided');
     console.log('Checkout - User ID:', userId);
 
     if (!apiKey) {
@@ -32,7 +37,7 @@ export const redirectToCheckout = async (amount: number, userEmail?: string, use
       },
       body: JSON.stringify({
         amount,
-        userEmail,
+        userEmail: sanitizedEmail,
         userId,
         apiKey, // Pass API key to the route handler
       }),
@@ -40,19 +45,23 @@ export const redirectToCheckout = async (amount: number, userEmail?: string, use
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Stripe checkout error response:', errorData);
-      console.error('Response status:', response.status);
+      console.log('Stripe checkout error response:', errorData);
+      console.log('Response status:', response.status);
       throw new Error(errorData.error || 'Failed to create checkout session');
     }
 
-    const { url } = await response.json();
+    const data = await response.json();
+    console.log('Checkout response data:', data);
 
     // Redirect to Stripe Checkout
-    if (url) {
-      window.location.href = url;
+    if (data.url) {
+      console.log('Redirecting to:', data.url);
+      window.location.href = data.url;
+    } else {
+      throw new Error('No checkout URL received from server');
     }
   } catch (error) {
-    console.error('Error redirecting to checkout:', error);
+    console.log('Error redirecting to checkout:', error);
     throw error;
   }
 };

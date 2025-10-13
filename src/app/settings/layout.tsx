@@ -7,15 +7,16 @@ import { cn } from "@/lib/utils";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarInset, SidebarTrigger, SidebarGroup } from "@/components/ui/sidebar";
 
 const navItems = [
-  // { href: "/settings", label: "Settings" },
   { href: "/settings/account", label: "Account" },
   { href: "/settings/credits", label: "Credits" },
+  { href: "/settings/referrals", label: "Referrals" },
+  { href: "/settings/keys", label: "Keys" },
   { href: "/settings/activity", label: "Activity" },
   { href: "/settings/presets", label: "Presets" },
-  { href: "/settings/keys", label: "API Keys" },
   { href: "/settings/provisioning", label: "Provisioning Keys" },
   { href: "/settings/integrations", label: "Integrations (BYOK)" },
   { href: "/settings/privacy", label: "Privacy" },
+  { href: "/settings", label: "Settings" },
 ];
 
 export default function SettingsLayout({

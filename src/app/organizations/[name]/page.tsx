@@ -7,7 +7,7 @@ import { models as allModelsData, type Model } from '@/lib/models-data';
 import { Building, Bot, BarChart, HardHat, Package, ChevronDown, Link as LinkIcon, Github, Twitter } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from '@/components/ui/badge';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -21,29 +21,55 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
 import { stringToColor } from '@/lib/utils';
+import { API_BASE_URL } from '@/lib/config';
 
-const ModelCard = ({ model }: { model: Model }) => (
-  <Link href={`/models/${encodeURIComponent(model.name)}`}>
-    <Card className="p-6 flex flex-col h-full hover:border-primary">
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            {model.name} {model.isFree && <Badge>Free</Badge>}
-          </h3>
-          <Badge variant="outline" className="mt-2" style={{ backgroundColor: stringToColor(model.category) }}>{model.category}</Badge>
+interface ApiModel {
+  id: string;
+  name: string;
+  description: string | null;
+  context_length: number;
+  pricing: {
+    prompt: string;
+    completion: string;
+  } | null;
+  architecture: {
+    input_modalities: string[] | null;
+    output_modalities: string[] | null;
+  } | null;
+  supported_parameters: string[] | null;
+  provider_slug: string;
+}
+
+const ApiModelCard = ({ model }: { model: ApiModel }) => {
+  const isFree = parseFloat(model.pricing?.prompt || '0') === 0 && parseFloat(model.pricing?.completion || '0') === 0;
+  const inputCost = (parseFloat(model.pricing?.prompt || '0') * 1000000).toFixed(2);
+  const outputCost = (parseFloat(model.pricing?.completion || '0') * 1000000).toFixed(2);
+  const contextK = model.context_length > 0 ? Math.round(model.context_length / 1000) : 0;
+
+  return (
+    <Link href={`/models/${encodeURIComponent(model.id)}`}>
+      <Card className="p-6 flex flex-col h-full hover:border-primary transition-colors">
+        <div className="flex justify-between items-start gap-3 mb-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-semibold flex items-center gap-2 flex-wrap mb-2">
+              <span className="truncate">{model.name}</span> {isFree && <Badge className="text-xs">Free</Badge>}
+            </h3>
+            <Badge variant="outline" className="text-xs" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
+          </div>
+          <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0 font-medium">{contextK > 0 ? `${contextK}K` : 'Pending'}</div>
         </div>
-        <div className="text-sm text-muted-foreground whitespace-nowrap">{model.tokens}</div>
-      </div>
-      <p className="text-muted-foreground mt-4 text-sm flex-grow">{model.description}</p>
-      <div className="flex items-center gap-4 text-xs text-muted-foreground mt-4 pt-4 border-t">
-        <span>by {model.developer}</span>
-        <span>{model.context}K context</span>
-        <span>${model.inputCost}/M input</span>
-        <span>${model.outputCost}/M output</span>
-      </div>
-    </Card>
-  </Link>
-);
+        <p className="text-muted-foreground text-sm flex-grow line-clamp-3 mb-4">
+          {model.description || 'No description available'}
+        </p>
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-3 border-t">
+          <span className="whitespace-nowrap">{contextK > 0 ? `${contextK}K context` : 'Pending sync'}</span>
+          <span className="whitespace-nowrap">${inputCost}/M in</span>
+          <span className="whitespace-nowrap">${outputCost}/M out</span>
+        </div>
+      </Card>
+    </Link>
+  );
+};
 
 const StatCard = ({ icon: Icon, title, value }: { icon: React.ElementType, title: string, value: string | number }) => (
     <Card>
@@ -109,12 +135,38 @@ const getTicks = (data: { date: string }[], maxTicks = 8) => {
 export default function OrganizationPage() {
   const params = useParams();
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('yearly');
+  const [apiModels, setApiModels] = useState<ApiModel[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const organizationName = useMemo(() => {
     const name = params.name as string;
     return name ? decodeURIComponent(name) : '';
   }, [params.name]);
 
+  // Fetch models from API using provider filter
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        setLoading(true);
+        // Use developer parameter to filter models directly from API
+        const response = await fetch(`${API_BASE_URL}/catalog/models?developer=${encodeURIComponent(organizationName.toLowerCase())}`);
+        const data = await response.json();
+        const models = data.data || [];
+
+        console.log(`Found ${models.length} models for ${organizationName} from catalog endpoint`);
+        setApiModels(models);
+      } catch (error) {
+        console.error('Failed to fetch models:', error);
+        setApiModels([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (organizationName) {
+      fetchModels();
+    }
+  }, [organizationName]);
 
   const orgModels = useMemo(() => {
     return allModelsData.filter(model => model.developer.toLowerCase() === organizationName.toLowerCase());
@@ -154,8 +206,8 @@ export default function OrganizationPage() {
   if (!organizationName) {
     return <div>Loading...</div>;
   }
-  
-  if (!orgRankingData && orgModels.length === 0) {
+
+  if (!loading && !orgRankingData && orgModels.length === 0 && apiModels.length === 0) {
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
             <h1 className="text-2xl font-bold">Organization not found.</h1>
@@ -264,15 +316,28 @@ export default function OrganizationPage() {
         </div>
 
         <main>
-            <h2 className="text-2xl font-bold mb-6">Models by {organizationName.charAt(0).toUpperCase() + organizationName.slice(1)} ({orgModels.length})</h2>
-            {orgModels.length > 0 ? (
+            <h2 className="text-2xl font-bold mb-6">Models by {organizationName.charAt(0).toUpperCase() + organizationName.slice(1)} ({apiModels.length})</h2>
+            {loading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {orgModels.map(model => (
-                        <ModelCard key={model.name} model={model} />
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <Card key={i} className="p-6">
+                            <div className="animate-pulse space-y-4">
+                                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                                <div className="h-16 bg-gray-200 rounded"></div>
+                                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            ) : apiModels.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {apiModels.map(model => (
+                        <ApiModelCard key={model.id} model={model} />
                     ))}
                 </div>
             ) : (
-                <p className="text-muted-foreground">No models found for this organization in the detailed list.</p>
+                <p className="text-muted-foreground">No models found for this organization.</p>
             )}
         </main>
     </div>

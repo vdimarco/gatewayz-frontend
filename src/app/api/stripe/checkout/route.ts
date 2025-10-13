@@ -4,6 +4,10 @@ export async function POST(req: NextRequest) {
   try {
     const { amount, userEmail, userId, apiKey } = await req.json();
 
+    const normalizedEmail = typeof userEmail === 'string' && userEmail.includes('@') && !userEmail.startsWith('did:privy:')
+      ? userEmail
+      : undefined;
+
     // Validate amount
     if (!amount || amount < 1) {
       return NextResponse.json(
@@ -23,14 +27,22 @@ export async function POST(req: NextRequest) {
     // Call backend to create checkout session
     // Backend will create payment record and properly format metadata
     const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.gatewayz.ai';
+
+    // Get the frontend URL - force beta.gatewayz.ai for Stripe redirects
+    // The VERCEL_URL changes with each deployment, so we use a fixed URL
+    const frontendUrl = 'https://beta.gatewayz.ai';
+
     const requestBody = {
       amount: amount * 100, // Convert dollars to cents
       currency: 'usd',
       description: `${amount} credits for Gatewayz AI platform`,
-      customer_email: userEmail,
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.gatewayz.ai'}/settings/credits?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.gatewayz.ai'}/settings/credits`,
+      customer_email: normalizedEmail,
+      success_url: `${frontendUrl}/settings/credits?session_id={{CHECKOUT_SESSION_ID}}`,
+      cancel_url: `${frontendUrl}/settings/credits`,
     };
+
+    console.log('[Checkout API] Frontend URL:', frontendUrl);
+    console.log('[Checkout API] Success URL:', requestBody.success_url);
 
     console.log('[Checkout API] Calling backend checkout:', backendUrl);
     console.log('[Checkout API] Request body:', JSON.stringify(requestBody));
@@ -49,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[Checkout API] Backend checkout error (raw):', errorText);
+      console.log('[Checkout API] Backend checkout error (raw):', errorText);
 
       let error;
       try {
@@ -58,7 +70,7 @@ export async function POST(req: NextRequest) {
         error = { detail: errorText };
       }
 
-      console.error('[Checkout API] Backend checkout error (parsed):', error);
+      console.log('[Checkout API] Backend checkout error (parsed):', error);
       return NextResponse.json(
         { error: error.detail || error.message || 'Failed to create checkout session' },
         { status: response.status }
@@ -70,7 +82,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ sessionId: session.session_id, url: session.url });
 
   } catch (error) {
-    console.error('Stripe checkout error:', error);
+    console.log('Stripe checkout error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to create checkout session';
     return NextResponse.json(
       { error: errorMessage, details: String(error) },

@@ -8,6 +8,12 @@ import { ArrowRight, ChevronRight, GitMerge, ShieldCheck, TrendingUp, User, Zap 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { usePrivy } from '@privy-io/react-auth';
+import { Check, Copy } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { getApiKey } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/config';
+import Image from 'next/image';
 
 interface FeaturedModel {
   name: string;
@@ -17,6 +23,23 @@ interface FeaturedModel {
   growth: string;
   color: string;
   logo_url?: string;
+}
+
+interface RankingModelData {
+  id: number;
+  rank: number;
+  model_name: string;
+  author: string;
+  tokens: string;
+  trend_percentage: string;
+  trend_direction: "up" | "down";
+  trend_icon: string;
+  trend_color: string;
+  model_url: string;
+  author_url: string;
+  time_period: string;
+  scraped_at: string;
+  logo_url: string;
 }
 
 const FeaturedModelCard = ({
@@ -34,7 +57,7 @@ const FeaturedModelCard = ({
       className={`h-[144px] bg-card border rounded-lg shadow-sm hover:shadow-md cursor-pointer overflow-hidden relative ${
         isActive
           ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-auto min-w-[280px] sm:min-w-[350px] md:min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)]'
-          : 'border-gray-200 hover:border-gray-300 w-20 sm:w-24 min-w-[80px] sm:min-w-[96px] flex-shrink-0'
+          : 'border-border hover:border-border/80 w-20 sm:w-24 min-w-[80px] sm:min-w-[96px] flex-shrink-0'
       }`}
       style={{
         transition: 'all 0.7s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -47,24 +70,24 @@ const FeaturedModelCard = ({
           isActive ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
       >
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 flex-shrink-0">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-200 flex-shrink-0 p-1">
           {model.logo_url ? (
-            <img src={model.logo_url} alt={model.by} width="42" height="42" />
+            <img src={model.logo_url} alt={model.by} width="42" height="42" className="w-full h-full object-contain" loading="lazy" />
           ) : (
             <>
               {model.by === 'google' && (
-                <div className="flex">
-                  <img src="/Google_Logo-black.svg" alt="Google" width="42" height="42" />
+                <div className="flex w-full h-full">
+                  <img src="/Google_Logo-black.svg" alt="Google" width="42" height="42" className="w-full h-full object-contain" loading="lazy" />
                 </div>
               )}
               {model.by === 'openai' && (
-                <div className="flex">
-                  <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="42" height="42" />
+                <div className="flex w-full h-full">
+                  <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="42" height="42" className="w-full h-full object-contain" loading="lazy" />
                 </div>
               )}
               {model.by === 'anthropic' && (
-                <div className="flex">
-                  <img src="/Meta_Logo-black.svg" alt="Anthropic" width="42" height="42" />
+                <div className="flex w-full h-full">
+                  <img src="/anthropic-logo.svg" alt="Anthropic" width="42" height="42" className="w-full h-full object-contain" loading="lazy" />
                 </div>
               )}
             </>
@@ -74,7 +97,7 @@ const FeaturedModelCard = ({
           <p className={`text-lg font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
             {model.growth}
           </p>
-          <p className="text-[10px] text-gray-600 leading-tight">Weekly Growth</p>
+          <p className="text-[10px] text-muted-foreground leading-tight">Weekly Growth</p>
         </div>
       </div>
 
@@ -85,49 +108,49 @@ const FeaturedModelCard = ({
         }`}
       >
         <div className="flex gap-2 sm:gap-3 mb-2 sm:mb-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-gray-100 flex-shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-200 flex-shrink-0 p-1">
               {model.logo_url ? (
-                <img src={model.logo_url} alt={model.by} className="w-8 h-8 sm:w-10 sm:h-10" />
+                <img src={model.logo_url} alt={model.by} width="40" height="40" className="w-full h-full object-contain" loading="lazy" />
               ) : (
                 <>
                   {model.by === 'google' && (
-                    <div className="flex">
-                      <img src="/Google_Logo-black.svg" alt="Google" className="w-8 h-8 sm:w-10 sm:h-10" />
+                    <div className="flex w-full h-full">
+                      <img src="/Google_Logo-black.svg" alt="Google" width="40" height="40" className="w-full h-full object-contain" loading="lazy" />
                     </div>
                   )}
                   {model.by === 'openai' && (
-                    <div className="flex">
-                      <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-8 h-8 sm:w-10 sm:h-10" />
+                    <div className="flex w-full h-full">
+                      <img src="/OpenAI_Logo-black.svg" alt="OpenAI" width="40" height="40" className="w-full h-full object-contain" loading="lazy" />
                     </div>
                   )}
                   {model.by === 'anthropic' && (
-                    <div className="flex">
-                      <img src="/Meta_Logo-black.svg" alt="Anthropic" className="w-8 h-8 sm:w-10 sm:h-10" />
+                    <div className="flex w-full h-full">
+                      <img src="/anthropic-logo.svg" alt="Anthropic" width="40" height="40" className="w-full h-full object-contain" loading="lazy" />
                     </div>
                   )}
                 </>
               )}
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base text-black">{model.name}</h3>
-              <span className="text-xs sm:text-sm">By</span><span className="text-xs sm:text-sm text-blue-600"> {model.by.charAt(0).toUpperCase() + model.by.slice(1)}</span>
+              <h3 className="font-bold text-sm sm:text-base">{model.name}</h3>
+              <span className="text-xs sm:text-sm text-muted-foreground">By</span><span className="text-xs sm:text-sm text-blue-600 dark:text-blue-400"> {model.by.charAt(0).toUpperCase() + model.by.slice(1)}</span>
             </div>
           </div>
 
         <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <div className="text-center">
-            <p className="text-lg sm:text-xl md:text-2xl font-bold text-black">{model.tokens}</p>
-            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">Tokens/Sec</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold">{model.tokens}</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Tokens</p>
           </div>
           <div className="text-center">
-            <p className="text-lg sm:text-xl md:text-2xl font-bold text-black">{model.latency}</p>
-            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">Latency</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold">{model.latency}</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Latency</p>
           </div>
           <div className="text-center">
             <p className={`text-lg sm:text-xl md:text-2xl font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
               {model.growth}
             </p>
-            <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">Weekly Growth</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Weekly Growth</p>
           </div>
         </div>
       </div>
@@ -156,7 +179,7 @@ const FeatureCard = ({ icon, title, description, linkText, linkHref }: { icon: s
   <Card className="p-6 text-center">
     <div className="flex justify-center mb-4">
       <div className="w-16 h-16 flex items-center justify-center rounded-2xl bg-muted">
-        <img src={`/${icon}.svg`} alt="Stats" width="100%" height="100%" />
+        <img src={`/${icon}.svg`} alt={title} width="64" height="64" className="w-full h-full" loading="lazy" />
       </div>
     </div>
     <h3 className="text-lg font-bold mb-2">{title}</h3>
@@ -179,21 +202,186 @@ export default function Home() {
   const [activeModelIndex, setActiveModelIndex] = useState<number | null>(0);
   const [message, setMessage] = useState('');
   const router = useRouter();
-  const [apiKey, setApiKey] = useState('0000000000000000000000000000000000000000');
+  const { user, ready, login } = usePrivy();
+  const [apiKey, setApiKey] = useState('');
   const carouselRef = useRef<HTMLDivElement>(null);
   const [carouselOffset, setCarouselOffset] = useState(0);
-  const [featuredModels, setFeaturedModels] = useState<FeaturedModel[]>([
-      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' },
-      { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/openai-logo.svg' },
-      { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' },
-      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' },
-      { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/openai-logo.svg' },
-      { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' },
-      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' },
-      { name: 'GPT-5 Chat', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/openai-logo.svg' },
-      { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' },
-      { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/google-logo.svg' }
-  ]);
+  const [activeCodeTab, setActiveCodeTab] = useState<'python' | 'javascript' | 'curl'>('python');
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(true);
+  const { toast } = useToast();
+
+  // Load the actual API key when user is authenticated
+  useEffect(() => {
+    const loadApiKey = () => {
+      // Wait for Privy to be ready
+      if (!ready) {
+        return;
+      }
+
+      if (user) {
+        const userApiKey = getApiKey();
+        if (userApiKey) {
+          setApiKey(userApiKey);
+        } else {
+          // User is authenticated but no API key yet - show placeholder
+          setApiKey('');
+        }
+      } else {
+        setApiKey(''); // Show placeholder when not authenticated
+      }
+    };
+
+    // Load initially
+    loadApiKey();
+
+    // Listen for storage changes (in case API key is set in another component)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'gatewayz_api_key') {
+        loadApiKey();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Poll for changes every 5 seconds to catch same-tab updates (reduced from 1s for performance)
+    const interval = setInterval(loadApiKey, 5000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [user, ready]);
+
+  // Dynamic code examples with actual API key
+  const codeExamples = {
+    python: `from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.gatewayz.ai/v1",
+    api_key="${apiKey || 'YOUR_API_KEY'}"
+)
+
+completion = client.chat.completions.create(
+    model="gpt-4",
+    messages=[
+        {"role": "user", "content": "Hello!"}
+    ]
+)
+
+print(completion.choices[0].message)`,
+
+    javascript: `import OpenAI from "openai";
+
+const openai = new OpenAI({
+  baseURL: "https://api.gatewayz.ai/v1",
+  apiKey: "${apiKey || 'YOUR_API_KEY'}",
+});
+
+const completion = await openai.chat.completions.create({
+  model: "gpt-4",
+  messages: [
+    { role: "user", content: "Hello!" }
+  ],
+});
+
+console.log(completion.choices[0].message);`,
+
+    curl: `curl https://api.gatewayz.ai/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${apiKey || 'YOUR_API_KEY'}" \\
+  -d '{
+    "model": "gpt-4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello!"
+      }
+    ]
+  }'`
+  };
+  const [featuredModels, setFeaturedModels] = useState<FeaturedModel[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(true);
+
+  // Fetch models from rankings API
+  useEffect(() => {
+    const fetchRankingModels = async () => {
+      try {
+        setIsLoadingModels(true);
+        const response = await fetch(`${API_BASE_URL}/ranking/models`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          const rankingModels: RankingModelData[] = result.data || [];
+
+          // Map ranking data to featured model format
+          const mappedModels: FeaturedModel[] = rankingModels.slice(0, 10).map((model) => {
+            // Get logo based on author
+            const authorLower = model.author.toLowerCase();
+            let logo_url = '/logo_black.svg'; // Default logo
+
+            if (authorLower.includes('google')) {
+              logo_url = '/Google_Logo-black.svg';
+            } else if (authorLower.includes('openai')) {
+              logo_url = '/OpenAI_Logo-black.svg';
+            } else if (authorLower.includes('anthropic')) {
+              logo_url = '/anthropic-logo.svg';
+            } else if (authorLower.includes('meta')) {
+              logo_url = '/Meta_Logo-black.svg';
+            } else if (authorLower.includes('deepseek')) {
+              logo_url = '/deepseek-icon.svg';
+            } else if (authorLower.includes('x-ai') || authorLower.includes('xai')) {
+              logo_url = '/xai-logo.svg';
+            }
+
+            // Format growth percentage
+            const growth = model.trend_direction === 'up'
+              ? `+${model.trend_percentage}`
+              : model.trend_direction === 'down'
+                ? `-${model.trend_percentage}`
+                : model.trend_percentage;
+
+            return {
+              name: model.model_name,
+              by: model.author,
+              tokens: model.tokens,
+              latency: '--', // Not provided by ranking API
+              growth: growth,
+              color: model.trend_direction === 'up' ? 'bg-green-400' : model.trend_direction === 'down' ? 'bg-red-400' : 'bg-gray-400',
+              logo_url: logo_url
+            };
+          });
+
+          setFeaturedModels(mappedModels);
+        } else {
+          console.error('Failed to fetch ranking models');
+          // Set fallback models if API fails
+          setFeaturedModels([
+            { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/Google_Logo-black.svg' },
+            { name: 'GPT-4', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/OpenAI_Logo-black.svg' },
+            { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching ranking models:', error);
+        // Set fallback models on error
+        setFeaturedModels([
+          { name: 'Gemini 2.5 Pro', by: 'google', tokens: '170.06', latency: '2.6s', growth: '+13.06%', color: 'bg-blue-400', logo_url: '/Google_Logo-black.svg' },
+          { name: 'GPT-4', by: 'openai', tokens: '20.98', latency: '850ms', growth: '--', color: 'bg-green-400', logo_url: '/OpenAI_Logo-black.svg' },
+          { name: 'Claude Sonnet 4', by: 'anthropic', tokens: '585.26', latency: '1.9s', growth: '-9.04%', color: 'bg-purple-400', logo_url: '/anthropic-logo.svg' }
+        ]);
+      } finally {
+        setIsLoadingModels(false);
+      }
+    };
+
+    fetchRankingModels();
+  }, []);
 
   // Auto-advance carousel every 3 seconds
   useEffect(() => {
@@ -251,17 +439,78 @@ export default function Home() {
   };
 
   const handleCopyApiKey = () => {
-    navigator.clipboard.writeText(apiKey);
+    if (apiKey) {
+      navigator.clipboard.writeText(apiKey);
+      toast({
+        title: "API Key Copied",
+        description: "Your API key has been copied to clipboard.",
+      });
+    }
+  };
+
+  const handleGenerateApiKey = () => {
+    if (user) {
+      // If already logged in, redirect to credits page to claim trial
+      router.push('/settings/credits');
+    } else {
+      // If not logged in, trigger login
+      login();
+    }
+  };
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(codeExamples[activeCodeTab]);
+    setCodeCopied(true);
+    toast({
+      title: "Code copied!",
+      description: "The code has been copied to your clipboard.",
+    });
+    setTimeout(() => setCodeCopied(false), 2000);
   };
   
   return (
     <div className="bg-background text-foreground">
+      {/* Claude Code Integration Banner */}
+      <div className="sticky top-[65px] z-40 bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+            <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 flex-shrink-0">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" fill="currentColor"/>
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-xs sm:text-base leading-tight">
+                  🚀 New: Integrate Claude Code with Gatewayz API
+                </p>
+                <p className="text-[11px] sm:text-sm text-white/90 leading-tight mt-0.5">
+                  Access multiple AI models, save costs, and build faster
+                </p>
+              </div>
+            </div>
+            <Link href="/claude-code" className="w-full sm:w-auto">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="bg-background text-purple-600 dark:text-purple-400 hover:bg-muted whitespace-nowrap w-full sm:w-auto text-xs sm:text-sm py-1.5 sm:py-2"
+              >
+                Get Started →
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 " style={{position: 'relative'}}>
         {/* Hero Section */}
-        <img 
-          src="/logo_transparent.svg" 
-          alt="Stats" 
-          className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[450px] h-[450px] lg:w-[640px] lg:h-[640px] xl:w-[768px] xl:h-[768px]" 
+        <Image
+          src="/logo_transparent.svg"
+          alt="Background logo"
+          width={768}
+          height={768}
+          priority
+          className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[450px] h-[450px] lg:w-[640px] lg:h-[640px] xl:w-[768px] xl:h-[768px]"
         />
         
         <section className="grid md:grid-cols-1 gap-8 items-center py-8 md:py-[140px] mb-16 md:mb-32 max-w-5xl mx-auto px-4" >
@@ -317,7 +566,21 @@ export default function Home() {
             </div>
           </div>
 
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm z-10 mt-6">
+            {/* Connected to 1000+ AI Models - Moved here */}
+            <section className="mt-12 px-4">
+              <div className="mb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-center">Connect To 1000+ AI Models</h2>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 md:gap-12 items-center justify-items-center max-w-5xl mx-auto">
+                <Image src="/OpenAI_Logo-black.svg" alt="OpenAI" width={140} height={40} className="w-full max-w-[140px] dark:invert" loading="lazy" />
+                <Image src="https://upload.wikimedia.org/wikipedia/commons/7/78/Anthropic_logo.svg" alt="Anthropic" width={140} height={40} className="w-full max-w-[140px] dark:invert" loading="lazy" />
+                <Image src="/Google_Logo-black.svg" alt="Google" width={140} height={40} className="w-full max-w-[140px] dark:invert" loading="lazy" />
+                <Image src="/DeepSeek_Logo-black.svg" alt="DeepSeek" width={140} height={40} className="w-full max-w-[140px] dark:invert" loading="lazy" />
+                <Image src="/Meta_Logo-black.svg" alt="Meta" width={140} height={40} className="w-full max-w-[140px] dark:invert" loading="lazy" />
+              </div>
+            </section>
+
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm z-10 mt-12">
               <div className=" px-6 py-[10px] flex flex-row items-center justify-between">
                 <div className="font-bold tracking-tight text-lg">Top Models This Month</div>
               <Link href="/rankings">
@@ -333,26 +596,6 @@ export default function Home() {
             </div>
         </section>
 
-        {/* Stats Section */}
-        {/* <section className="grid grid-cols-2 md:grid-cols-4 gap-8 my-24">
-            <StatItem value="8.4T" label="Monthly Tokens" />
-            <StatItem value="2.5M+" label="Global Users" />
-            <StatItem value="60+" label="Active Providers" />
-            <StatItem value="400+" label="Models" />
-        </section> */}
-
-        <section className="mb-12 md:mb-24 px-4">
-          <div className="mb-8 md:mb-12">
-            <h2 className="text-xl sm:text-2xl font-bold text-center">Connected TO 1000+ AI Models</h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 md:gap-12 items-center justify-items-center max-w-4xl mx-auto">
-            <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-full max-w-[140px]" />
-            <img src="/Google_Logo-black.svg" alt="Google" className="w-full max-w-[140px]" />
-            <img src="/DeepSeek_Logo-black.svg" alt="DeepSeek" className="w-full max-w-[140px]" />
-            <img src="/Meta_Logo-black.svg" alt="Meta" className="w-full max-w-[140px]" />
-          </div>
-        </section>
-
         {/* How It Works Section */}
         <section className=" my-24">
           <div className="mb-8">
@@ -361,17 +604,17 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-12">
             <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
               <div className="flex items-center justify-between col-span-2" >
-                <img src="/sign-up-blue.svg" alt="Stats" width="100%" height="100%" />
+                <img src="/sign-up-blue.svg" alt="Signup icon" width="100" height="100" className="w-full h-full" loading="lazy" />
               </div>
               <div className="flex items-center justify-between col-span-5" >
                 <HowItWorksStep number={1} title="Signup" description="Create An Account To Get Started Using Your Email Or A 3rd Party.">
                     <span></span>
                 </HowItWorksStep>
               </div>
-            </div>    
+            </div>
             <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
              <div className="flex items-center justify-between col-span-2" >
-                <img src="/coins-blue.svg" alt="Stats" width="100%" height="100%" />
+                <img src="/coins-blue.svg" alt="Credits icon" width="100" height="100" className="w-full h-full" loading="lazy" />
               </div>
               <div className="flex items-center justify-between col-span-5" >
                 <HowItWorksStep number={2} title="Buy credits" description="Credits Can Be Purchased In Multiple Methods, And Used With Any Model Or Provider.">
@@ -381,7 +624,7 @@ export default function Home() {
             </div>
             <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
               <div className="flex items-center justify-between col-span-2" >
-                <img src="/api-blue.svg" alt="Stats" width="100%" height="100%" />
+                <img src="/api-blue.svg" alt="API key icon" width="100" height="100" className="w-full h-full" loading="lazy" />
               </div>
               <div className="flex items-center justify-between col-span-5" >
                 <HowItWorksStep number={3} title="Get your API key" description="Create An API Key And Start Making Requests In An Instance.">
@@ -400,28 +643,155 @@ export default function Home() {
               <p className=" text-bold text-center text-xl">3 Lines To Get Gatewayz Running, No Stack Overhaul Required.</p>
             </div>
           </div>
-          <img src="/integration.svg" alt="Integrations" width="100%" height="100%" />
-           <div className="w-full flex flex-row items-center gap-10 mt-8">
-             <div className="relative flex-1">
-               <Input 
-                 placeholder="Enter your API key..." 
-                 className="h-12 pr-14" 
-                 value={apiKey}
-                 type="password"
-                 onChange={(e) => setApiKey(e.target.value)}
-                 onKeyPress={handleCopyApiKey}
-               />
-               <button 
-                 className="absolute right-2 top-1/2 -translate-y-1/2"
-                 onClick={handleCopyApiKey}
+
+          {/* Interactive Code Block - Sexier Version */}
+          <div className="rounded-xl overflow-hidden shadow-2xl border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+            {/* Terminal-style Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/80 hover:bg-red-500 transition-colors"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/80 hover:bg-yellow-500 transition-colors"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500/80 hover:bg-green-500 transition-colors"></div>
+                </div>
+                <span className="text-xs text-slate-400 ml-3 font-mono">integration.{activeCodeTab === 'python' ? 'py' : activeCodeTab === 'javascript' ? 'js' : 'sh'}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopyCode}
+                className="text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all"
+              >
+                {codeCopied ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2 text-green-400" />
+                    <span className="text-green-400">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Language Tabs */}
+            <div className="flex gap-1 px-4 pt-3 bg-slate-950/30">
+              {(['python', 'javascript', 'curl'] as const).map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setActiveCodeTab(lang)}
+                  className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all ${
+                    activeCodeTab === lang
+                      ? 'bg-slate-950/80 text-cyan-400 shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
+                  }`}
+                >
+                  {lang === 'python' ? '🐍 Python' : lang === 'javascript' ? '⚡ JavaScript' : '🔧 cURL'}
+                </button>
+              ))}
+            </div>
+
+            {/* Code Display with animated transition */}
+            <div className="relative bg-slate-950/80 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-purple-500/5 to-pink-500/5 opacity-50"></div>
+              <div className="relative p-6 overflow-x-auto">
+                <pre className="text-sm leading-relaxed font-mono">
+                  <code className="text-slate-200">
+                    {codeExamples[activeCodeTab].split('\n').map((line, i) => (
+                      <div key={i} className="hover:bg-slate-800/30 px-2 -mx-2 rounded transition-colors">
+                        <span className="inline-block w-8 text-slate-600 select-none">{i + 1}</span>
+                        <span className="syntax-highlight">{line}</span>
+                      </div>
+                    ))}
+                  </code>
+                </pre>
+              </div>
+            </div>
+
+            {/* Bottom gradient accent */}
+            <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
+          </div>
+
+          <style jsx>{`
+            .syntax-highlight {
+              color: #e2e8f0;
+            }
+          `}</style>
+
+           <div className="w-full flex items-center gap-4 mt-8">
+             {user && apiKey && (
+               <div className="flex-1 flex items-center gap-3">
+                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Your API Key</label>
+                 <div className="relative flex-1">
+                   <Input
+                     className="h-12 pr-28 font-mono text-sm bg-background text-foreground"
+                     value={apiKey}
+                     type={showApiKey ? "text" : "password"}
+                     readOnly
+                   />
+                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
+                     <button
+                       onClick={() => setShowApiKey(!showApiKey)}
+                       className="p-1 hover:bg-muted dark:hover:bg-muted/30 rounded"
+                     >
+                       {showApiKey ? (
+                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                         </svg>
+                       ) : (
+                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                         </svg>
+                       )}
+                     </button>
+                     <button
+                       onClick={handleCopyApiKey}
+                       className="p-1 hover:bg-muted dark:hover:bg-muted/30 rounded"
+                     >
+                       <Copy className="w-5 h-5" />
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             )}
+
+             <div className={`relative group inline-block ${user && apiKey ? '' : 'mx-auto'}`}>
+               {/* Multi-layered LED-style glow with color shifting */}
+               <div className="absolute -inset-[3px] rounded-lg opacity-90 blur-md animate-led-shimmer"></div>
+               <div className="absolute -inset-[2px] rounded-lg opacity-80 blur-sm animate-led-shimmer" style={{ animationDelay: '0.5s' }}></div>
+
+               {/* Elevated neon border - visible underneath */}
+               <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 opacity-100 animate-led-shimmer" style={{ top: '2px' }}></div>
+
+               {/* Button with elevation effect */}
+               <Button
+                 className="relative bg-black hover:bg-gray-900 text-white hover:text-white h-12 px-12 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)]"
+                 onClick={handleGenerateApiKey}
                >
-                 <img src="/material-symbols_key.svg" alt="Copy" width="24" height="24" />
-               </button>
-             </div>   
-             <span className="flex-1">
-             <Button className="w-full bg-black text-white h-12" variant="outline">Generate API Key</Button>    
-             </span>
+                 {user ? 'Claim Trial Credits' : 'Generate API Key'}
+               </Button>
+             </div>
            </div>
+
+           <style jsx>{`
+             @keyframes led-shimmer {
+               0%, 100% {
+                 background-position: 0% 50%;
+               }
+               50% {
+                 background-position: 100% 50%;
+               }
+             }
+
+             .animate-led-shimmer {
+               background: linear-gradient(90deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #06b6d4, #3b82f6);
+               background-size: 200% 200%;
+               animation: led-shimmer 4s ease-in-out infinite;
+             }
+           `}</style>
         </section>
 
         {/* Features Section */}
@@ -466,17 +836,17 @@ export default function Home() {
                 <div className="p-6 border rounded-lg bg-card">
                     <h2 className="text-3xl font-bold mb-2">Explore Models</h2>
                     <p className="text-1xl mb-4">Discover AI Models Across Our Collection, From All Major Labs And Providers.</p>
-                    <Link href="/models"><Button variant="outline" className="bg-white text-bold">View Models <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
+                    <Link href="/models"><Button variant="outline" className="bg-background hover:bg-muted text-bold">View Models <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
                 </div>
                  <div className="p-6 border rounded-lg bg-card">
                     <h2 className="text-3xl font-bold mb-2">Model & App Rankings</h2>
                     <p className="text-1xl mb-4">Explore Token Usage Across Models, Labs, And Public Applications.</p>
-                    <Link href="/rankings"><Button variant="outline" className="bg-white text-bold">View Rankings <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
+                    <Link href="/rankings"><Button variant="outline" className="bg-background hover:bg-muted text-bold">View Rankings <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
                 </div>
                 <div className="p-6 border rounded-lg bg-card">
                     <h2 className="text-3xl font-bold mb-2">Chat With Any LLM</h2>
                     <p className="text-1xl mb-4">Select Between 1000+ Models To Help With Any Query You Have At Hand Or Integrate Into Your Systems.</p>
-                    <Link href="/chat"><Button variant="outline" className="bg-white text-bold">Chat With LLM <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
+                    <Link href="/chat"><Button variant="outline" className="bg-background hover:bg-muted text-bold">Chat With LLM <ArrowRight className="w-4 h-4 ml-2" /></Button></Link>
                 </div>
             </div>
             {/* <div>

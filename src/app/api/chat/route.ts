@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Chat API route - Backend error:`, errorText);
+      console.log(`Chat API route - Backend error:`, errorText);
 
       return NextResponse.json(
         { error: `Backend API error: ${response.status}`, details: errorText },
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ response: content });
   } catch (error) {
-    console.error('Chat API route - Error:', error);
+    console.log('Chat API route - Error:', error);
     return NextResponse.json(
       { error: 'Failed to process chat request', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
