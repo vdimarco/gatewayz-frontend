@@ -27,8 +27,8 @@ export function OnboardingBanner() {
       return;
     }
 
-    // Don't show on onboarding page itself, home page, settings pages, or models page
-    if (pathname === '/onboarding' || pathname === '/' || pathname?.startsWith('/settings') || pathname === '/models') {
+    // Don't show on onboarding page itself or home page
+    if (pathname === '/onboarding' || pathname === '/') {
       setVisible(false);
       return;
     }
@@ -88,8 +88,8 @@ export function OnboardingBanner() {
   }
 
   return (
-    <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md">
-      <div className="container mx-auto px-4 py-3">
+    <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md sticky top-[65px] z-40">
+      <div className="px-4 py-3 max-w-full">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1">
             {/* Progress indicator */}
