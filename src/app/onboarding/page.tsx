@@ -322,6 +322,29 @@ console.log(response.choices[0].message.content);`
             </div>
           </div>
 
+          {/* Copy API Key Button */}
+          {apiKey && (
+            <div className="mb-6">
+              <Button
+                variant="outline"
+                onClick={copyApiKey}
+                className="mx-auto"
+              >
+                {copiedKey ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2 text-green-600" />
+                    API Key Copied!
+                  </>
+                ) : (
+                  <>
+                    <Key className="h-4 w-4 mr-2" />
+                    Copy API Key
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
           {/* API Key Display */}
           {apiKey && (
             <Card className="max-w-2xl mx-auto">
