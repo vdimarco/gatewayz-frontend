@@ -125,13 +125,6 @@ export default function RankingsPage() {
     const topTenModels = sortedModels.slice(0, 10);
 
     return { topModels, topTenModels };
-
-
-
-
-    // return uniqueModels
-    //   .sort((a, b) => a.rank - b.rank) // ascending order
-    //   .slice(0, selectedTopModelsCount);
   }, [selectedTopModelsCount, selectedTimeRangeForModels, models])
 
   const filteredApps = useMemo(() => {
