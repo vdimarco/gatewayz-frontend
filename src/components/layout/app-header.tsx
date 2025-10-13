@@ -252,19 +252,6 @@ export function AppHeader() {
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <>
-                <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg">
-                  <span className="text-xs text-muted-foreground font-mono">
-                    {formatAddress(getWalletAddress(user))}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-4 w-4 p-0"
-                    onClick={() => copyToClipboard(getWalletAddress(user))}
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
                 <UserNav user={user} />
               </>
             ) : (

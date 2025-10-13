@@ -72,10 +72,10 @@ export function UserNav({ user }: UserNavProps) {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast({ title: "Address copied to clipboard" });
+      toast({ title: "Wallet copied to clipboard" });
     } catch (error) {
       toast({
-        title: "Failed to copy address",
+        title: "Failed to copy wallet",
         variant: "destructive",
       });
     }
