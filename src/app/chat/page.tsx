@@ -702,8 +702,8 @@ const ChatSkeleton = () => (
   </div>
 );
 
-// Helper function to generate a concise chat title with random emoji using AI
-const generateChatTitle = async (message: string, apiKey: string, privyUserId: string): Promise<string> => {
+// Helper function to generate a concise chat title with random emoji
+const generateChatTitle = (message: string): string => {
     // Expanded array of emojis from standard emoji set
     const emojis = [
         '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇',
@@ -745,50 +745,34 @@ const generateChatTitle = async (message: string, apiKey: string, privyUserId: s
     // Pick a random emoji
     const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
 
-    try {
-        // Call AI to summarize the message into 3-5 words
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.gatewayz.ai';
-        const url = `${apiBaseUrl}/v1/responses?privy_user_id=${encodeURIComponent(privyUserId)}`;
+    // Clean and normalize the message
+    const cleaned = message.trim();
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'deepseek/deepseek-chat',
-                input: [
-                    {
-                        role: 'user',
-                        content: [
-                            {
-                                type: 'input_text',
-                                text: `Summarize this message in exactly 3-5 words that capture its main topic or question. Only respond with the summary, no other text:\n\n"${message}"`
-                            }
-                        ]
-                    }
-                ],
-                stream: false
-            })
-        });
+    // Smart title generation based on common question patterns
+    const words = cleaned.split(/\s+/);
 
-        if (response.ok) {
-            const data = await response.json();
-            const summary = data.output?.trim() || '';
-
-            if (summary && summary.split(/\s+/).length <= 6) {
-                return `${randomEmoji} ${summary}`;
-            }
-        }
-    } catch (error) {
-        console.error('Failed to generate AI title, falling back to truncation:', error);
+    // If message is already short (5 words or less), use it as is
+    if (words.length <= 5) {
+        return `${randomEmoji} ${cleaned}`;
     }
 
-    // Fallback: Split message into words and take first 5-6 words
-    const words = message.trim().split(/\s+/);
+    // Remove common filler words and extract key terms
+    const fillerWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'can', 'will', 'just', 'should', 'now']);
+
+    // Keep question words and important content words
+    const importantWords = words.filter((word, index) => {
+        const lower = word.toLowerCase();
+        // Always keep the first word if it's a question word
+        if (index === 0 && ['what', 'how', 'why', 'when', 'where', 'who', 'which', 'whose', 'whom', 'can', 'could', 'would', 'should', 'is', 'are', 'do', 'does'].includes(lower)) {
+            return true;
+        }
+        // Keep words that aren't filler words
+        return !fillerWords.has(lower) || index === 0;
+    });
+
+    // Take first 5-6 important words
     const maxWords = 6;
-    const titleWords = words.slice(0, maxWords);
+    const titleWords = importantWords.slice(0, maxWords);
     const title = titleWords.join(' ') + (words.length > maxWords ? '...' : '');
 
     return `${randomEmoji} ${title}`;
@@ -1316,8 +1300,8 @@ function ChatPageContent() {
             image: userImage || undefined
         }];
 
-        // Generate title asynchronously if this is the first message
-        let newTitle = isFirstMessage ? await generateChatTitle(userMessage, apiKey, userData.privy_user_id) : undefined;
+        // Generate title if this is the first message
+        let newTitle = isFirstMessage ? generateChatTitle(userMessage) : undefined;
 
         const updatedSessions = sessions.map(session => {
             if (session.id === currentSessionId) {
