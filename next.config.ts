@@ -42,6 +42,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    // Fix for layout router mounting errors in Next.js 15
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
   allowedDevOrigins: ["*.cloudworkstations.dev"],
   webpack: (config, { isServer }) => {
