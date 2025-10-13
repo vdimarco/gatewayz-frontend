@@ -11,6 +11,26 @@ import { getApiKey } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import posthog from 'posthog-js';
 import Link from 'next/link';
+import { API_BASE_URL } from '@/lib/config';
+
+interface ModelData {
+  id: number;
+  rank: number;
+  model_name: string;
+  author: string;
+  category?: string;
+  provider?: string;
+  tokens: string;
+  trend_percentage: string;
+  trend_direction: "up" | "down";
+  trend_icon: string;
+  trend_color: string;
+  model_url: string;
+  author_url: string;
+  time_period: string;
+  scraped_at: string;
+  logo_url: string;
+}
 
 export default function StartApiPage() {
   const { user, ready, login } = usePrivy();
@@ -21,21 +41,50 @@ export default function StartApiPage() {
   const [copied, setCopied] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [selectedModel, setSelectedModel] = useState('openai/gpt-4');
-
-  // Popular models for the dropdown
-  const popularModels = [
-    { value: 'openai/gpt-4o', label: 'GPT-4o (OpenAI)', description: 'Latest multimodal model' },
-    { value: 'openai/gpt-4', label: 'GPT-4 (OpenAI)', description: 'Most capable GPT model' },
-    { value: 'openai/gpt-4o-mini', label: 'GPT-4o mini (OpenAI)', description: 'Fast and affordable' },
-    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet (Anthropic)', description: 'Best for coding and analysis' },
-    { value: 'google/gemini-2.1-pro', label: 'Gemini 2.1 Pro (Google)', description: 'Advanced multimodal reasoning' },
-    { value: 'meta/llama-3.1-405b', label: 'Llama 3.1 405B (Meta)', description: 'Open source powerhouse' },
-    { value: 'qwen/qwen2-72b-a16b-2507', label: 'Qwen2 72B (Qwen)', description: 'Free multilingual model' },
-  ];
+  const [rankingModels, setRankingModels] = useState<ModelData[]>([]);
+  const [loadingModels, setLoadingModels] = useState(true);
 
   // Track page view
   useEffect(() => {
     posthog.capture('view_start_api');
+  }, []);
+
+  // Fetch ranking models
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        setLoadingModels(true);
+        const response = await fetch(`${API_BASE_URL}/ranking/models`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          // Get top models from "Top this month" period
+          const monthlyModels = result.data
+            .filter((model: ModelData) => model.time_period === 'Top this month')
+            .sort((a: ModelData, b: ModelData) => a.rank - b.rank)
+            .slice(0, 7); // Get top 7 models
+
+          setRankingModels(monthlyModels);
+
+          // Set the first model as default if available
+          if (monthlyModels.length > 0) {
+            const firstModel = monthlyModels[0];
+            setSelectedModel(`${firstModel.author}/${firstModel.model_name.toLowerCase().replace(/\s+/g, '-')}`);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch ranking models:', error);
+      } finally {
+        setLoadingModels(false);
+      }
+    };
+
+    fetchModels();
   }, []);
 
   // Load API key
@@ -202,24 +251,46 @@ print(completion.choices[0].message.content)`
           </div>
 
           <div className="bg-card border rounded-lg p-6 shadow-sm">
-            <label className="text-sm font-medium mb-3 block">Choose from Popular Models</label>
-            <Select value={selectedModel} onValueChange={setSelectedModel}>
-              <SelectTrigger className="h-12 text-base">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {popularModels.map((model) => (
-                  <SelectItem key={model.value} value={model.value}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{model.label}</span>
-                      <span className="text-xs text-muted-foreground">{model.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <label className="text-sm font-medium mb-3 block">Choose from Top Ranked Models</label>
+            {loadingModels ? (
+              <div className="h-12 bg-muted animate-pulse rounded-md"></div>
+            ) : (
+              <Select value={selectedModel} onValueChange={setSelectedModel}>
+                <SelectTrigger className="h-12 text-base">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {rankingModels.map((model) => {
+                    const modelId = `${model.author}/${model.model_name.toLowerCase().replace(/\s+/g, '-')}`;
+                    return (
+                      <SelectItem key={model.id} value={modelId}>
+                        <div className="flex items-center gap-2">
+                          {model.logo_url && (
+                            <img
+                              src={model.logo_url}
+                              alt={model.model_name}
+                              className="w-5 h-5 rounded"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <div className="flex flex-col">
+                            <span className="font-medium">{model.model_name} ({model.author})</span>
+                            <span className="text-xs text-muted-foreground">
+                              #{model.rank} • {model.tokens} • {model.category || 'Language'}
+                            </span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            )}
             <p className="text-xs text-muted-foreground mt-2">
-              💡 The code below will update automatically with your selection
+              💡 Top models based on monthly rankings. The code below updates automatically with your selection.
             </p>
           </div>
         </div>
