@@ -368,6 +368,23 @@ export default function ModelProfilePage() {
                         <p className="text-sm text-muted-foreground mb-3">
                             Created Apr 14, 2025 | By <span className="text-blue-600">{model.provider_slug} AI</span>
                         </p>
+                        {/* Model ID with copy button */}
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md border">
+                                <code className="text-sm font-mono">{model.id}</code>
+                                <button
+                                    onClick={() => copyToClipboard(model.id, 'model-id')}
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                    title="Copy model ID"
+                                >
+                                    {copiedStates['model-id'] ? (
+                                        <Check className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                        <Copy className="h-4 w-4" />
+                                    )}
+                                </button>
+                            </div>
+                        </div>
                         <div className="flex items-center gap-2 flex-wrap">
                             <Badge className="bg-black text-white hover:bg-gray-800">Free</Badge>
                             <Badge variant="secondary">Multi-Lingual</Badge>
