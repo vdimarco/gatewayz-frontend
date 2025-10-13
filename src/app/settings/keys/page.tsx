@@ -487,7 +487,7 @@ export default function ApiKeysPage() {
                       />
                     </div>
                      <p className="text-xs text-muted-foreground p-2 bg-muted rounded-md">
-                       If enabled, this key&apos;s limit will apply to the sum of its BYOK usage and OpenRouter usage.
+                       If enabled, this key&apos;s limit will apply to the sum of its BYOK usage and GatewayZ usage.
                      </p>
                   </CollapsibleContent>
                 </Collapsible>

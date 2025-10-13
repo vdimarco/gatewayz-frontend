@@ -135,7 +135,7 @@ export function UserNav({ user }: UserNavProps) {
             <DropdownMenuItem>Referrals</DropdownMenuItem>
           </Link>
           <Link href="/settings/keys">
-            <DropdownMenuItem>Keys</DropdownMenuItem>
+            <DropdownMenuItem>API Keys</DropdownMenuItem>
           </Link>
           <Link href="/settings/activity">
             <DropdownMenuItem>Activity</DropdownMenuItem>
