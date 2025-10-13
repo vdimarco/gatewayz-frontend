@@ -374,7 +374,6 @@ export default function ModelProfilePage() {
                         <Link href={`/chat?model=${encodeURIComponent(model.id)}`}>
                             <Button>Chat</Button>
                         </Link>
-                        <Button variant="outline" className="hidden sm:flex">Compare</Button>
                     </div>
                 </div>
                  <div className="mt-4 text-muted-foreground">
