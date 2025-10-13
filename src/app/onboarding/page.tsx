@@ -269,7 +269,7 @@ console.log(response.choices[0].message.content);`
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-6 flex-1">
+              <div className="flex items-center gap-6 flex-1 flex-wrap">
                 <div className="flex items-center gap-2">
                   <Terminal className="h-5 w-5" />
                   <span className="font-semibold">Developers:</span>
@@ -291,6 +291,19 @@ console.log(response.choices[0].message.content);`
                   <span className="text-sm">Try Claude Code</span>
                   <ArrowRight className="h-3 w-3" />
                 </Link>
+                <div className="flex items-center gap-2 ml-4 pl-4 border-l border-white/30">
+                  <CreditCard className="h-4 w-4" />
+                  <span className="text-sm font-semibold">💰 Add $10 and get a bonus $10 in free credits on your first top up</span>
+                  <Link href="/settings/credits">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="ml-2 text-white border-white hover:bg-white hover:text-purple-600 transition-all"
+                    >
+                      Add Credits
+                    </Button>
+                  </Link>
+                </div>
               </div>
               <Button
                 variant="ghost"
