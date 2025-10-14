@@ -195,9 +195,19 @@ export default function DevelopersPage() {
 
         console.log('Filtered models count:', filteredModels.length);
 
-        // Group models by author
+        // List of gateways/providers that should not be shown as developers
+        const excludedProviders = ['openrouter', 'portkey', 'featherless', 'together', 'fireworks'];
+
+        // Group models by author, excluding gateways
         const orgMap = new Map<string, RankingModel[]>();
         filteredModels.forEach(model => {
+            const authorLower = model.author.toLowerCase();
+
+            // Skip if this is a gateway/provider, not a model developer
+            if (excludedProviders.includes(authorLower)) {
+                return;
+            }
+
             if (!orgMap.has(model.author)) {
                 orgMap.set(model.author, []);
             }
