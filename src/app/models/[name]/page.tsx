@@ -138,7 +138,7 @@ const ChartCard = ({ modelName, title, dataKey, yAxisFormatter }: { modelName: s
     )
 }
 
-type TabType = 'Providers' | 'Activity' | 'Apps';
+type TabType = 'Providers' | 'Activity' | 'Apps' | 'Use Model';
 
 // Transform static model to API format
 function transformStaticModel(staticModel: typeof staticModels[0]): Model {
@@ -164,8 +164,9 @@ export default function ModelProfilePage() {
     const [model, setModel] = useState<Model | null>(null);
     const [allModels, setAllModels] = useState<Model[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<TabType>('Providers');
+    const [activeTab, setActiveTab] = useState<TabType>('Use Model');
     const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
+    const [apiKey, setApiKey] = useState('YOUR_API_KEY');
 
     const modelId = useMemo(() => {
         const id = params.name as string;
@@ -414,7 +415,7 @@ export default function ModelProfilePage() {
 
             <nav className="border-b overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-8">
                 <div className="flex gap-4 lg:gap-6">
-                    {(['Providers', 'Activity', 'Apps'] as TabType[]).map(item => (
+                    {(['Use Model', 'Providers', 'Activity', 'Apps'] as TabType[]).map(item => (
                         <Button
                             key={item}
                             variant="ghost"
@@ -433,6 +434,203 @@ export default function ModelProfilePage() {
             </nav>
 
             <main>
+                {activeTab === 'Use Model' && (
+                    <div>
+                        <div className="mb-6">
+                            <h2 className="text-2xl font-bold mb-2">Use {model.name}</h2>
+                            <p className="text-muted-foreground">
+                                Call this model with a few lines of code using the Gatewayz API
+                            </p>
+                        </div>
+
+                        {/* cURL Example */}
+                        <Card className="mb-6">
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-lg">cURL</CardTitle>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => copyToClipboard(`curl -X POST https://api.gatewayz.ai/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${apiKey}" \\
+  -d '{
+    "model": "${model.id}",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello! What can you help me with?"
+      }
+    ]
+  }'`, 'curl')}
+                                    >
+                                        {copiedStates['curl'] ? (
+                                            <>
+                                                <Check className="h-4 w-4 mr-2 text-green-600" />
+                                                Copied!
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="h-4 w-4 mr-2" />
+                                                Copy
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <pre className="p-4 bg-muted rounded-md text-xs overflow-x-auto">
+                                    <code>{`curl -X POST https://api.gatewayz.ai/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${apiKey}" \\
+  -d '{
+    "model": "${model.id}",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello! What can you help me with?"
+      }
+    ]
+  }'`}</code>
+                                </pre>
+                            </CardContent>
+                        </Card>
+
+                        {/* Python Example */}
+                        <Card className="mb-6">
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-lg">Python</CardTitle>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => copyToClipboard(`from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.gatewayz.ai/v1",
+    api_key="${apiKey}"
+)
+
+completion = client.chat.completions.create(
+    model="${model.id}",
+    messages=[
+        {"role": "user", "content": "Hello! What can you help me with?"}
+    ]
+)
+
+print(completion.choices[0].message.content)`, 'python')}
+                                    >
+                                        {copiedStates['python'] ? (
+                                            <>
+                                                <Check className="h-4 w-4 mr-2 text-green-600" />
+                                                Copied!
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="h-4 w-4 mr-2" />
+                                                Copy
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <pre className="p-4 bg-muted rounded-md text-xs overflow-x-auto">
+                                    <code>{`from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.gatewayz.ai/v1",
+    api_key="${apiKey}"
+)
+
+completion = client.chat.completions.create(
+    model="${model.id}",
+    messages=[
+        {"role": "user", "content": "Hello! What can you help me with?"}
+    ]
+)
+
+print(completion.choices[0].message.content)`}</code>
+                                </pre>
+                            </CardContent>
+                        </Card>
+
+                        {/* JavaScript Example */}
+                        <Card className="mb-6">
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-lg">JavaScript / TypeScript</CardTitle>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => copyToClipboard(`import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: "${apiKey}",
+  baseURL: "https://api.gatewayz.ai/v1"
+});
+
+const response = await client.chat.completions.create({
+  model: "${model.id}",
+  messages: [{ role: "user", content: "Hello! What can you help me with?" }]
+});
+
+console.log(response.choices[0].message.content);`, 'javascript')}
+                                    >
+                                        {copiedStates['javascript'] ? (
+                                            <>
+                                                <Check className="h-4 w-4 mr-2 text-green-600" />
+                                                Copied!
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="h-4 w-4 mr-2" />
+                                                Copy
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <pre className="p-4 bg-muted rounded-md text-xs overflow-x-auto">
+                                    <code>{`import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: "${apiKey}",
+  baseURL: "https://api.gatewayz.ai/v1"
+});
+
+const response = await client.chat.completions.create({
+  model: "${model.id}",
+  messages: [{ role: "user", content: "Hello! What can you help me with?" }]
+});
+
+console.log(response.choices[0].message.content);`}</code>
+                                </pre>
+                            </CardContent>
+                        </Card>
+
+                        {/* Get API Key CTA */}
+                        <Card className="bg-primary/5 border-primary/20">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between flex-wrap gap-4">
+                                    <div>
+                                        <h3 className="font-semibold text-lg mb-1">Need an API Key?</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Get your free API key to start using {model.name}
+                                        </p>
+                                    </div>
+                                    <Link href="/settings/credits">
+                                        <Button>
+                                            Get API Key
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
                 {activeTab === 'Providers' && (
                     <div>
                         <div className="flex items-center justify-between mb-6">
