@@ -284,38 +284,110 @@ export default function StartClaudeCodePage() {
           </div>
         </div>
 
-        {/* Step 3: Validate */}
+        {/* Step 2: Start Using Claude Code */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold">
-              3
+              2
             </div>
-            <h2 className="text-2xl font-bold">Test It Out</h2>
+            <h2 className="text-2xl font-bold">Start Using Claude Code</h2>
           </div>
 
-          <div className="bg-card border rounded-lg p-6 shadow-sm space-y-4">
-            <p className="text-muted-foreground mb-4">
-              Send your first message to Claude Code:
-            </p>
+          <p className="text-muted-foreground mb-4">
+            After setup completes, start Claude Code:
+          </p>
 
-            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-              <p className="font-mono text-sm">
-                <span className="text-purple-600 dark:text-purple-400">You:</span> "Help me write a function to check if a number is prime"
-              </p>
-              <p className="font-mono text-sm text-muted-foreground">
-                <span className="text-green-600 dark:text-green-400">Claude:</span> [Generates code and explanation]
-              </p>
+          {/* ccr code command */}
+          <div className="rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 mb-6">
+            {/* Terminal Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                </div>
+                <span className="text-xs text-slate-400 ml-3 font-mono">terminal</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText('ccr code');
+                  toast({ title: "Copied to clipboard" });
+                }}
+                className="text-slate-300 hover:text-white"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy
+              </Button>
             </div>
+            {/* Code Display */}
+            <div className="bg-slate-950/80 p-6">
+              <pre className="text-sm sm:text-base leading-relaxed font-mono text-green-400">
+                ccr code
+              </pre>
+            </div>
+            {/* Bottom gradient */}
+            <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
+          </div>
 
-            <div className="flex items-start gap-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-green-900 dark:text-green-100">Success!</p>
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  If you see a response, you're all set. Claude Code is now connected to Gatewayz.
-                </p>
+          <p className="text-muted-foreground mb-4">
+            Switch models on-the-fly:
+          </p>
+
+          {/* Model switching commands */}
+          <div className="rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+            {/* Terminal Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                </div>
+                <span className="text-xs text-slate-400 ml-3 font-mono">terminal</span>
               </div>
             </div>
+            {/* Code Display */}
+            <div className="bg-slate-950/80 p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <pre className="text-sm leading-relaxed font-mono text-green-400 flex-1">
+                  /model gatewayz,openai/gpt-5
+                </pre>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText('/model gatewayz,openai/gpt-5');
+                    toast({ title: "Copied to clipboard" });
+                  }}
+                  className="text-slate-300 hover:text-white ml-4"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <pre className="text-sm leading-relaxed font-mono text-green-400 flex-1">
+                  /model gatewayz,x-ai/grok-code-fast-1
+                </pre>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText('/model gatewayz,x-ai/grok-code-fast-1');
+                    toast({ title: "Copied to clipboard" });
+                  }}
+                  className="text-slate-300 hover:text-white ml-4"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy
+                </Button>
+              </div>
+            </div>
+            {/* Bottom gradient */}
+            <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
           </div>
         </div>
 
