@@ -524,7 +524,9 @@ console.log(completion.choices[0].message);`,
 
         <section className="grid md:grid-cols-1 gap-8 items-center py-8 md:py-[140px] mb-16 md:mb-32 max-w-5xl mx-auto px-4 relative" style={{ zIndex: 1 }}>
           <div className="space-y-6 md:space-y-8 px-4">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-extrabold tracking-tighter text-center leading-tight" style={{  fontFamily: 'Inter, sans-serif',}}>Ship with any AI model. One API key.</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-extrabold tracking-tighter text-center leading-tight" style={{  fontFamily: 'Inter, sans-serif',}}>
+              Ship with any AI model.<br />One API key.
+            </h1>
             <p className="text-sm sm:text-base md:text-lg text-center px-4 py-6">Pick your path: API · Claude Code · Chat. Make your first call in 30 seconds.</p>
           </div>
           {/* CTA Buttons */}
