@@ -523,21 +523,27 @@ export default function ModelProfilePage() {
       }
     ]
   }'`,
-                                    python: `from openai import OpenAI
+                                    python: `import requests
+import json
 
-client = OpenAI(
-    base_url="https://api.gatewayz.ai/v1",
-    api_key="${apiKey}"
+response = requests.post(
+    url="https://api.gatewayz.ai/v1/chat/completions",
+    headers={
+        "Authorization": "Bearer ${apiKey}",
+        "Content-Type": "application/json"
+    },
+    data=json.dumps({
+        "model": "${model.id}",
+        "messages": [
+            {
+                "role": "user",
+                "content": "Hello! What can you help me with?"
+            }
+        ]
+    })
 )
 
-completion = client.chat.completions.create(
-    model="${model.id}",
-    messages=[
-        {"role": "user", "content": "Hello! What can you help me with?"}
-    ]
-)
-
-print(completion.choices[0].message.content)`,
+print(response.json())`,
                                     javascript: `import OpenAI from 'openai';
 
 const client = new OpenAI({
