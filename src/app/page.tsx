@@ -527,7 +527,7 @@ console.log(completion.choices[0].message);`,
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-extrabold tracking-tighter text-center leading-tight" style={{  fontFamily: 'Inter, sans-serif',}}>
               Ship with any AI model.<br />One API key.
             </h1>
-            <p className="text-sm sm:text-base md:text-lg text-center px-4 py-6">Pick your path: API · Claude Code · Chat. Make your first call in 30 seconds.</p>
+            <p className="text-sm sm:text-base md:text-lg text-center px-4 py-6">Make your first call in 30 seconds.</p>
           </div>
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4">
