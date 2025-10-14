@@ -168,7 +168,7 @@ export default function ModelProfilePage() {
     const [activeTab, setActiveTab] = useState<TabType>('Use Model');
     const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
     const [apiKey, setApiKey] = useState('YOUR_API_KEY');
-    const [selectedLanguage, setSelectedLanguage] = useState<'curl' | 'python' | 'javascript' | 'openai-python' | 'typescript' | 'openai-typescript'>('curl');
+    const [selectedLanguage, setSelectedLanguage] = useState<'curl' | 'python' | 'openai-python' | 'typescript' | 'openai-typescript'>('curl');
     const [modelProviders, setModelProviders] = useState<string[]>([]);
 
     // Load API key from storage
@@ -478,13 +478,6 @@ export default function ModelProfilePage() {
                                 Python
                             </Button>
                             <Button
-                                variant={selectedLanguage === 'javascript' ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => setSelectedLanguage('javascript')}
-                            >
-                                JavaScript
-                            </Button>
-                            <Button
                                 variant={selectedLanguage === 'openai-python' ? 'default' : 'outline'}
                                 size="sm"
                                 onClick={() => setSelectedLanguage('openai-python')}
@@ -544,19 +537,6 @@ response = requests.post(
 )
 
 print(response.json())`,
-                                    javascript: `import OpenAI from 'openai';
-
-const client = new OpenAI({
-  apiKey: "${apiKey}",
-  baseURL: "https://api.gatewayz.ai/v1"
-});
-
-const response = await client.chat.completions.create({
-  model: "${model.id}",
-  messages: [{ role: "user", content: "Hello! What can you help me with?" }]
-});
-
-console.log(response.choices[0].message.content);`,
                                     'openai-python': `from openai import OpenAI
 
 client = OpenAI(
@@ -572,19 +552,22 @@ completion = client.chat.completions.create(
 )
 
 print(completion.choices[0].message.content)`,
-                                    typescript: `import OpenAI from 'openai';
-
-const client = new OpenAI({
-  apiKey: "${apiKey}",
-  baseURL: "https://api.gatewayz.ai/v1"
-});
-
-const response = await client.chat.completions.create({
-  model: "${model.id}",
-  messages: [{ role: "user", content: "Hello! What can you help me with?" }]
-});
-
-console.log(response.choices[0].message.content);`,
+                                    typescript: `fetch("https://api.gatewayz.ai/v1/chat/completions", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer ${apiKey}",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    "model": "${model.id}",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello! What can you help me with?"
+      }
+    ]
+  })
+});`,
                                     'openai-typescript': `import OpenAI from 'openai';
 
 const client = new OpenAI({
