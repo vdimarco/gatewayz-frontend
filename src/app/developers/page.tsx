@@ -319,6 +319,13 @@ export default function DevelopersPage() {
                 <div className="flex justify-between items-center mb-8">
                     <div className="flex items-center gap-2">
                         <Button
+                            variant={activeTab === 'top' ? 'default' : 'ghost'}
+                            onClick={() => setActiveTab('top')}
+                            className={activeTab === 'top' ? 'bg-muted text-foreground' : ''}
+                        >
+                            Top
+                        </Button>
+                        <Button
                             variant={activeTab === 'trending' ? 'default' : 'ghost'}
                             onClick={() => setActiveTab('trending')}
                             className={activeTab === 'trending' ? 'bg-muted text-foreground' : ''}
