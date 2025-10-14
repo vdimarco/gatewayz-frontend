@@ -195,9 +195,19 @@ export default function DevelopersPage() {
 
         console.log('Filtered models count:', filteredModels.length);
 
-        // Group models by author
+        // List of gateways/providers that should not be shown as developers
+        const excludedProviders = ['openrouter', 'portkey', 'featherless', 'together', 'fireworks'];
+
+        // Group models by author, excluding gateways
         const orgMap = new Map<string, RankingModel[]>();
         filteredModels.forEach(model => {
+            const authorLower = model.author.toLowerCase();
+
+            // Skip if this is a gateway/provider, not a model developer
+            if (excludedProviders.includes(authorLower)) {
+                return;
+            }
+
             if (!orgMap.has(model.author)) {
                 orgMap.set(model.author, []);
             }
@@ -234,9 +244,28 @@ export default function DevelopersPage() {
                 model.rank < top.rank ? model : top
             , models[0]);
 
+            // Format author name for display
+            const formatAuthorName = (author: string): string => {
+                const formatted: Record<string, string> = {
+                    'openai': 'OpenAI',
+                    'anthropic': 'Anthropic',
+                    'google': 'Google',
+                    'qwen': 'Qwen',
+                    'x-ai': 'xAI',
+                    'meta-llama': 'Meta',
+                    'deepseek': 'DeepSeek',
+                    'mistralai': 'Mistral AI',
+                    'meta': 'Meta',
+                    'cohere': 'Cohere',
+                    'amazon': 'Amazon',
+                    'microsoft': 'Microsoft'
+                };
+                return formatted[author.toLowerCase()] || author.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            };
+
             return {
                 id: author,
-                name: author.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+                name: formatAuthorName(author),
                 author: author,
                 modelCount: models.length,
                 totalTokens: formatTokens(totalTokensNum),
@@ -246,7 +275,40 @@ export default function DevelopersPage() {
                 logoUrl: organizationLogos.get(author),
             };
         }).sort((a, b) => {
-            // Sort by total tokens (descending)
+            // For "Top" tab, sort by total tokens generated in the time period (descending)
+            if (activeTab === 'top') {
+                const aTokensStr = a.totalTokens.replace(/[^0-9.]/g, '');
+                const bTokensStr = b.totalTokens.replace(/[^0-9.]/g, '');
+
+                const aMultiplier = a.totalTokens.includes('T') ? 1000000000000 :
+                                   a.totalTokens.includes('B') ? 1000000000 :
+                                   a.totalTokens.includes('M') ? 1000000 : 1;
+                const bMultiplier = b.totalTokens.includes('T') ? 1000000000000 :
+                                   b.totalTokens.includes('B') ? 1000000000 :
+                                   b.totalTokens.includes('M') ? 1000000 : 1;
+
+                const aTokens = parseFloat(aTokensStr) * aMultiplier;
+                const bTokens = parseFloat(bTokensStr) * bMultiplier;
+
+                return bTokens - aTokens;
+            }
+
+            // For "Trending" tab, use priority order matching model dropdown
+            const priorityOrgs = ['OpenAI', 'Anthropic', 'Google', 'Qwen', 'xAI', 'Meta', 'DeepSeek', 'Mistral AI'];
+
+            const aPriority = priorityOrgs.indexOf(a.name);
+            const bPriority = priorityOrgs.indexOf(b.name);
+
+            // If both are in priority list, sort by priority order
+            if (aPriority !== -1 && bPriority !== -1) {
+                return aPriority - bPriority;
+            }
+
+            // Priority orgs come first
+            if (aPriority !== -1) return -1;
+            if (bPriority !== -1) return 1;
+
+            // For non-priority orgs, sort by total tokens (descending)
             const aTokens = parseFloat(a.totalTokens.replace(/[^0-9.]/g, ''));
             const bTokens = parseFloat(b.totalTokens.replace(/[^0-9.]/g, ''));
             return bTokens - aTokens;
@@ -254,11 +316,9 @@ export default function DevelopersPage() {
     }, [rankingModels, timeFrame, activeTab, organizationLogos]);
 
     const filteredOrgs = useMemo(() => {
-        const filtered = organizations.filter(org =>
+        return organizations.filter(org =>
             org.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
-        // Limit to 12 organizations for clean grid layout (3 columns x 4 rows or 2 rows x 6 cols)
-        return filtered.slice(0, 12);
     }, [organizations, searchTerm, activeTab]);
 
 
@@ -286,6 +346,13 @@ export default function DevelopersPage() {
 
                 <div className="flex justify-between items-center mb-8">
                     <div className="flex items-center gap-2">
+                        <Button
+                            variant={activeTab === 'top' ? 'default' : 'ghost'}
+                            onClick={() => setActiveTab('top')}
+                            className={activeTab === 'top' ? 'bg-muted text-foreground' : ''}
+                        >
+                            Top
+                        </Button>
                         <Button
                             variant={activeTab === 'trending' ? 'default' : 'ghost'}
                             onClick={() => setActiveTab('trending')}

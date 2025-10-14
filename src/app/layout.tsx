@@ -1,4 +1,4 @@
-import type {Metadata} from 'next';
+import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AppHeader } from '@/components/layout/app-header';
@@ -6,7 +6,6 @@ import { AppFooter } from '@/components/layout/app-footer';
 import { ThemeProvider } from '@/components/theme-provider';
 import { PrivyProviderWrapper } from '@/components/providers/privy-provider';
 import { PostHogProvider, PostHogPageView } from '@/components/providers/posthog-provider';
-import { ErrorBoundary } from '@/components/error-boundary';
 import { OnboardingBanner } from '@/components/onboarding/onboarding-banner';
 import { Inter } from 'next/font/google';
 import { Suspense } from 'react';
@@ -20,16 +19,17 @@ const inter = Inter({
   adjustFontFallback: true,
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
   title: 'Gatewayz - One Interface To Work With Any LLM',
   description: 'From Idea To Production, Gatewayz Gives AI Teams The Toolkit, Savings, And Reliability They Need.',
   keywords: ['AI', 'LLM', 'GPT', 'Claude', 'Gemini', 'API Gateway', 'AI Router', 'Model Routing'],
   authors: [{ name: 'Gatewayz' }],
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-  },
   robots: {
     index: true,
     follow: true,
@@ -74,21 +74,19 @@ export default function RootLayout({
           defaultTheme="system"
           storageKey="ui-theme"
         >
-          <ErrorBoundary>
-            <PostHogProvider>
-              <Suspense fallback={null}>
-                <PostHogPageView />
-              </Suspense>
-              <PrivyProviderWrapper>
-                {/* <GTMLoader /> Temporarily disabled due to layout router issues */}
-                <AppHeader />
-                <OnboardingBanner />
-                {children}
-                <Toaster />
-                <AppFooter />
-              </PrivyProviderWrapper>
-            </PostHogProvider>
-          </ErrorBoundary>
+          <PostHogProvider>
+            <Suspense fallback={null}>
+              <PostHogPageView />
+            </Suspense>
+            <PrivyProviderWrapper>
+              {/* <GTMLoader /> Temporarily disabled due to layout router issues */}
+              <AppHeader />
+              <OnboardingBanner />
+              {children}
+              <Toaster />
+              <AppFooter />
+            </PrivyProviderWrapper>
+          </PostHogProvider>
         </ThemeProvider>
       </body>
     </html>

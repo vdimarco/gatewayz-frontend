@@ -33,8 +33,8 @@ const nextConfig: NextConfig = {
   compress: true,
   // Optimize production builds
   productionBrowserSourceMaps: false,
-  // React optimization
-  reactStrictMode: true,
+  // React optimization - disabled due to layout router mounting issues with providers
+  reactStrictMode: false,
   // Optimize power preference
   poweredByHeader: false,
   experimental: {
@@ -42,6 +42,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    // Fix for layout router mounting errors in Next.js 15
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
   allowedDevOrigins: ["*.cloudworkstations.dev"],
   webpack: (config, { isServer }) => {
@@ -67,10 +69,17 @@ const nextConfig: NextConfig = {
       };
     }
 
-    // Ignore warnings about require.extensions
+    // Ignore warnings about require.extensions and module casing
     config.ignoreWarnings = [
       /require\.extensions is not supported by webpack/,
+      /There are multiple modules with names that only differ in casing/,
     ];
+
+    // Fix module casing issues on Windows
+    config.snapshot = {
+      ...config.snapshot,
+      managedPaths: [],
+    };
 
     return config;
   },

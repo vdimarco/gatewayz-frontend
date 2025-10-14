@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, ChevronRight, GitMerge, ShieldCheck, TrendingUp, User, Zap } from 'lucide-react';
+import { ArrowRight, ChevronRight, GitMerge, ShieldCheck, TrendingUp, User, Zap, Code2, Terminal, MessageSquare, Check as CheckIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { getApiKey } from '@/lib/api';
 import { API_BASE_URL } from '@/lib/config';
 import Image from 'next/image';
+import { PathChooserModal } from '@/components/onboarding/path-chooser-modal';
+import posthog from 'posthog-js';
 
 interface FeaturedModel {
   name: string;
@@ -56,7 +58,7 @@ const FeaturedModelCard = ({
     <div
       className={`h-[144px] bg-card border rounded-lg shadow-sm hover:shadow-md cursor-pointer overflow-hidden relative ${
         isActive
-          ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-auto min-w-[280px] sm:min-w-[350px] md:min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)]'
+          ? 'border-2 border-[rgba(81,177,255,1)] shadow-lg w-full sm:w-auto sm:min-w-[350px] md:min-w-[400px] flex-shrink-0 shadow-[0px_0px_6px_0px_rgba(81,177,255,1)]'
           : 'border-border hover:border-border/80 w-20 sm:w-24 min-w-[80px] sm:min-w-[96px] flex-shrink-0'
       }`}
       style={{
@@ -139,15 +141,14 @@ const FeaturedModelCard = ({
 
         <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <div className="text-center">
-            <p className="text-lg sm:text-xl md:text-2xl font-bold">{model.tokens}</p>
-            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Tokens</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold leading-tight">{model.tokens}</p>
           </div>
           <div className="text-center">
-            <p className="text-lg sm:text-xl md:text-2xl font-bold">{model.latency}</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold leading-tight">{model.latency}</p>
             <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Latency</p>
           </div>
           <div className="text-center">
-            <p className={`text-lg sm:text-xl md:text-2xl font-bold ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
+            <p className={`text-base sm:text-lg md:text-xl font-bold leading-tight ${model.growth.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
               {model.growth}
             </p>
             <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">Weekly Growth</p>
@@ -210,6 +211,7 @@ export default function Home() {
   const [codeCopied, setCodeCopied] = useState(false);
   const [showApiKey, setShowApiKey] = useState(true);
   const { toast } = useToast();
+  const [showPathChooser, setShowPathChooser] = useState(false);
 
   // Load the actual API key when user is authenticated
   useEffect(() => {
@@ -467,7 +469,12 @@ console.log(completion.choices[0].message);`,
     });
     setTimeout(() => setCodeCopied(false), 2000);
   };
-  
+
+  // Track page view on mount
+  useEffect(() => {
+    posthog.capture('view_homepage');
+  }, []);
+
   return (
     <div className="bg-background text-foreground">
       {/* Claude Code Integration Banner */}
@@ -489,11 +496,12 @@ console.log(completion.choices[0].message);`,
                 </p>
               </div>
             </div>
-            <Link href="/claude-code" className="w-full sm:w-auto">
+            <Link href="/start/claude-code" className="w-full sm:w-auto">
               <Button
                 variant="secondary"
                 size="sm"
                 className="bg-background text-purple-600 dark:text-purple-400 hover:bg-muted whitespace-nowrap w-full sm:w-auto text-xs sm:text-sm py-1.5 sm:py-2"
+                onClick={() => posthog.capture('claude_code_banner_clicked')}
               >
                 Get Started →
               </Button>
@@ -510,37 +518,146 @@ console.log(completion.choices[0].message);`,
           width={768}
           height={768}
           priority
-          className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[450px] h-[450px] lg:w-[640px] lg:h-[640px] xl:w-[768px] xl:h-[768px]"
+          className="absolute top-8 left-1/2 transform -translate-x-1/2 w-[450px] h-[450px] lg:w-[640px] lg:h-[640px] xl:w-[768px] xl:h-[768px] pointer-events-none"
+          style={{ zIndex: 0 }}
         />
-        
-        <section className="grid md:grid-cols-1 gap-8 items-center py-8 md:py-[140px] mb-16 md:mb-32 max-w-5xl mx-auto px-4" >
+
+        <section className="grid md:grid-cols-1 gap-8 items-center py-8 md:py-[140px] mb-16 md:mb-32 max-w-5xl mx-auto px-4 relative" style={{ zIndex: 1 }}>
           <div className="space-y-6 md:space-y-8 px-4">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tighter text-center" style={{  fontFamily: 'Inter, sans-serif',}}>One Interface To </h1>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tighter text-center">Work With Any LLM</h1>
-            <p className="text-sm sm:text-base md:text-lg text-center px-4 py-6">From Idea To Production, Gatewayz Gives AI Teams The Toolkit, Savings, And Reliability They Need.</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-7xl font-extrabold tracking-tighter text-center leading-tight" style={{  fontFamily: 'Inter, sans-serif',}}>
+              Ship with any AI model.<br />One API key.
+            </h1>
+            <p className="text-sm sm:text-base md:text-lg text-center px-4 py-6">Make your first call in 30 seconds.</p>
           </div>
-          <div className="relative mt-4">
-            <Input
-              placeholder="Start a message..."
-              className="h-12 pr-14 bg-input"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              autoComplete="off"
-              data-form-type="other"
-              type="text"
-            />
-            <button
-              className="absolute right-2 top-1/2 -translate-y-1/2"
-              onClick={handleSendMessage}
-              type="button"
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4">
+            <Button
+              size="lg"
+              className="h-14 px-8 text-lg font-semibold bg-black hover:bg-gray-900 text-white w-full sm:w-auto"
+              onClick={() => {
+                posthog.capture('get_started_clicked');
+                setShowPathChooser(true);
+              }}
             >
-              <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="34" height="34" rx="8" fill="black"/>
-                <path d="M9 23.5V18.346L14.846 17L9 15.654V10.5L24.423 17L9 23.5Z" fill="white"/>
-              </svg>
-            </button>
+              Get Started
+            </Button>
+            <Link href="/models" className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 px-8 text-lg font-semibold w-full sm:w-auto"
+              >
+                Explore Models
+              </Button>
+            </Link>
           </div>
+
+          {/* Path Chooser Modal */}
+          <PathChooserModal open={showPathChooser} onOpenChange={setShowPathChooser} />
+
+          {/* Three Path Cards - Above the Fold */}
+          <div className="grid md:grid-cols-3 gap-6 mt-16 max-w-5xl mx-auto">
+            {/* API Path Card */}
+            <Link href="/start/api" className="group">
+              <div className="bg-card border-2 border-border hover:border-blue-500 rounded-lg p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col">
+                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Code2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Use the API</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Copy key → make your first API call in 30 seconds
+                </p>
+                <div className="mt-auto">
+                  <div className="text-sm font-medium text-blue-600 dark:text-blue-400 group-hover:underline">
+                    Get Started →
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* Claude Code Path Card */}
+            <Link href="/start/claude-code" className="group">
+              <div className="bg-card border-2 border-border hover:border-purple-500 rounded-lg p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col">
+                <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Terminal className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Install Claude Code</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  One command → AI-powered coding in minutes
+                </p>
+                <div className="mt-auto">
+                  <div className="text-sm font-medium text-purple-600 dark:text-purple-400 group-hover:underline">
+                    Get Started →
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* Chat Path Card */}
+            <Link href="/start/chat" className="group">
+              <div className="bg-card border-2 border-border hover:border-green-500 rounded-lg p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col">
+                <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <MessageSquare className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Open Chat</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Start chatting → we pick the best model for you
+                </p>
+                <div className="mt-auto">
+                  <div className="text-sm font-medium text-green-600 dark:text-green-400 group-hover:underline">
+                    Get Started →
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </div>
+
+          {/* Why Gatewayz - Proof Strip */}
+          <div className="mt-16 max-w-5xl mx-auto">
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-8">
+              <h3 className="text-2xl font-bold text-center mb-8">Why Gatewayz?</h3>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-3">
+                    <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <h4 className="font-bold mb-2">Cheaper</h4>
+                  <p className="text-sm text-muted-foreground">Router picks lowest cost model automatically</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-3">
+                    <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h4 className="font-bold mb-2">Faster</h4>
+                  <p className="text-sm text-muted-foreground">Multi-provider routing for best performance</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mx-auto mb-3">
+                    <CheckIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <h4 className="font-bold mb-2">1000+ Models</h4>
+                  <p className="text-sm text-muted-foreground">Access every major AI model through one API</p>
+                </div>
+              </div>
+              <div className="mt-6 flex justify-center">
+                <div className="relative inline-block">
+                  {/* Animated gradient glow effect */}
+                  <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400 rounded-lg opacity-60 blur-md animate-pulse"></div>
+
+                  {/* Content box */}
+                  <div className="relative bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/30 dark:to-orange-900/30 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg px-6 py-3 shadow-lg">
+                    <p className="text-base font-bold text-yellow-900 dark:text-yellow-200">
+                      <span className="text-2xl mr-2">💰</span>
+                      <span className="text-yellow-800 dark:text-yellow-300">Bonus:</span>{' '}
+                      <span className="text-orange-600 dark:text-orange-400">Add $10 → get +$10 free credits</span>{' '}
+                      <span className="text-yellow-800 dark:text-yellow-300">on your first top-up</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="overflow-hidden relative -mx-4 mt-6">
             <div
               ref={carouselRef}
@@ -566,6 +683,31 @@ console.log(completion.choices[0].message);`,
             </div>
           </div>
 
+          {/* Message Input for Chat Redirect */}
+          <div className="max-w-3xl mx-auto mt-8 px-4">
+            <div className="relative flex gap-2">
+              <Input
+                type="text"
+                placeholder="Try: Explain quantum computing in simple terms..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="h-14 px-6 text-base bg-background border-2 border-border hover:border-primary/50 focus:border-primary transition-colors"
+              />
+              <Button
+                size="lg"
+                onClick={handleSendMessage}
+                disabled={!message.trim() || activeModelIndex === null}
+                className="h-14 px-8 text-base font-semibold bg-primary hover:bg-primary/90"
+              >
+                Chat
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Select a model above and type a message to start chatting
+            </p>
+          </div>
+
             {/* Connected to 1000+ AI Models - Moved here */}
             <section className="mt-12 px-4">
               <div className="mb-8">
@@ -581,10 +723,10 @@ console.log(completion.choices[0].message);`,
             </section>
 
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm z-10 mt-12">
-              <div className=" px-6 py-[10px] flex flex-row items-center justify-between">
+              <div className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="font-bold tracking-tight text-lg">Top Models This Month</div>
-              <Link href="/rankings">
-                <Button variant="link" className="text-sm">View Trending
+              <Link href="/rankings" className="w-full sm:w-auto">
+                <Button variant="link" className="text-sm w-full sm:w-auto justify-start sm:justify-center">View Trending
                   <span>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2.66671 8H13.3334M13.3334 8L9.33337 12M13.3334 8L9.33337 4" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -602,7 +744,7 @@ console.log(completion.choices[0].message);`,
             <h2 className="text-4xl font-bold text-center">Getting Started Is As Easy As 123...</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-12">
-            <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
+            <div className="p-4 bg-card border rounded-lg h-40 grid grid-cols-7 shadow-sm">
               <div className="flex items-center justify-between col-span-2" >
                 <img src="/sign-up-blue.svg" alt="Signup icon" width="100" height="100" className="w-full h-full" loading="lazy" />
               </div>
@@ -612,7 +754,7 @@ console.log(completion.choices[0].message);`,
                 </HowItWorksStep>
               </div>
             </div>
-            <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
+            <div className="p-4 bg-card border rounded-lg h-40 grid grid-cols-7 shadow-sm">
              <div className="flex items-center justify-between col-span-2" >
                 <img src="/coins-blue.svg" alt="Credits icon" width="100" height="100" className="w-full h-full" loading="lazy" />
               </div>
@@ -622,7 +764,7 @@ console.log(completion.choices[0].message);`,
                 </HowItWorksStep>
               </div>
             </div>
-            <div className="p-4 bg-muted rounded-lg h-40 grid grid-cols-7">
+            <div className="p-4 bg-card border rounded-lg h-40 grid grid-cols-7 shadow-sm">
               <div className="flex items-center justify-between col-span-2" >
                 <img src="/api-blue.svg" alt="API key icon" width="100" height="100" className="w-full h-full" loading="lazy" />
               </div>
@@ -720,9 +862,9 @@ console.log(completion.choices[0].message);`,
             }
           `}</style>
 
-           <div className="w-full flex items-center gap-4 mt-8">
+           <div className="w-full flex flex-col lg:flex-row items-stretch lg:items-center gap-4 mt-8">
              {user && apiKey && (
-               <div className="flex-1 flex items-center gap-3">
+               <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Your API Key</label>
                  <div className="relative flex-1">
                    <Input
@@ -758,7 +900,7 @@ console.log(completion.choices[0].message);`,
                </div>
              )}
 
-             <div className={`relative group inline-block ${user && apiKey ? '' : 'mx-auto'}`}>
+             <div className={`relative group ${user && apiKey ? 'w-full lg:w-auto' : 'w-full sm:w-auto mx-auto'}`}>
                {/* Multi-layered LED-style glow with color shifting */}
                <div className="absolute -inset-[3px] rounded-lg opacity-90 blur-md animate-led-shimmer"></div>
                <div className="absolute -inset-[2px] rounded-lg opacity-80 blur-sm animate-led-shimmer" style={{ animationDelay: '0.5s' }}></div>
@@ -768,10 +910,10 @@ console.log(completion.choices[0].message);`,
 
                {/* Button with elevation effect */}
                <Button
-                 className="relative bg-black hover:bg-gray-900 text-white hover:text-white h-12 px-12 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)]"
+                 className="relative bg-black hover:bg-gray-900 text-white hover:text-white h-12 px-12 rounded-lg font-semibold transition-all duration-200 active:translate-y-[2px] active:shadow-none shadow-[0_2px_0_0_rgba(59,130,246,0.5),0_4px_12px_rgba(59,130,246,0.4)] w-full lg:w-auto"
                  onClick={handleGenerateApiKey}
                >
-                 {user ? 'Claim Trial Credits' : 'Generate API Key'}
+                 {user ? 'Claim Trial Credits' : 'Get API Key'}
                </Button>
              </div>
            </div>

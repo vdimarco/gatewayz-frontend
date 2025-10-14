@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { stringToColor } from '@/lib/utils';
 import { API_BASE_URL } from '@/lib/config';
 import { models as staticModels } from '@/lib/models-data';
+import { getApiKey } from '@/lib/api';
 
 // Lazy load heavy components
 const TopAppsTable = lazy(() => import('@/components/dashboard/top-apps-table'));
@@ -138,7 +139,7 @@ const ChartCard = ({ modelName, title, dataKey, yAxisFormatter }: { modelName: s
     )
 }
 
-type TabType = 'Overview' | 'Providers' | 'Apps' | 'Activity' | 'Uptime' | 'API';
+type TabType = 'Providers' | 'Activity' | 'Apps' | 'Use Model';
 
 // Transform static model to API format
 function transformStaticModel(staticModel: typeof staticModels[0]): Model {
@@ -164,8 +165,19 @@ export default function ModelProfilePage() {
     const [model, setModel] = useState<Model | null>(null);
     const [allModels, setAllModels] = useState<Model[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<TabType>('Overview');
+    const [activeTab, setActiveTab] = useState<TabType>('Use Model');
     const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
+    const [apiKey, setApiKey] = useState('YOUR_API_KEY');
+    const [selectedLanguage, setSelectedLanguage] = useState<'curl' | 'python' | 'openai-python' | 'typescript' | 'openai-typescript'>('curl');
+    const [modelProviders, setModelProviders] = useState<string[]>([]);
+
+    // Load API key from storage
+    useEffect(() => {
+        const userApiKey = getApiKey();
+        if (userApiKey) {
+            setApiKey(userApiKey);
+        }
+    }, []);
 
     const modelId = useMemo(() => {
         const id = params.name as string;
@@ -308,6 +320,13 @@ export default function ModelProfilePage() {
                         setModel(null);
                     }
                     setLoading(false);
+
+                    // Determine which gateways support this model
+                    const providers: string[] = [];
+                    if (openrouterData.some((m: Model) => m.id === modelId)) providers.push('openrouter');
+                    if (portkeyData.some((m: Model) => m.id === modelId)) providers.push('portkey');
+                    if (featherlessData.some((m: Model) => m.id === modelId)) providers.push('featherless');
+                    setModelProviders(providers);
                 }
             } catch (error) {
                 console.log('Failed to fetch models:', error);
@@ -362,22 +381,42 @@ export default function ModelProfilePage() {
       <TooltipProvider>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-screen-2xl">
             <header className="mb-8">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl lg:text-3xl font-bold">{model.name}</h1>
-                        <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
-                            <Badge variant="outline">{Math.round(model.context_length / 1000)}K context</Badge>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="flex-1">
+                        <h1 className="text-3xl lg:text-4xl font-bold mb-2">{model.name}</h1>
+                        <p className="text-sm text-muted-foreground mb-3">
+                            Created Apr 14, 2025 | By <span className="text-blue-600">{model.provider_slug} AI</span>
+                        </p>
+                        {/* Model ID with copy button */}
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md border">
+                                <code className="text-sm font-mono">{model.id}</code>
+                                <button
+                                    onClick={() => copyToClipboard(model.id, 'model-id')}
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                    title="Copy model ID"
+                                >
+                                    {copiedStates['model-id'] ? (
+                                        <Check className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                        <Copy className="h-4 w-4" />
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Badge className="bg-black text-white hover:bg-gray-800">Free</Badge>
+                            <Badge variant="secondary">Multi-Lingual</Badge>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <Link href={`/chat?model=${encodeURIComponent(model.id)}`}>
                             <Button>Chat</Button>
                         </Link>
+                        <Button variant="outline">Create API Key</Button>
                     </div>
                 </div>
-                 <div className="mt-4 text-muted-foreground">
-                    {/* <p>{model.description}</p> */}
+                 <div className="mt-6 text-muted-foreground leading-relaxed">
                     <ReactMarkdown
                         components={{
                         a: ({ children, ...props }) => (
@@ -392,9 +431,9 @@ export default function ModelProfilePage() {
                 </div>
             </header>
 
-            <nav className="border-b overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+            <nav className="border-b overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-8">
                 <div className="flex gap-4 lg:gap-6">
-                    {(['Overview', 'Providers', 'Apps', 'Activity', 'Uptime', 'API'] as TabType[]).map(item => (
+                    {(['Use Model', 'Providers', 'Activity', 'Apps'] as TabType[]).map(item => (
                         <Button
                             key={item}
                             variant="ghost"
@@ -413,217 +452,396 @@ export default function ModelProfilePage() {
             </nav>
 
             <main>
-                {activeTab === 'Overview' && (
-                    <>
-                        <Section
-                          title="Model Details"
-                          className="pt-8 pb-0"
-                        >
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="text-base">Pricing</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-2">
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Prompt:</span>
-                                                <span className="font-medium">${model.pricing.prompt}/1M tokens</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Completion:</span>
-                                                <span className="font-medium">${model.pricing.completion}/1M tokens</span>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="text-base">Capabilities</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="flex flex-wrap gap-2">
-                                            {model.architecture.input_modalities.map((modality) => (
-                                                <Badge key={modality} variant="secondary">{modality}</Badge>
-                                            ))}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </Section>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-                            <ChartCard
-                                modelName={model.name}
-                                title="Throughput"
-                                dataKey="throughput"
-                                yAxisFormatter={(value) => `${value} tps`}
-                            />
-                             <ChartCard
-                                modelName={model.name}
-                                title="Latency"
-                                dataKey="latency"
-                                yAxisFormatter={(value) => `${value}s`}
-                            />
+                {activeTab === 'Use Model' && (
+                    <div>
+                        <div className="mb-6">
+                            <h2 className="text-2xl font-bold mb-2">Use {model.name}</h2>
+                            <p className="text-muted-foreground">
+                                Call this model with a few lines of code using the Gatewayz API
+                            </p>
                         </div>
 
-                        <Section title="Is My Data Private?">
-                            <p className="text-muted-foreground">Yes, your data is private by default. See our <Link href="#" className="text-primary hover:underline">privacy policy</Link>.</p>
-                        </Section>
+                        {/* Language Selector */}
+                        <div className="flex gap-2 mb-4 flex-wrap">
+                            <Button
+                                variant={selectedLanguage === 'curl' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setSelectedLanguage('curl')}
+                            >
+                                cURL
+                            </Button>
+                            <Button
+                                variant={selectedLanguage === 'python' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setSelectedLanguage('python')}
+                            >
+                                Python
+                            </Button>
+                            <Button
+                                variant={selectedLanguage === 'openai-python' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setSelectedLanguage('openai-python')}
+                            >
+                                OpenAI Python
+                            </Button>
+                            <Button
+                                variant={selectedLanguage === 'typescript' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setSelectedLanguage('typescript')}
+                            >
+                                TypeScript
+                            </Button>
+                            <Button
+                                variant={selectedLanguage === 'openai-typescript' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setSelectedLanguage('openai-typescript')}
+                            >
+                                OpenAI TypeScript
+                            </Button>
+                        </div>
 
-                        <Section title={`More models from ${model.provider_slug}`}>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {relatedModels.map(relatedModel => (
-                                    <Link key={relatedModel.id} href={`/models/${encodeURIComponent(relatedModel.id)}`}>
-                                        <Card className="hover:border-primary h-full">
-                                            <CardContent className="p-4">
-                                                <h3 className="font-semibold">{relatedModel.name}</h3>
-                                                <p className="text-sm text-muted-foreground mt-2 truncate">{relatedModel.description}</p>
-                                            </CardContent>
-                                        </Card>
-                                    </Link>
-                                ))}
-                            </div>
-                        </Section>
-                    </>
-                )}
-
-                {activeTab === 'Providers' && (
-                    <Section
-                      title={`Providers for ${model.name}`}
-                      description="Gatewayz routes requests to the best providers that are able to handle your prompt size and parameters, with fallbacks to maximize uptime."
-                      className="pt-8 pb-0"
-                    >
-                        <ProvidersDisplay modelName={model.name} />
-                    </Section>
-                )}
-
-                {activeTab === 'Apps' && (
-                    <Suspense fallback={<div className="py-8 text-center text-muted-foreground">Loading apps...</div>}>
-                        <Section title="Top Apps" className="pt-8">
-                            <TopAppsTable />
-                        </Section>
-                    </Suspense>
-                )}
-
-                {activeTab === 'Activity' && (
-                    <Section title="Recent Activity" className="pt-8">
-                        <Card>
-                            <CardContent className="p-8 text-center text-muted-foreground">
-                                Activity tracking coming soon
-                            </CardContent>
-                        </Card>
-                    </Section>
-                )}
-
-                {activeTab === 'Uptime' && (
-                    <Section title={`Uptime from our API and our providers`} className="pt-8">
-                        <Card>
-                            <CardContent className="h-[200px] p-2">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={generateChartData([], 'throughput').slice(0,30)}>
-                                        <Tooltip
-                                            formatter={(value) => [value, "Uptime"]}
-                                        />
-                                        <Area type="monotone" dataKey="value" strokeWidth={2} stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2) / 0.1)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </CardContent>
-                        </Card>
-                    </Section>
-                )}
-
-                {activeTab === 'API' && (
-                    <Section title="API Documentation" className="pt-8">
-                        <Card>
-                            <CardContent className="p-6 space-y-6">
-                                <div>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h3 className="font-semibold">Model ID</h3>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-8 px-2"
-                                            onClick={() => copyToClipboard(model.id, 'model-id')}
-                                        >
-                                            {copiedStates['model-id'] ? (
-                                                <>
-                                                    <Check className="h-4 w-4 mr-1 text-green-600" />
-                                                    Copied
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Copy className="h-4 w-4 mr-1" />
-                                                    Copy
-                                                </>
-                                            )}
-                                        </Button>
-                                    </div>
-                                    <code className="bg-muted px-3 py-2 rounded block">{model.id}</code>
-                                </div>
-                                <div>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h3 className="font-semibold">Example Request</h3>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-8 px-2"
-                                            onClick={() => copyToClipboard(
-`curl https://api.gatewayz.ai/v1/chat/completions \\
+                        {/* Code Example */}
+                        <div className="mb-6">
+                            {(() => {
+                                const codeExamples = {
+                                    curl: `curl -X POST https://api.gatewayz.ai/v1/chat/completions \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Authorization: Bearer ${apiKey}" \\
   -d '{
     "model": "${model.id}",
     "messages": [
       {
         "role": "user",
-        "content": "Hello!"
+        "content": "Hello! What can you help me with?"
       }
     ]
   }'`,
-                                                'example-request'
-                                            )}
-                                        >
-                                            {copiedStates['example-request'] ? (
-                                                <>
-                                                    <Check className="h-4 w-4 mr-1 text-green-600" />
-                                                    Copied
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Copy className="h-4 w-4 mr-1" />
-                                                    Copy
-                                                </>
-                                            )}
-                                        </Button>
-                                    </div>
-                                    <pre className="bg-muted p-4 rounded overflow-x-auto text-xs">
-{`curl https://api.gatewayz.ai/v1/chat/completions \\
-  -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -d '{
+                                    python: `import requests
+import json
+
+response = requests.post(
+    url="https://api.gatewayz.ai/v1/chat/completions",
+    headers={
+        "Authorization": "Bearer ${apiKey}",
+        "Content-Type": "application/json"
+    },
+    data=json.dumps({
+        "model": "${model.id}",
+        "messages": [
+            {
+                "role": "user",
+                "content": "Hello! What can you help me with?"
+            }
+        ]
+    })
+)
+
+print(response.json())`,
+                                    'openai-python': `from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.gatewayz.ai/v1",
+    api_key="${apiKey}"
+)
+
+completion = client.chat.completions.create(
+    model="${model.id}",
+    messages=[
+        {"role": "user", "content": "Hello! What can you help me with?"}
+    ]
+)
+
+print(completion.choices[0].message.content)`,
+                                    typescript: `fetch("https://api.gatewayz.ai/v1/chat/completions", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer ${apiKey}",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
     "model": "${model.id}",
     "messages": [
       {
         "role": "user",
-        "content": "Hello!"
+        "content": "Hello! What can you help me with?"
       }
     ]
-  }'`}
-                                    </pre>
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold mb-2">Supported Parameters</h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {model.supported_parameters.map((param) => (
-                                            <Badge key={param} variant="outline">{param}</Badge>
-                                        ))}
+  })
+});`,
+                                    'openai-typescript': `import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: "${apiKey}",
+  baseURL: "https://api.gatewayz.ai/v1"
+});
+
+const response = await client.chat.completions.create({
+  model: "${model.id}",
+  messages: [{ role: "user", content: "Hello! What can you help me with?" }]
+});
+
+console.log(response.choices[0].message.content);`
+                                };
+
+                                const currentCode = codeExamples[selectedLanguage];
+
+                                return (
+                                    <div className="rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                                        {/* Terminal Header */}
+                                        <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex gap-1.5">
+                                                    <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                                                    <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                                                    <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                                                </div>
+                                                <span className="text-xs text-slate-400 ml-3 font-mono">terminal</span>
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => copyToClipboard(currentCode, selectedLanguage)}
+                                                className="text-slate-300 hover:text-white"
+                                            >
+                                                {copiedStates[selectedLanguage] ? (
+                                                    <>
+                                                        <Check className="h-4 w-4 mr-2" />
+                                                        Copied!
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Copy className="h-4 w-4 mr-2" />
+                                                        Copy
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
+                                        {/* Code Display */}
+                                        <div className="bg-slate-950/80 p-6">
+                                            <pre className="text-sm leading-relaxed font-mono text-cyan-400 overflow-x-auto">
+                                                <code>{currentCode}</code>
+                                            </pre>
+                                        </div>
+                                        {/* Bottom gradient */}
+                                        <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
                                     </div>
+                                );
+                            })()}
+                        </div>
+
+                        {/* Get API Key CTA */}
+                        <Card className="bg-primary/5 border-primary/20">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between flex-wrap gap-4">
+                                    <div>
+                                        <h3 className="font-semibold text-lg mb-1">Need an API Key?</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Get your free API key to start using {model.name}
+                                        </p>
+                                    </div>
+                                    <Link href="/settings/keys">
+                                        <Button>
+                                            Get API Key
+                                        </Button>
+                                    </Link>
                                 </div>
                             </CardContent>
                         </Card>
-                    </Section>
+                    </div>
                 )}
+
+                {activeTab === 'Providers' && (
+                    <div>
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold">Providers for {model.name}</h2>
+                            <p className="text-sm text-muted-foreground">{modelProviders.length} Gateway{modelProviders.length !== 1 ? 's' : ''}</p>
+                        </div>
+
+                        {modelProviders.length > 0 ? (
+                            <div className="space-y-4">
+                                {modelProviders.map(provider => {
+                                    const providerNames: Record<string, string> = {
+                                        openrouter: 'OpenRouter',
+                                        portkey: 'Portkey',
+                                        featherless: 'Featherless'
+                                    };
+                                    const providerLogos: Record<string, string> = {
+                                        openrouter: '/openrouter-logo.svg',
+                                        portkey: '/portkey-logo.svg',
+                                        featherless: '/featherless-logo.svg'
+                                    };
+
+                                    return (
+                                        <Card key={provider} className="p-6">
+                                            <div className="flex items-center gap-4 mb-4">
+                                                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border">
+                                                    <img
+                                                        src={providerLogos[provider] || '/OpenAI_Logo-black.svg'}
+                                                        alt={providerNames[provider]}
+                                                        className="w-8 h-8 object-contain"
+                                                        onError={(e) => {
+                                                            // Fallback to a default icon if logo doesn't exist
+                                                            e.currentTarget.src = '/OpenAI_Logo-black.svg';
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-lg font-semibold">{providerNames[provider]}</h3>
+                                                    <p className="text-sm text-muted-foreground">Gateway Provider</p>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">Input Cost</p>
+                                                    <p className="text-lg font-semibold">
+                                                        ${(parseFloat(model.pricing.prompt) * 1000000).toFixed(2)}/M
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">Output Cost</p>
+                                                    <p className="text-lg font-semibold">
+                                                        ${(parseFloat(model.pricing.completion) * 1000000).toFixed(2)}/M
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">Context Length</p>
+                                                    <p className="text-lg font-semibold">
+                                                        {model.context_length > 0 ? `${Math.round(model.context_length / 1000)}K` : 'N/A'}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">Status</p>
+                                                    <Badge className="bg-green-500">Available</Badge>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <Card className="p-8 text-center">
+                                <p className="text-muted-foreground">No gateway providers found for this model.</p>
+                            </Card>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'Activity' && (
+                    <div>
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold">Recent Activity Of {model.name}</h2>
+                        </div>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-sm text-muted-foreground">Total usage per day on Gatewayz</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-[400px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={generateChartData([], 'throughput').slice(0,90)}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                            <XAxis
+                                                dataKey="date"
+                                                tickFormatter={(label) => format(new Date(label), 'MMM d')}
+                                                tick={{ fontSize: 12 }}
+                                            />
+                                            <YAxis
+                                                tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+                                                tick={{ fontSize: 12 }}
+                                            />
+                                            <Tooltip
+                                                formatter={(value: any) => [`${(value / 1000000).toFixed(2)}M`, "Usage"]}
+                                                labelFormatter={(label) => format(new Date(label), "PPP")}
+                                                contentStyle={{
+                                                    backgroundColor: 'hsl(var(--background))',
+                                                    borderColor: 'hsl(var(--border))',
+                                                }}
+                                            />
+                                            <Legend />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="value"
+                                                name="Prompt Tokens"
+                                                stroke="#3b82f6"
+                                                fill="#3b82f6"
+                                                fillOpacity={0.6}
+                                                strokeWidth={2}
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="value2"
+                                                name="Completion Tokens"
+                                                stroke="#9ca3af"
+                                                fill="#9ca3af"
+                                                fillOpacity={0.3}
+                                                strokeWidth={2}
+                                            />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
+                {activeTab === 'Apps' && (
+                    <div>
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold">Top Apps Using {model.name}</h2>
+                            <div className="flex items-center gap-4">
+                                <select className="border rounded px-3 py-2 text-sm">
+                                    <option>Top This Year</option>
+                                    <option>Top This Month</option>
+                                    <option>Top This Week</option>
+                                </select>
+                                <select className="border rounded px-3 py-2 text-sm">
+                                    <option>Sort By: All</option>
+                                    <option>Sort By: Tokens</option>
+                                    <option>Sort By: Growth</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {[1,2,3,4,5,6,7,8].map((i) => (
+                                <Card key={i} className="hover:shadow-lg transition-shadow">
+                                    <CardContent className="p-4">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border">
+                                                    <img src="/Google_Logo-black.svg" alt="Google" className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold">Google</h3>
+                                                    <span className="text-xs text-muted-foreground">#{i}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                                            Autonomous Coding Agent That Is...
+                                        </p>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <span className="text-2xl font-bold">21.7B</span>
+                                                <p className="text-xs text-muted-foreground">Tokens Generated</p>
+                                            </div>
+                                            <div className="text-green-600 font-semibold text-sm">
+                                                +13.06%
+                                                <span className="text-xs text-muted-foreground ml-1">Weekly Growth</span>
+                                            </div>
+                                        </div>
+                                        <Button variant="outline" size="sm" className="w-full mt-4">
+                                            View App →
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                        <div className="text-center mt-8">
+                            <Button variant="outline">Load More</Button>
+                        </div>
+                    </div>
+                )}
+
             </main>
         </div>
         </TooltipProvider>

@@ -56,35 +56,48 @@ const ModelCard = ({ model }: { model: Model }) => {
   const outputCost = (parseFloat(model.pricing?.completion || '0') * 1000000).toFixed(2);
   const contextK = model.context_length > 0 ? Math.round(model.context_length / 1000) : 0;
 
+  // Determine if model is multi-lingual (simple heuristic - can be improved)
+  const isMultiLingual = model.architecture?.input_modalities?.includes('text') &&
+                         (model.name.toLowerCase().includes('multilingual') ||
+                          model.description?.toLowerCase().includes('multilingual') ||
+                          model.description?.toLowerCase().includes('multi-lingual'));
+
   return (
     <Link href={`/models/${encodeURIComponent(model.id)}`} className="h-full block">
-      <Card className="p-5 flex flex-col h-full hover:border-primary transition-colors overflow-hidden">
-        <div className="flex justify-between items-start gap-3 mb-3 min-w-0">
-          <div className="min-w-0 flex-1 overflow-hidden">
-            <h3 className="text-base font-semibold flex items-center gap-2 flex-wrap mb-2 min-w-0">
-              <span className="truncate break-words min-w-0">{model.name}</span> {isFree && <Badge className="text-xs flex-shrink-0">Free</Badge>}
-            </h3>
-            <Badge variant="outline" className="text-xs truncate max-w-full" style={{ backgroundColor: stringToColor(model.provider_slug) }}>{model.provider_slug}</Badge>
+      <Card className="p-6 flex flex-col h-full hover:border-primary transition-colors overflow-hidden">
+        {/* Model name and badges */}
+        <div className="flex items-start gap-2 mb-3 min-w-0">
+          <h3 className="text-lg font-bold flex-1 min-w-0 truncate">
+            {model.name}
+          </h3>
+          <div className="flex gap-2 flex-shrink-0">
+            {isFree && (
+              <Badge className="bg-black text-white hover:bg-black/90 text-xs px-2 py-0.5">
+                Free
+              </Badge>
+            )}
+            {isMultiLingual && (
+              <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                Multi-Lingual
+              </Badge>
+            )}
           </div>
-          <div className="text-sm text-muted-foreground whitespace-nowrap flex-shrink-0 font-medium">{contextK > 0 ? `${contextK}K` : 'Pending'}</div>
         </div>
-        <div className="text-muted-foreground text-sm flex-grow line-clamp-2 mb-4 overflow-hidden break-words">
-          <ReactMarkdown
-            components={{
-              a: ({ children, ...props }) => (
-                <span className="text-blue-600 underline cursor-pointer" {...props}>
-                  {children}
-                </span>
-              ),
-            }}
-          >
-            {model.description || 'No description available'}
-          </ReactMarkdown>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-3 border-t min-w-0">
-          <span className="whitespace-nowrap">{contextK > 0 ? `${contextK}K context` : 'Pending sync'}</span>
-          <span className="whitespace-nowrap">${inputCost}/M in</span>
-          <span className="whitespace-nowrap">${outputCost}/M out</span>
+
+        {/* Description */}
+        <p className="text-sm text-muted-foreground flex-grow line-clamp-2 mb-4 overflow-hidden break-words">
+          {model.description || 'Explore Token Usage Across Models, Labs, And Public Applications.'}
+        </p>
+
+        {/* Bottom metadata row */}
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground border-t pt-3">
+          <span className="flex items-center gap-1">
+            By <span className="font-medium text-foreground">{model.provider_slug}</span>
+          </span>
+          <span className="font-medium">{contextK > 0 ? `${contextK}M Tokens` : '0M Tokens'}</span>
+          <span className="font-medium">{contextK > 0 ? `${contextK}K Context` : '0K Context'}</span>
+          <span className="font-medium">${inputCost}/M Input</span>
+          <span className="font-medium">${outputCost}/M Output</span>
         </div>
       </Card>
     </Link>
