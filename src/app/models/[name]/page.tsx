@@ -169,6 +169,7 @@ export default function ModelProfilePage() {
     const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
     const [apiKey, setApiKey] = useState('YOUR_API_KEY');
     const [selectedLanguage, setSelectedLanguage] = useState<'curl' | 'python' | 'javascript' | 'openai-python' | 'typescript' | 'openai-typescript'>('curl');
+    const [modelProviders, setModelProviders] = useState<string[]>([]);
 
     // Load API key from storage
     useEffect(() => {
@@ -319,6 +320,13 @@ export default function ModelProfilePage() {
                         setModel(null);
                     }
                     setLoading(false);
+
+                    // Determine which gateways support this model
+                    const providers: string[] = [];
+                    if (openrouterData.some((m: Model) => m.id === modelId)) providers.push('openrouter');
+                    if (portkeyData.some((m: Model) => m.id === modelId)) providers.push('portkey');
+                    if (featherlessData.some((m: Model) => m.id === modelId)) providers.push('featherless');
+                    setModelProviders(providers);
                 }
             } catch (error) {
                 console.log('Failed to fetch models:', error);
@@ -657,86 +665,75 @@ console.log(response.choices[0].message.content);`
                     <div>
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-2xl font-bold">Providers for {model.name}</h2>
-                            <p className="text-sm text-muted-foreground">2 Providers</p>
+                            <p className="text-sm text-muted-foreground">{modelProviders.length} Gateway{modelProviders.length !== 1 ? 's' : ''}</p>
                         </div>
 
-                        <div className="border rounded-lg overflow-hidden">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-muted/50">
-                                        <TableHead className="w-[200px]">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
-                                                    <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-4 h-4" />
+                        {modelProviders.length > 0 ? (
+                            <div className="space-y-4">
+                                {modelProviders.map(provider => {
+                                    const providerNames: Record<string, string> = {
+                                        openrouter: 'OpenRouter',
+                                        portkey: 'Portkey',
+                                        featherless: 'Featherless'
+                                    };
+                                    const providerLogos: Record<string, string> = {
+                                        openrouter: '/openrouter-logo.svg',
+                                        portkey: '/portkey-logo.svg',
+                                        featherless: '/featherless-logo.svg'
+                                    };
+
+                                    return (
+                                        <Card key={provider} className="p-6">
+                                            <div className="flex items-center gap-4 mb-4">
+                                                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border">
+                                                    <img
+                                                        src={providerLogos[provider] || '/OpenAI_Logo-black.svg'}
+                                                        alt={providerNames[provider]}
+                                                        className="w-8 h-8 object-contain"
+                                                        onError={(e) => {
+                                                            // Fallback to a default icon if logo doesn't exist
+                                                            e.currentTarget.src = '/OpenAI_Logo-black.svg';
+                                                        }}
+                                                    />
                                                 </div>
-                                                <span className="font-semibold">OpenAI</span>
-                                            </div>
-                                        </TableHead>
-                                        <TableHead className="text-right">Tokens</TableHead>
-                                        <TableHead className="text-right">Value</TableHead>
-                                        <TableHead className="text-right">Max Output</TableHead>
-                                        <TableHead className="text-right">Input</TableHead>
-                                        <TableHead className="text-right">Output</TableHead>
-                                        <TableHead className="text-right">Latency</TableHead>
-                                        <TableHead className="text-right">Throughput</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    <TableRow>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6"></div>
-                                                <div className="flex gap-1">
-                                                    <button className="w-5 h-5 text-muted-foreground hover:text-foreground">
-                                                        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/></svg>
-                                                    </button>
-                                                    <button className="w-5 h-5 text-muted-foreground hover:text-foreground">
-                                                        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"/></svg>
-                                                    </button>
-                                                    <button className="w-5 h-5 text-muted-foreground hover:text-foreground">
-                                                        <svg viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/></svg>
-                                                    </button>
+                                                <div>
+                                                    <h3 className="text-lg font-semibold">{providerNames[provider]}</h3>
+                                                    <p className="text-sm text-muted-foreground">Gateway Provider</p>
                                                 </div>
                                             </div>
-                                        </TableCell>
-                                        <TableCell className="text-right">170.02m</TableCell>
-                                        <TableCell className="text-right">$10.35m</TableCell>
-                                        <TableCell className="text-right">4096k</TableCell>
-                                        <TableCell className="text-right">$0.15</TableCell>
-                                        <TableCell className="text-right">$0.60</TableCell>
-                                        <TableCell className="text-right">0.49s</TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <span>24.99 Tps</span>
-                                                <div className="w-8 h-6 bg-green-500 rounded"></div>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
-                                                    <img src="/OpenAI_Logo-black.svg" alt="OpenAI" className="w-4 h-4" />
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">Input Cost</p>
+                                                    <p className="text-lg font-semibold">
+                                                        ${(parseFloat(model.pricing.prompt) * 1000000).toFixed(2)}/M
+                                                    </p>
                                                 </div>
-                                                <span className="font-semibold">OpenAI</span>
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">Output Cost</p>
+                                                    <p className="text-lg font-semibold">
+                                                        ${(parseFloat(model.pricing.completion) * 1000000).toFixed(2)}/M
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">Context Length</p>
+                                                    <p className="text-lg font-semibold">
+                                                        {model.context_length > 0 ? `${Math.round(model.context_length / 1000)}K` : 'N/A'}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-muted-foreground">Status</p>
+                                                    <Badge className="bg-green-500">Available</Badge>
+                                                </div>
                                             </div>
-                                        </TableCell>
-                                        <TableCell className="text-right">170.02m</TableCell>
-                                        <TableCell className="text-right">$10.35m</TableCell>
-                                        <TableCell className="text-right">4096k</TableCell>
-                                        <TableCell className="text-right">$0.15</TableCell>
-                                        <TableCell className="text-right">$0.60</TableCell>
-                                        <TableCell className="text-right">0.49s</TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <span>24.99 Tps</span>
-                                                <div className="w-8 h-6 bg-green-500 rounded"></div>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                        </div>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <Card className="p-8 text-center">
+                                <p className="text-muted-foreground">No gateway providers found for this model.</p>
+                            </Card>
+                        )}
                     </div>
                 )}
 
