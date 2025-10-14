@@ -190,8 +190,35 @@ export default function OrganizationPage() {
         const data = await response.json();
         const models = data.data || [];
 
-        console.log(`Found ${models.length} models for ${organizationName} from catalog endpoint`);
-        setApiModels(models);
+        console.log(`API returned ${models.length} models for ${organizationName} from catalog endpoint`);
+
+        // Client-side filtering to ensure only models from this organization are shown
+        // The model ID typically starts with "org-name/" or the model has a provider_slug matching the org
+        const filteredModels = models.filter((model: ApiModel) => {
+          const modelIdLower = model.id.toLowerCase();
+          const orgNameLower = organizationName.toLowerCase();
+
+          // Check if model ID starts with "organization/"
+          if (modelIdLower.startsWith(`${orgNameLower}/`)) {
+            return true;
+          }
+
+          // Check if provider_slug matches
+          if (model.provider_slug && model.provider_slug.toLowerCase() === orgNameLower) {
+            return true;
+          }
+
+          // Extract author from model ID (format: "author/model-name")
+          const modelAuthor = model.id.split('/')[0]?.toLowerCase();
+          if (modelAuthor === orgNameLower) {
+            return true;
+          }
+
+          return false;
+        });
+
+        console.log(`After client-side filtering: ${filteredModels.length} models for ${organizationName}`);
+        setApiModels(filteredModels);
       } catch (error) {
         console.error('Failed to fetch models:', error);
         setApiModels([]);
