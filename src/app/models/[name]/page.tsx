@@ -410,10 +410,10 @@ export default function ModelProfilePage() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="outline">Chat</Button>
                         <Link href={`/chat?model=${encodeURIComponent(model.id)}`}>
-                            <Button>Create API Key</Button>
+                            <Button>Chat</Button>
                         </Link>
+                        <Button variant="outline">Create API Key</Button>
                     </div>
                 </div>
                  <div className="mt-6 text-muted-foreground leading-relaxed">
