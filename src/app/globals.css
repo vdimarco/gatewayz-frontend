@@ -101,6 +101,32 @@ body {
   body {
     @apply bg-background text-foreground overflow-x-hidden;
   }
+
+  /* Custom text selection styling for better visibility */
+  ::selection {
+    background-color: rgba(59, 130, 246, 0.9); /* Bright blue */
+    color: white;
+    text-shadow: none;
+  }
+
+  ::-moz-selection {
+    background-color: rgba(59, 130, 246, 0.9);
+    color: white;
+    text-shadow: none;
+  }
+
+  /* Dark mode selection */
+  .dark ::selection {
+    background-color: rgba(96, 165, 250, 0.9); /* Lighter blue for dark mode */
+    color: rgb(15, 23, 42); /* Dark slate */
+    text-shadow: none;
+  }
+
+  .dark ::-moz-selection {
+    background-color: rgba(96, 165, 250, 0.9);
+    color: rgb(15, 23, 42);
+    text-shadow: none;
+  }
 }
 
 @layer components {
