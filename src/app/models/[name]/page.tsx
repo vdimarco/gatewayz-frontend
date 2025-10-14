@@ -639,7 +639,7 @@ console.log(response.choices[0].message.content);`
                                             Get your free API key to start using {model.name}
                                         </p>
                                     </div>
-                                    <Link href="/settings/credits">
+                                    <Link href="/settings/keys">
                                         <Button>
                                             Get API Key
                                         </Button>
