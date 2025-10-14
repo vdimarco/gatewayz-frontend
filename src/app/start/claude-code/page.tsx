@@ -11,16 +11,35 @@ import posthog from 'posthog-js';
 import Link from 'next/link';
 import Image from 'next/image';
 
+type OSType = 'windows' | 'macos' | 'linux';
+
 export default function StartClaudeCodePage() {
   const { user, ready, login } = usePrivy();
   const router = useRouter();
   const { toast } = useToast();
   const [apiKey, setApiKey] = useState('');
   const [copied, setCopied] = useState(false);
+  const [selectedOS, setSelectedOS] = useState<OSType>('windows');
 
   // Track page view
   useEffect(() => {
     posthog.capture('view_start_claude_code');
+  }, []);
+
+  // Detect OS on mount
+  useEffect(() => {
+    const detectOS = (): OSType => {
+      if (typeof window === 'undefined') return 'windows';
+
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      if (userAgent.includes('win')) return 'windows';
+      if (userAgent.includes('linux')) return 'linux';
+      if (userAgent.includes('mac')) return 'macos';
+
+      return 'windows';
+    };
+
+    setSelectedOS(detectOS());
   }, []);
 
   // Load API key
@@ -39,10 +58,14 @@ export default function StartClaudeCodePage() {
     }
   }, [user, ready, login]);
 
-  const installCommand = `npx @anthropic/claude-code@latest init`;
+  const installCommands = {
+    windows: 'irm https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-windows.ps1 | iex',
+    macos: 'bash <(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-macos.sh)',
+    linux: 'bash <(curl -fsSL https://raw.githubusercontent.com/Alpaca-Network/gatewayz-frontend/master/claude-code/setup-linux.sh)'
+  };
 
   const handleCopyInstaller = () => {
-    navigator.clipboard.writeText(installCommand);
+    navigator.clipboard.writeText(installCommands[selectedOS]);
     posthog.capture('installer_copied');
     toast({
       title: "Command Copied",
@@ -87,6 +110,31 @@ export default function StartClaudeCodePage() {
             <h2 className="text-2xl font-bold">Run the Installer</h2>
           </div>
 
+          {/* OS Selector */}
+          <div className="flex gap-2 flex-wrap mb-4">
+            <Button
+              variant={selectedOS === 'windows' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedOS('windows')}
+            >
+              Windows
+            </Button>
+            <Button
+              variant={selectedOS === 'macos' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedOS('macos')}
+            >
+              macOS
+            </Button>
+            <Button
+              variant={selectedOS === 'linux' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedOS('linux')}
+            >
+              Linux
+            </Button>
+          </div>
+
           <div className="rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
             {/* Terminal Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
@@ -96,7 +144,11 @@ export default function StartClaudeCodePage() {
                   <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
                   <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
                 </div>
-                <span className="text-xs text-slate-400 ml-3 font-mono">terminal</span>
+                <span className="text-xs text-slate-400 ml-3 font-mono">
+                  {selectedOS === 'windows' && 'PowerShell (Run as Administrator)'}
+                  {selectedOS === 'macos' && 'Terminal'}
+                  {selectedOS === 'linux' && 'Terminal'}
+                </span>
               </div>
               <Button
                 variant="ghost"
@@ -120,8 +172,8 @@ export default function StartClaudeCodePage() {
 
             {/* Code Display */}
             <div className="bg-slate-950/80 p-6">
-              <pre className="text-lg leading-relaxed font-mono text-cyan-400">
-                $ {installCommand}
+              <pre className="text-lg leading-relaxed font-mono text-cyan-400 overflow-x-auto">
+                $ {installCommands[selectedOS]}
               </pre>
             </div>
 
@@ -129,9 +181,18 @@ export default function StartClaudeCodePage() {
             <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
           </div>
 
-          <p className="text-sm text-muted-foreground mt-4">
-            This will guide you through setting up Claude Code in your terminal or VS Code.
-          </p>
+          {/* What it does */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mt-4">
+            <p className="text-sm text-blue-900 dark:text-blue-100 font-medium mb-2">
+              This script will:
+            </p>
+            <ul className="text-sm text-blue-900 dark:text-blue-100 list-disc ml-5 space-y-1">
+              <li>Install Claude Code Router</li>
+              <li>Configure your GatewayZ API key</li>
+              <li>Set up smart model routing</li>
+              <li>Test the connection</li>
+            </ul>
+          </div>
         </div>
 
         {/* Step 2: Configure */}
