@@ -168,6 +168,7 @@ export default function ModelProfilePage() {
     const [activeTab, setActiveTab] = useState<TabType>('Use Model');
     const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
     const [apiKey, setApiKey] = useState('YOUR_API_KEY');
+    const [selectedLanguage, setSelectedLanguage] = useState<'curl' | 'python' | 'javascript'>('curl');
 
     // Load API key from storage
     useEffect(() => {
@@ -452,90 +453,48 @@ export default function ModelProfilePage() {
                             </p>
                         </div>
 
-                        {/* cURL Example */}
-                        <div className="mb-6">
-                            <h3 className="text-lg font-semibold mb-3">cURL</h3>
-                            <div className="rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-                                {/* Terminal Header */}
-                                <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex gap-1.5">
-                                            <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                                            <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                                            <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-                                        </div>
-                                        <span className="text-xs text-slate-400 ml-3 font-mono">terminal</span>
-                                    </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => copyToClipboard(`curl -X POST https://api.gatewayz.ai/v1/chat/completions \\
-  -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer ${apiKey}" \\
-  -d '{
-    "model": "${model.id}",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Hello! What can you help me with?"
-      }
-    ]
-  }'`, 'curl')}
-                                        className="text-slate-300 hover:text-white"
-                                    >
-                                        {copiedStates['curl'] ? (
-                                            <>
-                                                <Check className="h-4 w-4 mr-2" />
-                                                Copied!
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Copy className="h-4 w-4 mr-2" />
-                                                Copy
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                                {/* Code Display */}
-                                <div className="bg-slate-950/80 p-6">
-                                    <pre className="text-sm leading-relaxed font-mono text-cyan-400 overflow-x-auto">
-                                        <code>{`curl -X POST https://api.gatewayz.ai/v1/chat/completions \\
-  -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer ${apiKey}" \\
-  -d '{
-    "model": "${model.id}",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Hello! What can you help me with?"
-      }
-    ]
-  }'`}</code>
-                                    </pre>
-                                </div>
-                                {/* Bottom gradient */}
-                                <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
-                            </div>
+                        {/* Language Selector */}
+                        <div className="flex gap-2 mb-4">
+                            <Button
+                                variant={selectedLanguage === 'curl' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setSelectedLanguage('curl')}
+                            >
+                                cURL
+                            </Button>
+                            <Button
+                                variant={selectedLanguage === 'python' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setSelectedLanguage('python')}
+                            >
+                                Python
+                            </Button>
+                            <Button
+                                variant={selectedLanguage === 'javascript' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setSelectedLanguage('javascript')}
+                            >
+                                JavaScript
+                            </Button>
                         </div>
 
-                        {/* Python Example */}
+                        {/* Code Example */}
                         <div className="mb-6">
-                            <h3 className="text-lg font-semibold mb-3">Python</h3>
-                            <div className="rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-                                {/* Terminal Header */}
-                                <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex gap-1.5">
-                                            <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                                            <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                                            <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-                                        </div>
-                                        <span className="text-xs text-slate-400 ml-3 font-mono">terminal</span>
-                                    </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => copyToClipboard(`from openai import OpenAI
+                            {(() => {
+                                const codeExamples = {
+                                    curl: `curl -X POST https://api.gatewayz.ai/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${apiKey}" \\
+  -d '{
+    "model": "${model.id}",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello! What can you help me with?"
+      }
+    ]
+  }'`,
+                                    python: `from openai import OpenAI
 
 client = OpenAI(
     base_url="https://api.gatewayz.ai/v1",
@@ -549,113 +508,66 @@ completion = client.chat.completions.create(
     ]
 )
 
-print(completion.choices[0].message.content)`, 'python')}
-                                        className="text-slate-300 hover:text-white"
-                                    >
-                                        {copiedStates['python'] ? (
-                                            <>
-                                                <Check className="h-4 w-4 mr-2" />
-                                                Copied!
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Copy className="h-4 w-4 mr-2" />
-                                                Copy
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                                {/* Code Display */}
-                                <div className="bg-slate-950/80 p-6">
-                                    <pre className="text-sm leading-relaxed font-mono text-cyan-400 overflow-x-auto">
-                                        <code>{`from openai import OpenAI
+print(completion.choices[0].message.content)`,
+                                    javascript: `import OpenAI from 'openai';
 
-client = OpenAI(
-    base_url="https://api.gatewayz.ai/v1",
-    api_key="${apiKey}"
-)
+const client = new OpenAI({
+  apiKey: "${apiKey}",
+  baseURL: "https://api.gatewayz.ai/v1"
+});
 
-completion = client.chat.completions.create(
-    model="${model.id}",
-    messages=[
-        {"role": "user", "content": "Hello! What can you help me with?"}
-    ]
-)
+const response = await client.chat.completions.create({
+  model: "${model.id}",
+  messages: [{ role: "user", content: "Hello! What can you help me with?" }]
+});
 
-print(completion.choices[0].message.content)`}</code>
-                                    </pre>
-                                </div>
-                                {/* Bottom gradient */}
-                                <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
-                            </div>
-                        </div>
+console.log(response.choices[0].message.content);`
+                                };
 
-                        {/* JavaScript Example */}
-                        <div className="mb-6">
-                            <h3 className="text-lg font-semibold mb-3">JavaScript / TypeScript</h3>
-                            <div className="rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-                                {/* Terminal Header */}
-                                <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex gap-1.5">
-                                            <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                                            <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                                            <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                                const currentCode = codeExamples[selectedLanguage];
+
+                                return (
+                                    <div className="rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                                        {/* Terminal Header */}
+                                        <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex gap-1.5">
+                                                    <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                                                    <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                                                    <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                                                </div>
+                                                <span className="text-xs text-slate-400 ml-3 font-mono">terminal</span>
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => copyToClipboard(currentCode, selectedLanguage)}
+                                                className="text-slate-300 hover:text-white"
+                                            >
+                                                {copiedStates[selectedLanguage] ? (
+                                                    <>
+                                                        <Check className="h-4 w-4 mr-2" />
+                                                        Copied!
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Copy className="h-4 w-4 mr-2" />
+                                                        Copy
+                                                    </>
+                                                )}
+                                            </Button>
                                         </div>
-                                        <span className="text-xs text-slate-400 ml-3 font-mono">terminal</span>
+                                        {/* Code Display */}
+                                        <div className="bg-slate-950/80 p-6">
+                                            <pre className="text-sm leading-relaxed font-mono text-cyan-400 overflow-x-auto">
+                                                <code>{currentCode}</code>
+                                            </pre>
+                                        </div>
+                                        {/* Bottom gradient */}
+                                        <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
                                     </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => copyToClipboard(`import OpenAI from 'openai';
-
-const client = new OpenAI({
-  apiKey: "${apiKey}",
-  baseURL: "https://api.gatewayz.ai/v1"
-});
-
-const response = await client.chat.completions.create({
-  model: "${model.id}",
-  messages: [{ role: "user", content: "Hello! What can you help me with?" }]
-});
-
-console.log(response.choices[0].message.content);`, 'javascript')}
-                                        className="text-slate-300 hover:text-white"
-                                    >
-                                        {copiedStates['javascript'] ? (
-                                            <>
-                                                <Check className="h-4 w-4 mr-2" />
-                                                Copied!
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Copy className="h-4 w-4 mr-2" />
-                                                Copy
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                                {/* Code Display */}
-                                <div className="bg-slate-950/80 p-6">
-                                    <pre className="text-sm leading-relaxed font-mono text-cyan-400 overflow-x-auto">
-                                        <code>{`import OpenAI from 'openai';
-
-const client = new OpenAI({
-  apiKey: "${apiKey}",
-  baseURL: "https://api.gatewayz.ai/v1"
-});
-
-const response = await client.chat.completions.create({
-  model: "${model.id}",
-  messages: [{ role: "user", content: "Hello! What can you help me with?" }]
-});
-
-console.log(response.choices[0].message.content);`}</code>
-                                    </pre>
-                                </div>
-                                {/* Bottom gradient */}
-                                <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
-                            </div>
+                                );
+                            })()}
                         </div>
 
                         {/* Get API Key CTA */}
