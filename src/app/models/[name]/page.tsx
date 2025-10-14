@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { stringToColor } from '@/lib/utils';
 import { API_BASE_URL } from '@/lib/config';
 import { models as staticModels } from '@/lib/models-data';
+import { getApiKey } from '@/lib/api';
 
 // Lazy load heavy components
 const TopAppsTable = lazy(() => import('@/components/dashboard/top-apps-table'));
@@ -167,6 +168,14 @@ export default function ModelProfilePage() {
     const [activeTab, setActiveTab] = useState<TabType>('Use Model');
     const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
     const [apiKey, setApiKey] = useState('YOUR_API_KEY');
+
+    // Load API key from storage
+    useEffect(() => {
+        const userApiKey = getApiKey();
+        if (userApiKey) {
+            setApiKey(userApiKey);
+        }
+    }, []);
 
     const modelId = useMemo(() => {
         const id = params.name as string;
@@ -444,10 +453,19 @@ export default function ModelProfilePage() {
                         </div>
 
                         {/* cURL Example */}
-                        <Card className="mb-6">
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-lg">cURL</CardTitle>
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold mb-3">cURL</h3>
+                            <div className="rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                                {/* Terminal Header */}
+                                <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex gap-1.5">
+                                            <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                                            <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                                            <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                                        </div>
+                                        <span className="text-xs text-slate-400 ml-3 font-mono">terminal</span>
+                                    </div>
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -463,10 +481,11 @@ export default function ModelProfilePage() {
       }
     ]
   }'`, 'curl')}
+                                        className="text-slate-300 hover:text-white"
                                     >
                                         {copiedStates['curl'] ? (
                                             <>
-                                                <Check className="h-4 w-4 mr-2 text-green-600" />
+                                                <Check className="h-4 w-4 mr-2" />
                                                 Copied!
                                             </>
                                         ) : (
@@ -477,10 +496,10 @@ export default function ModelProfilePage() {
                                         )}
                                     </Button>
                                 </div>
-                            </CardHeader>
-                            <CardContent>
-                                <pre className="p-4 bg-muted rounded-md text-xs overflow-x-auto">
-                                    <code>{`curl -X POST https://api.gatewayz.ai/v1/chat/completions \\
+                                {/* Code Display */}
+                                <div className="bg-slate-950/80 p-6">
+                                    <pre className="text-sm leading-relaxed font-mono text-cyan-400 overflow-x-auto">
+                                        <code>{`curl -X POST https://api.gatewayz.ai/v1/chat/completions \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer ${apiKey}" \\
   -d '{
@@ -492,15 +511,27 @@ export default function ModelProfilePage() {
       }
     ]
   }'`}</code>
-                                </pre>
-                            </CardContent>
-                        </Card>
+                                    </pre>
+                                </div>
+                                {/* Bottom gradient */}
+                                <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
+                            </div>
+                        </div>
 
                         {/* Python Example */}
-                        <Card className="mb-6">
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-lg">Python</CardTitle>
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold mb-3">Python</h3>
+                            <div className="rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                                {/* Terminal Header */}
+                                <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex gap-1.5">
+                                            <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                                            <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                                            <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                                        </div>
+                                        <span className="text-xs text-slate-400 ml-3 font-mono">terminal</span>
+                                    </div>
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -519,10 +550,11 @@ completion = client.chat.completions.create(
 )
 
 print(completion.choices[0].message.content)`, 'python')}
+                                        className="text-slate-300 hover:text-white"
                                     >
                                         {copiedStates['python'] ? (
                                             <>
-                                                <Check className="h-4 w-4 mr-2 text-green-600" />
+                                                <Check className="h-4 w-4 mr-2" />
                                                 Copied!
                                             </>
                                         ) : (
@@ -533,10 +565,10 @@ print(completion.choices[0].message.content)`, 'python')}
                                         )}
                                     </Button>
                                 </div>
-                            </CardHeader>
-                            <CardContent>
-                                <pre className="p-4 bg-muted rounded-md text-xs overflow-x-auto">
-                                    <code>{`from openai import OpenAI
+                                {/* Code Display */}
+                                <div className="bg-slate-950/80 p-6">
+                                    <pre className="text-sm leading-relaxed font-mono text-cyan-400 overflow-x-auto">
+                                        <code>{`from openai import OpenAI
 
 client = OpenAI(
     base_url="https://api.gatewayz.ai/v1",
@@ -551,15 +583,27 @@ completion = client.chat.completions.create(
 )
 
 print(completion.choices[0].message.content)`}</code>
-                                </pre>
-                            </CardContent>
-                        </Card>
+                                    </pre>
+                                </div>
+                                {/* Bottom gradient */}
+                                <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
+                            </div>
+                        </div>
 
                         {/* JavaScript Example */}
-                        <Card className="mb-6">
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-lg">JavaScript / TypeScript</CardTitle>
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold mb-3">JavaScript / TypeScript</h3>
+                            <div className="rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                                {/* Terminal Header */}
+                                <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex gap-1.5">
+                                            <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                                            <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                                            <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                                        </div>
+                                        <span className="text-xs text-slate-400 ml-3 font-mono">terminal</span>
+                                    </div>
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -576,10 +620,11 @@ const response = await client.chat.completions.create({
 });
 
 console.log(response.choices[0].message.content);`, 'javascript')}
+                                        className="text-slate-300 hover:text-white"
                                     >
                                         {copiedStates['javascript'] ? (
                                             <>
-                                                <Check className="h-4 w-4 mr-2 text-green-600" />
+                                                <Check className="h-4 w-4 mr-2" />
                                                 Copied!
                                             </>
                                         ) : (
@@ -590,10 +635,10 @@ console.log(response.choices[0].message.content);`, 'javascript')}
                                         )}
                                     </Button>
                                 </div>
-                            </CardHeader>
-                            <CardContent>
-                                <pre className="p-4 bg-muted rounded-md text-xs overflow-x-auto">
-                                    <code>{`import OpenAI from 'openai';
+                                {/* Code Display */}
+                                <div className="bg-slate-950/80 p-6">
+                                    <pre className="text-sm leading-relaxed font-mono text-cyan-400 overflow-x-auto">
+                                        <code>{`import OpenAI from 'openai';
 
 const client = new OpenAI({
   apiKey: "${apiKey}",
@@ -606,9 +651,12 @@ const response = await client.chat.completions.create({
 });
 
 console.log(response.choices[0].message.content);`}</code>
-                                </pre>
-                            </CardContent>
-                        </Card>
+                                    </pre>
+                                </div>
+                                {/* Bottom gradient */}
+                                <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
+                            </div>
+                        </div>
 
                         {/* Get API Key CTA */}
                         <Card className="bg-primary/5 border-primary/20">

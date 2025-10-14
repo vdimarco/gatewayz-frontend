@@ -172,7 +172,7 @@ export default function StartClaudeCodePage() {
 
             {/* Code Display */}
             <div className="bg-slate-950/80 p-6">
-              <pre className="text-lg leading-relaxed font-mono text-cyan-400 overflow-x-auto">
+              <pre className="text-sm sm:text-base leading-relaxed font-mono text-cyan-400 whitespace-pre-wrap break-all">
                 $ {installCommands[selectedOS]}
               </pre>
             </div>
