@@ -168,7 +168,7 @@ export default function ModelProfilePage() {
     const [activeTab, setActiveTab] = useState<TabType>('Use Model');
     const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
     const [apiKey, setApiKey] = useState('YOUR_API_KEY');
-    const [selectedLanguage, setSelectedLanguage] = useState<'curl' | 'python' | 'javascript'>('curl');
+    const [selectedLanguage, setSelectedLanguage] = useState<'curl' | 'python' | 'javascript' | 'openai-python' | 'typescript' | 'openai-typescript'>('curl');
 
     // Load API key from storage
     useEffect(() => {
@@ -454,7 +454,7 @@ export default function ModelProfilePage() {
                         </div>
 
                         {/* Language Selector */}
-                        <div className="flex gap-2 mb-4">
+                        <div className="flex gap-2 mb-4 flex-wrap">
                             <Button
                                 variant={selectedLanguage === 'curl' ? 'default' : 'outline'}
                                 size="sm"
@@ -475,6 +475,27 @@ export default function ModelProfilePage() {
                                 onClick={() => setSelectedLanguage('javascript')}
                             >
                                 JavaScript
+                            </Button>
+                            <Button
+                                variant={selectedLanguage === 'openai-python' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setSelectedLanguage('openai-python')}
+                            >
+                                OpenAI Python
+                            </Button>
+                            <Button
+                                variant={selectedLanguage === 'typescript' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setSelectedLanguage('typescript')}
+                            >
+                                TypeScript
+                            </Button>
+                            <Button
+                                variant={selectedLanguage === 'openai-typescript' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setSelectedLanguage('openai-typescript')}
+                            >
+                                OpenAI TypeScript
                             </Button>
                         </div>
 
@@ -510,6 +531,47 @@ completion = client.chat.completions.create(
 
 print(completion.choices[0].message.content)`,
                                     javascript: `import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: "${apiKey}",
+  baseURL: "https://api.gatewayz.ai/v1"
+});
+
+const response = await client.chat.completions.create({
+  model: "${model.id}",
+  messages: [{ role: "user", content: "Hello! What can you help me with?" }]
+});
+
+console.log(response.choices[0].message.content);`,
+                                    'openai-python': `from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.gatewayz.ai/v1",
+    api_key="${apiKey}"
+)
+
+completion = client.chat.completions.create(
+    model="${model.id}",
+    messages=[
+        {"role": "user", "content": "Hello! What can you help me with?"}
+    ]
+)
+
+print(completion.choices[0].message.content)`,
+                                    typescript: `import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: "${apiKey}",
+  baseURL: "https://api.gatewayz.ai/v1"
+});
+
+const response = await client.chat.completions.create({
+  model: "${model.id}",
+  messages: [{ role: "user", content: "Hello! What can you help me with?" }]
+});
+
+console.log(response.choices[0].message.content);`,
+                                    'openai-typescript': `import OpenAI from 'openai';
 
 const client = new OpenAI({
   apiKey: "${apiKey}",
