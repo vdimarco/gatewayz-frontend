@@ -265,7 +265,25 @@ export default function DevelopersPage() {
                 logoUrl: organizationLogos.get(author),
             };
         }).sort((a, b) => {
-            // Priority order matching model dropdown
+            // For "Top" tab, sort by total tokens generated in the time period (descending)
+            if (activeTab === 'top') {
+                const aTokensStr = a.totalTokens.replace(/[^0-9.]/g, '');
+                const bTokensStr = b.totalTokens.replace(/[^0-9.]/g, '');
+
+                const aMultiplier = a.totalTokens.includes('T') ? 1000000000000 :
+                                   a.totalTokens.includes('B') ? 1000000000 :
+                                   a.totalTokens.includes('M') ? 1000000 : 1;
+                const bMultiplier = b.totalTokens.includes('T') ? 1000000000000 :
+                                   b.totalTokens.includes('B') ? 1000000000 :
+                                   b.totalTokens.includes('M') ? 1000000 : 1;
+
+                const aTokens = parseFloat(aTokensStr) * aMultiplier;
+                const bTokens = parseFloat(bTokensStr) * bMultiplier;
+
+                return bTokens - aTokens;
+            }
+
+            // For "Trending" tab, use priority order matching model dropdown
             const priorityOrgs = ['OpenAI', 'Anthropic', 'Google', 'Qwen', 'xAI', 'Meta', 'DeepSeek', 'Mistral AI'];
 
             const aPriority = priorityOrgs.indexOf(a.name);
