@@ -19,6 +19,7 @@ export default function StartClaudeCodePage() {
   const { toast } = useToast();
   const [apiKey, setApiKey] = useState('');
   const [copied, setCopied] = useState(false);
+  const [copiedApiKey, setCopiedApiKey] = useState(false);
   const [selectedOS, setSelectedOS] = useState<OSType>('windows');
 
   // Track page view
@@ -73,6 +74,19 @@ export default function StartClaudeCodePage() {
     });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCopyApiKey = () => {
+    if (apiKey) {
+      navigator.clipboard.writeText(apiKey);
+      posthog.capture('api_key_copied');
+      toast({
+        title: "API Key Copied",
+        description: "Your API key has been copied to clipboard.",
+      });
+      setCopiedApiKey(true);
+      setTimeout(() => setCopiedApiKey(false), 2000);
+    }
   };
 
   if (!ready || !user) {
@@ -209,9 +223,51 @@ export default function StartClaudeCodePage() {
               During setup, when asked for an API key, use your Gatewayz key:
             </p>
 
-            <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm break-all">
-              {apiKey || 'Generate your API key from Settings → Credits'}
-            </div>
+            {apiKey ? (
+              <div className="rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                {/* Terminal Header */}
+                <div className="flex items-center justify-between px-4 py-3 bg-slate-950/50 border-b border-slate-700">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                    </div>
+                    <span className="text-xs text-slate-400 ml-3 font-mono">API Key</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCopyApiKey}
+                    className="text-slate-300 hover:text-white"
+                  >
+                    {copiedApiKey ? (
+                      <>
+                        <Check className="h-4 w-4 mr-2" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {/* API Key Display */}
+                <div className="bg-slate-950/80 p-6">
+                  <pre className="text-sm leading-relaxed font-mono text-cyan-400 break-all">
+                    {apiKey}
+                  </pre>
+                </div>
+                {/* Bottom gradient */}
+                <div className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
+              </div>
+            ) : (
+              <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm break-all">
+                Generate your API key from Settings → Credits
+              </div>
+            )}
 
             {!apiKey && (
               <Link href="/settings/credits">
