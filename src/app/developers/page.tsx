@@ -234,9 +234,28 @@ export default function DevelopersPage() {
                 model.rank < top.rank ? model : top
             , models[0]);
 
+            // Format author name for display
+            const formatAuthorName = (author: string): string => {
+                const formatted: Record<string, string> = {
+                    'openai': 'OpenAI',
+                    'anthropic': 'Anthropic',
+                    'google': 'Google',
+                    'qwen': 'Qwen',
+                    'x-ai': 'xAI',
+                    'meta-llama': 'Meta',
+                    'deepseek': 'DeepSeek',
+                    'mistralai': 'Mistral AI',
+                    'meta': 'Meta',
+                    'cohere': 'Cohere',
+                    'amazon': 'Amazon',
+                    'microsoft': 'Microsoft'
+                };
+                return formatted[author.toLowerCase()] || author.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            };
+
             return {
                 id: author,
-                name: author.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+                name: formatAuthorName(author),
                 author: author,
                 modelCount: models.length,
                 totalTokens: formatTokens(totalTokensNum),
@@ -246,7 +265,22 @@ export default function DevelopersPage() {
                 logoUrl: organizationLogos.get(author),
             };
         }).sort((a, b) => {
-            // Sort by total tokens (descending)
+            // Priority order matching model dropdown
+            const priorityOrgs = ['OpenAI', 'Anthropic', 'Google', 'Qwen', 'xAI', 'Meta', 'DeepSeek', 'Mistral AI'];
+
+            const aPriority = priorityOrgs.indexOf(a.name);
+            const bPriority = priorityOrgs.indexOf(b.name);
+
+            // If both are in priority list, sort by priority order
+            if (aPriority !== -1 && bPriority !== -1) {
+                return aPriority - bPriority;
+            }
+
+            // Priority orgs come first
+            if (aPriority !== -1) return -1;
+            if (bPriority !== -1) return 1;
+
+            // For non-priority orgs, sort by total tokens (descending)
             const aTokens = parseFloat(a.totalTokens.replace(/[^0-9.]/g, ''));
             const bTokens = parseFloat(b.totalTokens.replace(/[^0-9.]/g, ''));
             return bTokens - aTokens;
@@ -254,11 +288,9 @@ export default function DevelopersPage() {
     }, [rankingModels, timeFrame, activeTab, organizationLogos]);
 
     const filteredOrgs = useMemo(() => {
-        const filtered = organizations.filter(org =>
+        return organizations.filter(org =>
             org.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
-        // Limit to 12 organizations for clean grid layout (3 columns x 4 rows or 2 rows x 6 cols)
-        return filtered.slice(0, 12);
     }, [organizations, searchTerm, activeTab]);
 
 
